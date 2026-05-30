@@ -1,0 +1,133 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - COSMETICC</title>
+    <script type="importmap"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/COSMETICC.styles.css" asp-append-version="true" />
+
+</head>
+<body>
+    <header class="header">
+
+        <!-- TOP -->
+
+        <div class="container d-flex align-items-center justify-content-between py-3">
+            <button class="btn btn-dark d-lg-none m-2"
+                    type="button"
+                    data-bs-toggle="offcanvas"
+                    data-bs-target="#mobileMenu">
+                ☰ Menu
+            </button>
+            <!-- LOGO -->
+            <a asp-controller="Home" asp-action="Index" class="logo">
+                <h2 class="mb-0">MeiLing</h2>
+                <small>Tỏa sáng rạng rỡ</small>
+            </a>
+
+            <!-- SEARCH -->
+            <div class="search-box">
+                <input type="text" placeholder="What are you looking for?" />
+                <span>🔍</span>
+            </div>
+
+            <!-- RIGHT -->
+            <div class="d-flex align-items-center gap-4">
+
+                @if (Context.Session.GetString("UserId") != null)
+                {
+                    <a asp-controller="Account" asp-action="Profile">
+                        👤 @Context.Session.GetString("FullName")
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Login">Sign in / Register</a>
+                }
+
+                <span>🛒</span>
+                <!-- BUTTON MOBILE -->
+
+
+            </div>
+        </div>
+
+
+
+        <!-- SIDEBAR MENU -->
+        <div class="offcanvas offcanvas-start"
+             tabindex="-1"
+             id="mobileMenu">
+
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title">MEILING</h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="offcanvas">
+                </button>
+            </div>
+
+            <div class="offcanvas-body">
+
+                <div class="mobile-menu">
+
+                    <a href="#">Shop All</a>
+                    <a href="#">Best Sellers</a>
+
+                    <a href="#" class="highlight">
+                        Limited Deal
+                        <span class="badge">Up to 92%</span>
+                    </a>
+
+                    <a href="#">Skin Concern</a>
+                    <a href="#">By Wishtrend</a>
+                    <a href="#">About Us</a>
+                    <a href="#">Media</a>
+                    <a href="#">B2B Inquiry</a>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- MENU DESKTOP -->
+        <div class="menu container d-none d-lg-flex">
+            <a href="#">Shop All</a>
+            <a href="#">Best Sellers</a>
+
+            <a href="#" class="highlight">
+                Limited Deal <span class="badge">Up to 92%</span>
+            </a>
+
+            <a href="#">Skin Concern ▼</a>
+            <a href="#">By Wishtrend</a>
+            <a href="#">About Us</a>
+            <a href="#">Media</a>
+            <a href="#">B2B Inquiry</a>
+        </div>
+
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2026 - COSMETICC - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+  

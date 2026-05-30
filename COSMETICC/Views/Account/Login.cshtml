@@ -1,0 +1,57 @@
+﻿@{
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<div class="container d-flex justify-content-center align-items-center" style="height:80vh;">
+    <div class="card shadow p-4" style="width:380px; border-radius:15px;">
+
+        <h3 class="text-center mb-4">Đăng nhập</h3>
+
+        <form asp-action="Login" method="post">
+            @Html.AntiForgeryToken()
+
+            <!-- Email / Phone -->
+            <div class="mb-3">
+                <label class="form-label">Email hoặc SĐT</label>
+                <input name="input" class="form-control" placeholder="Nhập email hoặc số điện thoại" required />
+            </div>
+
+            <!-- Password -->
+            <div class="mb-3">
+                <label class="form-label">Mật khẩu</label>
+                <input name="password" type="password" class="form-control" placeholder="Nhập mật khẩu" required />
+            </div>
+
+            <!-- Login button -->
+            <button class="btn btn-dark w-100">Đăng nhập</button>
+        </form>
+
+        <!-- Error -->
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger mt-3 text-center p-2">
+                @ViewBag.Error
+            </div>
+        }
+
+        <!-- Divider -->
+        <div class="text-center my-3">
+            <small>Hoặc</small>
+        </div>
+
+        <!-- Google login -->
+        <a asp-action="LoginGoogle" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2">
+            <img src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" width="18" />
+            Đăng nhập với Google
+        </a>
+
+        <!-- Register -->
+        <div class="text-center mt-3">
+            <small>
+                Chưa có tài khoản?
+                <a asp-action="Register">Đăng ký</a>
+            </small>
+        </div>
+
+    </div>
+</div>

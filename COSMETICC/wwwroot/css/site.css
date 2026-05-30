@@ -1,0 +1,104 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+  color: var(--bs-secondary-color);
+  text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+  text-align: start;
+}
+.header {
+    border-bottom: 1px solid #eee;
+}
+
+/* LOGO */
+.logo h2 {
+    font-weight: bold;
+    font-size: 28px;
+}
+
+.logo small {
+    font-size: 12px;
+    margin-left: 5px;
+}
+
+/* SEARCH */
+.search-box {
+    position: relative;
+    width: 40%;
+}
+
+    .search-box input {
+        width: 100%;
+        padding: 10px 40px 10px 15px;
+        border-radius: 25px;
+        border: none;
+        background: #f2f2f2;
+    }
+
+    .search-box span {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+/* DESKTOP MENU */
+.menu {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 0;
+}
+
+    .menu a {
+        text-decoration: none;
+        color: black;
+        font-size: 15px;
+    }
+
+/* MOBILE SIDEBAR */
+.mobile-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+    .mobile-menu a {
+        text-decoration: none;
+        color: black;
+        font-size: 18px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+    }
+
+/* BADGE */
+.badge {
+    background: white;
+    color: red;
+    border: 1px solid red;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 10px;
+}}

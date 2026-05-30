@@ -1,0 +1,40 @@
+﻿@model COSMETICC.Models.User
+
+@{
+    ViewData["Title"] = "Đăng ký";
+}
+
+<div class="container d-flex justify-content-center align-items-center" style="height:80vh;">
+    <div class="card p-4 shadow" style="width:400px;">
+
+        <h3 class="text-center mb-3">Tạo tài khoản</h3>
+
+        <form asp-action="Register" method="post">
+            @Html.AntiForgeryToken()
+
+            <input asp-for="FullName" class="form-control mb-2" placeholder="Họ tên" required />
+
+            <input asp-for="Email" class="form-control mb-2" placeholder="Email" required />
+
+            <input asp-for="Phone" class="form-control mb-2" placeholder="Số điện thoại" required />
+
+            <input asp-for="Username" class="form-control mb-2" placeholder="Tên đăng nhập" required />
+
+            <input asp-for="Password" type="password" class="form-control mb-3" placeholder="Mật khẩu" required />
+
+            <button class="btn btn-dark w-100">Đăng ký</button>
+        </form>
+
+        @if (ViewBag.Error != null)
+        {
+            <p class="text-danger text-center mt-2">@ViewBag.Error</p>
+        }
+
+        <div class="text-center mt-3">
+            <a asp-controller="Account" asp-action="Login">
+                Đã có tài khoản? Đăng nhập
+            </a>
+        </div>
+
+    </div>
+</div>

@@ -1,0 +1,343 @@
+﻿/* RESET */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #f8f5ef;
+    color: #222;
+}
+
+/* ================= HEADER ================= */
+
+header {
+    background-color: white;
+    padding: 20px 60px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo a {
+    text-decoration: none;
+    font-size: 32px;
+    font-weight: bold;
+    color: #8b5e3c;
+    text-transform: uppercase;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 30px;
+}
+
+    .nav-links a {
+        text-decoration: none;
+        color: #333;
+        font-size: 14px;
+        transition: 0.3s;
+    }
+
+        .nav-links a:hover {
+            color: #8b5e3c;
+        }
+
+/* ================= BANNER ================= */
+
+.banner {
+    display: flex;
+    align-items: center;
+    min-height: 700px;
+}
+
+.banner-left {
+    width: 50%;
+}
+
+    .banner-left img {
+        width: 100%;
+        height: 700px;
+        object-fit: cover;
+    }
+
+.banner-right {
+    width: 50%;
+    padding: 80px;
+}
+
+    .banner-right h4 {
+        font-size: 18px;
+        margin-bottom: 20px;
+        color: #8b5e3c;
+    }
+
+    .banner-right h1 {
+        font-size: 60px;
+        line-height: 1.2;
+        margin-bottom: 20px;
+    }
+
+    .banner-right p {
+        font-size: 18px;
+        line-height: 1.8;
+        margin-bottom: 30px;
+    }
+
+    .banner-right button {
+        padding: 15px 40px;
+        border: none;
+        background-color: black;
+        color: white;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+        .banner-right button:hover {
+            background-color: #8b5e3c;
+        }
+
+/* ================= INTRO ================= */
+
+.intro {
+    display: flex;
+    align-items: center;
+    padding: 100px 80px;
+    gap: 60px;
+}
+
+.intro-text {
+    width: 50%;
+}
+
+    .intro-text h2 {
+        font-size: 50px;
+        margin-bottom: 20px;
+    }
+
+    .intro-text p {
+        font-size: 18px;
+        line-height: 1.8;
+    }
+
+.intro-image {
+    width: 50%;
+}
+
+    .intro-image img {
+        width: 100%;
+        border-radius: 20px;
+    }
+
+/* ================= BRAND ================= */
+
+.brand {
+    background-image: url('https://images.unsplash.com/photo-1501004318641-b39e6451bec6?q=80&w=1200&auto=format&fit=crop');
+    background-size: cover;
+    background-position: center;
+    padding: 150px 0;
+    text-align: center;
+}
+
+.brand-content {
+    background-color: rgba(255,255,255,0.9);
+    width: 500px;
+    margin: auto;
+    padding: 50px;
+}
+
+    .brand-content h2 {
+        font-size: 40px;
+        margin-bottom: 20px;
+    }
+
+    .brand-content p {
+        font-size: 18px;
+        line-height: 1.8;
+        margin-bottom: 30px;
+    }
+
+    .brand-content button {
+        padding: 14px 35px;
+        background-color: black;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+/* ================= VEGAN ================= */
+
+.vegan {
+    padding: 100px 80px;
+    text-align: center;
+}
+
+    .vegan h1 {
+        font-size: 55px;
+        margin-bottom: 80px;
+    }
+
+.vegan-list {
+    display: flex;
+    justify-content: center;
+    gap: 50px;
+}
+
+.vegan-item {
+    width: 300px;
+}
+
+    .vegan-item i {
+        font-size: 50px;
+        color: #8b5e3c;
+        margin-bottom: 20px;
+    }
+
+    .vegan-item h3 {
+        margin-bottom: 15px;
+    }
+
+    .vegan-item p {
+        line-height: 1.8;
+    }
+
+/* ================= PRODUCTS ================= */
+
+.products {
+    padding: 100px 80px;
+}
+
+.section-title {
+    margin-bottom: 50px;
+}
+
+    .section-title h2 {
+        font-size: 50px;
+    }
+
+.product-list {
+    display: flex;
+    gap: 30px;
+}
+
+.product-item {
+    background-color: white;
+    padding: 20px;
+    width: 33.33%;
+    transition: 0.3s;
+}
+
+    .product-item:hover {
+        transform: translateY(-10px);
+    }
+
+    .product-item img {
+        width: 100%;
+        height: 350px;
+        object-fit: cover;
+    }
+
+    .product-item h3 {
+        margin: 20px 0 10px;
+    }
+
+    .product-item p {
+        color: #8b5e3c;
+        font-weight: bold;
+    }
+
+/* ================= GREEN BANNER ================= */
+
+.green-banner {
+    background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1200&auto=format&fit=crop');
+    background-size: cover;
+    background-position: center;
+    height: 500px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.green-content h1 {
+    color: white;
+    font-size: 60px;
+    margin-bottom: 30px;
+}
+
+.green-content button {
+    padding: 15px 40px;
+    border: none;
+    background-color: white;
+    cursor: pointer;
+}
+
+/* ================= BLOG ================= */
+
+.blog {
+    padding: 100px 80px;
+}
+
+.blog-title {
+    margin-bottom: 50px;
+}
+
+    .blog-title h2 {
+        font-size: 50px;
+    }
+
+.blog-list {
+    display: flex;
+    gap: 30px;
+}
+
+.blog-item {
+    width: 50%;
+    background-color: white;
+}
+
+    .blog-item img {
+        width: 100%;
+        height: 350px;
+        object-fit: cover;
+    }
+
+    .blog-item h3 {
+        padding: 20px 20px 10px;
+    }
+
+    .blog-item p {
+        padding: 0 20px 20px;
+        line-height: 1.8;
+    }
+
+/* ================= INSTAGRAM ================= */
+
+.instagram {
+    padding: 100px 80px;
+}
+
+    .instagram h2 {
+        font-size: 40px;
+        margin-bottom: 40px;
+    }
+
+.instagram-list {
+    display: flex;
+    gap: 20px;
+}
+
+    .instagram-list img {
+        width: 25%;
+        height: 250px;
+        object-fit: cover;
+    }
