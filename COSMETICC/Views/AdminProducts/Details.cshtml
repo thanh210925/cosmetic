@@ -1,0 +1,106 @@
+@model COSMETICC.Models.Product
+
+@{
+    ViewData["Title"] = "Chi tiết sản phẩm";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="card shadow border-0">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+
+        <h3 class="mb-0">
+            📄 Chi tiết sản phẩm
+        </h3>
+
+        <a asp-action="Index"
+           class="btn btn-secondary">
+            ← Quay lại
+        </a>
+
+    </div>
+
+    <div class="card-body">
+
+        <div class="row">
+
+            <div class="col-md-4 text-center">
+
+                <img src="@Model.ImageUrl"
+                     class="img-fluid rounded shadow-sm"
+                     style="max-height:300px;object-fit:cover;" />
+
+            </div>
+
+            <div class="col-md-8">
+
+                <table class="table table-bordered">
+
+                    <tr>
+                        <th width="200">Mã sản phẩm</th>
+                        <td>#@Model.Id</td>
+                    </tr>
+
+                    <tr>
+                        <th>Tên sản phẩm</th>
+                        <td>@Model.Name</td>
+                    </tr>
+
+                    <tr>
+                        <th>Giá bán</th>
+                        <td class="text-danger fw-bold">
+                            @Model.Price.ToString("N0") đ
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th>Tồn kho</th>
+                        <td>@Model.Stock</td>
+                    </tr>
+
+                    <tr>
+                        <th>Danh mục</th>
+                        <td>@Model.CategoryId</td>
+                    </tr>
+
+                    <tr>
+                        <th>Loại sản phẩm</th>
+                        <td>
+                            @(Model.IsVegan == true ? "🌱 Vegan" : "Thông thường")
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th>Thành phần</th>
+                        <td>@Model.Ingredient</td>
+                    </tr>
+
+                    <tr>
+                        <th>Mô tả</th>
+                        <td>@Model.Description</td>
+                    </tr>
+
+                </table>
+
+                <div class="mt-3">
+
+                    <a asp-action="Edit"
+                       asp-route-id="@Model.Id"
+                       class="btn btn-warning">
+                        ✏️ Sửa
+                    </a>
+
+                    <a asp-action="Delete"
+                       asp-route-id="@Model.Id"
+                       class="btn btn-danger">
+                        🗑 Xóa
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

@@ -1,0 +1,210 @@
+@model List<COSMETICC.Models.Product>
+
+@{
+    ViewData["Title"] = "Thêm sản phẩm";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="card shadow border-0">
+    
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+
+        <div>
+            <h3 class="mb-0">➕ Thêm nhiều sản phẩm</h3>
+            <small class="text-muted">
+                Nhập nhiều sản phẩm cùng lúc
+            </small>
+        </div>
+
+        <a asp-action="Index"
+           class="btn btn-secondary">
+            ← Quay lại
+        </a>
+
+    </div>
+
+    <div class="card-body">
+
+        <form asp-action="CreateMultiple" method="post">
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered align-middle"
+                       id="productTable">
+
+                    <thead class="table-dark">
+
+                        <tr>
+                            <th>Tên sản phẩm</th>
+                            <th>Giá</th>
+                            <th>Danh mục</th>
+                            <th>Tồn kho</th>
+                            <th>Vegan</th>
+                            <th width="100">Xóa</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        <tr>
+
+                            <td>
+                                <input name="[0].Name"
+                                       class="form-control"
+                                       placeholder="Tên sản phẩm" />
+                            </td>
+
+                            <td>
+                                <input name="[0].Price"
+                                       class="form-control"
+                                       placeholder="Giá bán" />
+                            </td>
+
+                            <td>
+
+                                <select name="[0].CategoryId"
+                                        class="form-select">
+
+                                    <option value="">
+                                        -- Chọn danh mục --
+                                    </option>
+
+                                    @foreach (var item in ViewBag.Categories)
+                                    {
+                                        <option value="@item.Id">
+                                            @item.Name
+                                        </option>
+                                    }
+
+                                </select>
+
+                            </td>
+
+                            <td>
+                                <input name="[0].Stock"
+                                       class="form-control"
+                                       placeholder="Tồn kho" />
+                            </td>
+
+                            <td class="text-center">
+                                <input type="checkbox"
+                                       name="[0].IsVegan" />
+                            </td>
+
+                            <td class="text-center">
+                                <button type="button"
+                                        class="btn btn-danger removeRow">
+                                    🗑
+                                </button>
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <div class="mt-3">
+
+                <button type="button"
+                        id="addRow"
+                        class="btn btn-success">
+                    ➕ Thêm dòng
+                </button>
+
+                <button type="submit"
+                        class="btn btn-primary">
+                    💾 Lưu tất cả
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+
+    let categoryOptions = `
+        @foreach (var item in ViewBag.Categories)
+        {
+                <text>
+                    <option value="@item.Id">@item.Name</option>
+                </text>
+        }
+        `;
+
+    let index = 1;
+
+    document.getElementById("addRow")
+        .addEventListener("click", function () {
+
+            let row = `
+                <tr>
+
+                    <td>
+                        <input name="[${index}].Name"
+                               class="form-control"
+                               placeholder="Tên sản phẩm" />
+                    </td>
+
+                    <td>
+                        <input name="[${index}].Price"
+                               class="form-control"
+                               placeholder="Giá bán" />
+                    </td>
+
+                    <td>
+                        <select name="[${index}].CategoryId"
+                                class="form-select">
+
+                            <option value="">
+                                -- Chọn danh mục --
+                            </option>
+
+                            ${categoryOptions}
+
+                        </select>
+                    </td>
+
+                    <td>
+                        <input name="[${index}].Stock"
+                               class="form-control"
+                               placeholder="Tồn kho" />
+                    </td>
+
+                    <td class="text-center">
+                        <input type="checkbox"
+                               name="[${index}].IsVegan" />
+                    </td>
+
+                    <td class="text-center">
+                        <button type="button"
+                                class="btn btn-danger removeRow">
+                            🗑
+                        </button>
+                    </td>
+
+                </tr>`;
+
+            document
+                .querySelector("#productTable tbody")
+                .insertAdjacentHTML("beforeend", row);
+
+            index++;
+        });
+
+    document.addEventListener("click", function (e) {
+
+        if (e.target.classList.contains("removeRow")) {
+            e.target.closest("tr").remove();
+        }
+
+    });
+
+</script>

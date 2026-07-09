@@ -39,13 +39,29 @@
 
                 @if (Context.Session.GetString("UserId") != null)
                 {
-                    <a asp-controller="Account" asp-action="Profile">
-                        👤 @Context.Session.GetString("FullName")
-                    </a>
+                    <div class="d-flex align-items-center gap-3">
+
+                        <a asp-controller="Account"
+                           asp-action="Profile"
+                           class="text-decoration-none">
+                            👤 @Context.Session.GetString("FullName")
+                        </a>
+
+                        <a asp-controller="Account"
+                           asp-action="Logout"
+                           class="btn btn-outline-danger btn-sm">
+                            Đăng xuất
+                        </a>
+
+                    </div>
                 }
                 else
                 {
-                    <a asp-controller="Account" asp-action="Login">Sign in / Register</a>
+                    <a asp-controller="Account"
+                       asp-action="Login"
+                       class="text-decoration-none">
+                        Sign in / Register
+                    </a>
                 }
 
                 <span>🛒</span>
@@ -75,16 +91,11 @@
 
                 <div class="mobile-menu">
 
-                    <a href="#">Shop All</a>
-                    <a href="#">Best Sellers</a>
-
-                    <a href="#" class="highlight">
-                        Limited Deal
-                        <span class="badge">Up to 92%</span>
-                    </a>
-
-                    <a href="#">Skin Concern</a>
-                    <a href="#">By Wishtrend</a>
+                    <a href="#">Danh mục nổi bật</a>
+                    <a href="#">Thương hiệu nổi bật</a>
+                    <a href="#" class="Sản phẩm bán chạy">Limited Dea</a>
+                    <a href="#">BLOG làm đẹp</a>
+                    <a href="#">Sản phẩm giảm giá</a>
                     <a href="#">About Us</a>
                     <a href="#">Media</a>
                     <a href="#">B2B Inquiry</a>
@@ -96,15 +107,11 @@
 
         <!-- MENU DESKTOP -->
         <div class="menu container d-none d-lg-flex">
-            <a href="#">Shop All</a>
-            <a href="#">Best Sellers</a>
-
-            <a href="#" class="highlight">
-                Limited Deal <span class="badge">Up to 92%</span>
-            </a>
-
-            <a href="#">Skin Concern ▼</a>
-            <a href="#">By Wishtrend</a>
+            <a href="#">Danh mục nổi bật</a>
+            <a href="#">Thương hiệu nổi bật</a>
+            <a href="#" class="Sản phẩm bán chạy">Limited Dea</a>
+            <a href="#">BLOG làm đẹp</a>
+            <a href="#">Sản phẩm giảm giá</a>
             <a href="#">About Us</a>
             <a href="#">Media</a>
             <a href="#">B2B Inquiry</a>

@@ -101,4 +101,39 @@ body {
     font-size: 11px;
     padding: 2px 6px;
     border-radius: 10px;
-}}
+}
+/*css sidebar*/
+.admin-wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 260px;
+    background: #1e293b;
+    color: white;
+}
+
+    .sidebar ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .sidebar li {
+        padding: 15px 20px;
+    }
+
+    .sidebar a {
+        color: white;
+        text-decoration: none;
+    }
+
+    .sidebar li:hover {
+        background: #334155;
+    }
+
+main {
+    flex: 1;
+    padding: 30px;
+    background: #f5f5f5;
+}

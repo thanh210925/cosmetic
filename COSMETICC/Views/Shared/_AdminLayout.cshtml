@@ -1,0 +1,94 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Admin Panel</title>
+
+    <link rel="stylesheet" href="~/css/admin.css" />
+</head>
+<body>
+
+    <div class="admin-wrapper">
+
+        <aside class="sidebar">
+
+            <div class="logo">MEILING ADMIN
+            </div>
+            <div class="admin-info">
+                <div>👤 @Context.Session.GetString("AdminName")</div>
+                <small>Administrator</small>
+            </div>
+            <ul>
+
+                <li>
+                    <a asp-controller="Admin"
+                       asp-action="Dashboard">
+                        Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a asp-controller="AdminProducts"
+                       asp-action="Index">
+                         Quản lý sản phẩm
+                    </a>
+                </li>
+
+                <li>
+                    <a asp-controller="AdminCategories"
+                       asp-action="Index">
+                        Quản lý Danh mục
+                    </a>
+                </li>
+
+                <li>
+                    <a asp-controller="AdminOrder"
+                       asp-action="Index">
+                        Quản lý Đơn hàng
+                    </a>
+                </li>
+
+                <li>
+                    <a asp-controller="AdminCustomer"
+                       asp-action="Index">
+                        Khách hàng
+                    </a>
+                </li>
+
+                <li>
+                    <a asp-controller="AdminReview"
+                       asp-action="Index">
+                        Đánh giá
+                    </a>
+                </li>
+
+                <li>
+                    <a asp-controller="AdminVoucher"
+                       asp-action="Index">
+                        Voucher
+                    </a>
+                </li>
+
+                <li>
+                    <a asp-controller="AdminReport"
+                       asp-action="Index">
+                        Báo cáo
+                    </a>
+                </li>
+                <li>
+                    <a asp-controller="Admin"
+                       asp-action="Logout">
+                        🚪 Đăng xuất
+                    </a>
+                </li>
+            </ul>
+
+        </aside>
+
+        <main class="content">
+            @RenderBody()
+        </main>
+
+    </div>
+
+</body>
+</html>
