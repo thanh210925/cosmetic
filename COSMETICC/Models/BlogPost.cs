@@ -38,4 +38,22 @@ public partial class BlogPost
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 
     public bool IsPublished { get; set; } = true;
+
+    public int? UserId { get; set; }
+
+    public int LikesCount { get; set; } = 0;
+
+    public int CommentsCount { get; set; } = 0;
+
+    public int SharesCount { get; set; } = 0;
+
+    [ForeignKey("UserId")]
+    [InverseProperty("BlogPosts")]
+    public virtual User? User { get; set; }
+
+    [InverseProperty("BlogPost")]
+    public virtual ICollection<BlogPostLike> BlogPostLikes { get; set; } = new List<BlogPostLike>();
+
+    [InverseProperty("BlogPost")]
+    public virtual ICollection<BlogPostComment> BlogPostComments { get; set; } = new List<BlogPostComment>();
 }

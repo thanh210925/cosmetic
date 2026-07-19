@@ -68,21 +68,57 @@ public class AdminProductsController : AdminBaseController
         ViewBag.Brands = _context.Brands.ToList();
         return View(product);
     }
-    [HttpPost]
-    public async Task<IActionResult> CreateMultiple(List<Product> products)
+    // GET: PRODUCTS/ImportBulk
+    [HttpGet]
+    public IActionResult ImportBulk()
     {
-        foreach (var product in products)
-        {
-            product.CreatedAt = DateTime.Now;
-
-            _context.Products.Add(product);
-        }
         ViewBag.Categories = _context.Categories.ToList();
+        ViewBag.Brands = _context.Brands.ToList();
+        return View();
+    }
 
-        await _context.SaveChangesAsync();
-        TempData["SuccessMessage"] = "Đã thêm danh sách sản phẩm thành công!";
+    // POST: PRODUCTS/ImportBulk
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ImportBulk(List<Product> products)
+    {
+        if (products == null || !products.Any())
+        {
+            ModelState.AddModelError("", "Danh sách sản phẩm nhập vào trống.");
+        }
 
-        return RedirectToAction(nameof(Index));
+        if (ModelState.IsValid)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                foreach (var p in products)
+                {
+                    p.CreatedAt = DateTime.Now;
+                    p.IsActive = true;
+                    // Auto generate Slug from name if not provided
+                    if (string.IsNullOrEmpty(p.Slug))
+                    {
+                        p.Slug = p.Name.ToLower().Replace(" ", "-").Replace("đ", "d"); // Basic slug
+                    }
+                    _context.Products.Add(p);
+                }
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                TempData["SuccessMessage"] = $"Đã nhập hàng loạt thành công {products.Count} sản phẩm mới!";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                ModelState.AddModelError("", "Lỗi khi nhập dữ liệu sản phẩm: " + ex.Message);
+            }
+        }
+
+        ViewBag.Categories = _context.Categories.ToList();
+        ViewBag.Brands = _context.Brands.ToList();
+        return View(products);
     }
 
     // GET: PRODUCTS/Edit/5
@@ -274,5 +310,40 @@ public class AdminProductsController : AdminBaseController
         await _context.SaveChangesAsync();
 
         return Json(new { success = true, message = "Đã xóa ảnh thành công!" });
+    }
+
+    // GET: PRODUCTS/Clone/5
+    public async Task<IActionResult> Clone(int id)
+    {
+        var product = await _context.Products.FindAsync(id);
+        if (product == null) return NotFound();
+
+        var clone = new Product
+        {
+            Name = product.Name + " (Bản sao)",
+            Price = product.Price,
+            PromoPrice = product.PromoPrice,
+            Description = product.Description,
+            Ingredient = product.Ingredient,
+            ImageUrl = product.ImageUrl,
+            CategoryId = product.CategoryId,
+            BrandId = product.BrandId,
+            Stock = 0, // Reset stock, nhập qua phiếu nhập
+            IsVegan = product.IsVegan,
+            IsActive = product.IsActive,
+            SkinType = product.SkinType,
+            SKU = product.SKU + "-COPY",
+            Barcode = product.Barcode != null ? product.Barcode + "-COPY" : null,
+            VideoUrl = product.VideoUrl,
+            Tags = product.Tags,
+            MetaTitle = product.MetaTitle,
+            MetaDescription = product.MetaDescription,
+            MetaKeywords = product.MetaKeywords
+        };
+
+        ViewBag.Categories = _context.Categories.ToList();
+        ViewBag.Brands = _context.Brands.ToList();
+        
+        return View("Create", clone);
     }
 }

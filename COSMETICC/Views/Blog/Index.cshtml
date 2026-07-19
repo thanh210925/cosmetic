@@ -1,56 +1,123 @@
 @model IEnumerable<COSMETICC.Models.BlogPost>
 @{
-    ViewData["Title"] = "Tin tức & Bí quyết làm đẹp";
+    ViewData["Title"] = "Cộng đồng làm đẹp & Blog";
     Layout = "~/Views/Shared/_Layout.cshtml";
     
     var recentPosts = (List<COSMETICC.Models.BlogPost>)ViewBag.RecentPosts;
     var uniqueTags = (List<string>)ViewBag.UniqueTags;
+    int? currentUserId = ViewBag.CurrentUserId as int?;
 }
 
 <style>
     body {
-        background-color: #f8fafc;
+        background-color: #f0f2f5;
+        font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
     }
-    .blog-header {
+    .social-header {
         background: linear-gradient(135deg, #800020 0%, #4a0012 100%);
         color: white;
-        padding: 50px 0;
+        padding: 40px 0;
         text-align: center;
-        margin-bottom: 40px;
+        margin-bottom: 30px;
+        border-bottom-left-radius: 20px;
+        border-bottom-right-radius: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
-    .blog-card {
+    .feed-card {
         background: white;
         border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-        border: 1px solid #edf2f7;
-        transition: all 0.3s ease;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
+        border: none;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        margin-bottom: 20px;
+        padding: 16px;
+        text-align: left;
     }
-    .blog-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 25px rgba(128,0,32,0.1);
-        border-color: #800020;
-    }
-    .blog-card-img {
-        height: 200px;
+    .feed-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
         object-fit: cover;
+        background-color: #e4e6eb;
+    }
+    .feed-btn {
+        flex: 1;
+        background: none;
+        border: none;
+        padding: 8px;
+        border-radius: 6px;
+        color: #65676b;
+        font-weight: 600;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: background-color 0.2s;
+    }
+    .feed-btn:hover {
+        background-color: #f2f3f5;
+        color: #800020;
+    }
+    .feed-btn.liked {
+        color: #e0245e;
+    }
+    .comment-box {
+        background-color: #f0f2f5;
+        border-radius: 18px;
+        padding: 8px 12px;
+        display: inline-block;
+        max-width: 85%;
+    }
+    .comment-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .write-comment-input {
+        background-color: #f0f2f5;
+        border: none;
+        border-radius: 20px;
+        padding: 8px 16px;
+        font-size: 14px;
         width: 100%;
-        transition: all 0.3s;
+    }
+    .write-comment-input:focus {
+        outline: none;
+        background-color: #e4e6eb;
+    }
+    .post-btn-submit {
+        background-color: #800020;
+        border: none;
+        color: white;
+        font-weight: 600;
+        border-radius: 20px;
+        padding: 8px 24px;
+        transition: opacity 0.2s;
+    }
+    .post-btn-submit:hover {
+        opacity: 0.9;
+    }
+    .widget-card {
+        background: white;
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        padding: 16px;
+        margin-bottom: 20px;
+        text-align: left;
     }
     .widget-title {
         font-weight: 700;
         color: #800020;
-        border-bottom: 2px solid #800020;
-        padding-bottom: 8px;
         margin-bottom: 15px;
+        font-size: 16px;
     }
     .tag-badge {
-        background: #f1f5f9;
-        color: #475569;
-        font-size: 12px;
+        background: #e4e6eb;
+        color: #050505;
+        font-size: 13px;
+        font-weight: 500;
         padding: 6px 12px;
         border-radius: 20px;
         text-decoration: none;
@@ -60,77 +127,224 @@
         background: #800020;
         color: white;
     }
+    .toast-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999;
+    }
 </style>
 
-<div class="blog-header">
+<div class="social-header">
     <div class="container">
-        <h1 class="fw-bold display-5">CẨM NANG LÀM ĐẸP MEILING</h1>
-        <p class="lead opacity-75 mb-0">Chia sẻ bí quyết chăm sóc da, đánh giá mỹ phẩm và phong cách sống thuần chay</p>
+        <h1 class="fw-bold"><i class="bi bi-people-fill me-2"></i>CỘNG ĐỒNG LÀM ĐẸP MEILING</h1>
+        <p class="opacity-75 mb-0">Nơi kết nối đam mê skincare, chia sẻ bí quyết và phong cách sống thuần chay</p>
     </div>
 </div>
 
 <div class="container mb-5">
     <div class="row">
         
-        <!-- Left: Blog List Grid -->
+        <!-- Left: News Feed -->
         <div class="col-lg-8">
-            @if (ViewBag.CurrentTag != null)
+            
+            <!-- Create Post Box (FB Style) -->
+            @if (currentUserId != null)
             {
-                <div class="alert alert-light border mb-4 d-flex align-items-center justify-content-between">
-                    <span>Đang lọc theo thẻ tag: <strong class="text-danger">#@ViewBag.CurrentTag</strong></span>
-                    <a asp-action="Index" class="btn btn-sm btn-outline-secondary">Xóa bộ lọc</a>
+                <div class="feed-card">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <img src="/images/default-avatar.png" class="feed-avatar" alt="Avatar" />
+                        <span class="fw-bold text-dark">Chia sẻ bí quyết skincare của bạn ngay...</span>
+                    </div>
+                    <form asp-action="CreatePost" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-2">
+                            <input type="text" name="title" class="form-control" placeholder="Tiêu đề bài viết..." required style="border-radius: 8px; border: 1px solid #ddd; font-size: 14px;" />
+                        </div>
+                        <div class="mb-2">
+                            <textarea name="content" class="form-control" rows="3" placeholder="Bạn đang nghĩ gì? Chia sẻ công thức, review mỹ phẩm..." required style="border-radius: 8px; border: 1px solid #ddd; font-size: 14px; resize: none;"></textarea>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-sm-6">
+                                <input type="url" name="imageUrl" class="form-control form-control-sm" placeholder="Link ảnh minh họa (tùy chọn)..." style="border-radius: 8px;" />
+                            </div>
+                            <div class="col-sm-6">
+                                <input type="text" name="tags" class="form-control form-control-sm" placeholder="Thẻ tag (Ví dụ: Skincare, Vegan)..." style="border-radius: 8px;" />
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="post-btn-submit">
+                                <i class="bi bi-send-fill me-1"></i> Đăng bài viết
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            }
+            else
+            {
+                <div class="feed-card text-center py-4 bg-white">
+                    <i class="bi bi-box-arrow-in-right fs-2 text-muted"></i>
+                    <p class="mt-2 mb-2 fw-semibold">Bạn muốn đăng bài viết, thảo luận cùng mọi người?</p>
+                    <a href="@Url.Action("Login", "Account")" class="btn btn-sm btn-primary fw-bold" style="background:#800020; border:none; border-radius:20px; padding: 6px 20px;">Đăng nhập ngay</a>
                 </div>
             }
 
-            <div class="row g-4">
+            @if (ViewBag.CurrentTag != null)
+            {
+                <div class="alert alert-light border mb-4 d-flex align-items-center justify-content-between py-2 px-3 bg-white" style="border-radius: 8px;">
+                    <span class="small">Đang lọc theo thẻ: <strong class="text-danger">#@ViewBag.CurrentTag</strong></span>
+                    <a asp-action="Index" class="btn btn-sm btn-outline-secondary py-0">Xóa bộ lọc</a>
+                </div>
+            }
+
+            <!-- Feed Posts -->
+            <div id="socialFeed">
                 @if (Model != null && Model.Any())
                 {
                     foreach (var post in Model)
                     {
-                        <div class="col-md-6">
-                            <div class="blog-card">
-                                <a href="@Url.Action("Details", "Blog", new { slug = post.Slug })">
-                                    <img src="@(string.IsNullOrEmpty(post.ImageUrl) ? "https://placehold.co/400x200?text=MeiLing+Skincare" : post.ImageUrl)" class="blog-card-img" alt="@post.Title" />
-                                </a>
-                                <div class="p-4 d-flex flex-column flex-grow-1 text-start">
-                                    <div class="small text-muted mb-2"><i class="bi bi-calendar3 me-1"></i>@post.CreatedAt.ToString("dd/MM/yyyy")</div>
-                                    <h5 class="fw-bold mb-2">
-                                        <a href="@Url.Action("Details", "Blog", new { slug = post.Slug })" class="text-decoration-none text-dark hover-danger" style="line-height: 1.4;">
-                                            @post.Title
-                                        </a>
-                                    </h5>
-                                    <p class="text-secondary small mb-4 flex-grow-1">@post.Summary</p>
-                                    
-                                    <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top">
-                                        <a href="@Url.Action("Details", "Blog", new { slug = post.Slug })" class="fw-bold text-decoration-none small text-danger" style="color: #800020;">
-                                            Đọc tiếp <i class="bi bi-arrow-right"></i>
-                                        </a>
-                                        @if (!string.IsNullOrEmpty(post.Tags))
-                                        {
-                                            <span class="badge bg-light text-muted"># @post.Tags.Split(',')[0].Trim()</span>
-                                        }
+                        var isLiked = post.BlogPostLikes.Any(l => l.UserId == currentUserId);
+                        
+                        <div class="feed-card" id="post-@post.Id">
+                            <!-- Post Header -->
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <img src="@(post.User?.Avatar ?? "/images/default-avatar.png")" class="feed-avatar" alt="Avatar" />
+                                    <div>
+                                        <div class="fw-bold text-dark">@(post.User?.FullName ?? "Ban quản trị MeiLing")</div>
+                                        <small class="text-muted" style="font-size: 11px;">@post.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small>
                                     </div>
                                 </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    @if (post.UserId == null)
+                                    {
+                                        <span class="badge bg-danger-subtle text-danger" style="font-size: 10px; padding: 4px 8px;">Admin Post</span>
+                                    }
+                                    @if (post.UserId == currentUserId && currentUserId != null)
+                                    {
+                                        <div class="dropdown text-end">
+                                            <button class="btn btn-link btn-sm text-muted p-0 border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="box-shadow:none;">
+                                                <i class="bi bi-three-dots-vertical fs-5"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end" style="border-radius:8px; border:none; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 140px;">
+                                                <li>
+                                                    <button class="dropdown-item py-2 text-dark small" type="button" onclick="openEditModal(@post.Id, '@post.Title', `@post.Content`, '@post.ImageUrl', '@post.Tags')">
+                                                        <i class="bi bi-pencil-square me-2 text-warning"></i> Chỉnh sửa
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button class="dropdown-item py-2 text-danger small" type="button" onclick="deletePost(@post.Id)">
+                                                        <i class="bi bi-trash-fill me-2"></i> Xóa bài viết
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Post Body -->
+                            <h5 class="fw-bold text-dark mb-2">@post.Title</h5>
+                            <p class="text-dark small mb-3" style="line-height: 1.5; white-space: pre-line;">@post.Content</p>
+
+                            @if (!string.IsNullOrEmpty(post.ImageUrl))
+                            {
+                                <div class="mb-3 text-center rounded-3 overflow-hidden" style="background-color: #f0f2f5;">
+                                    <img src="@post.ImageUrl" class="img-fluid" style="max-height: 380px; object-fit: contain; width: 100%;" alt="Post Image" />
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(post.Tags))
+                            {
+                                <div class="mb-3 d-flex gap-1 flex-wrap">
+                                    @foreach (var t in post.Tags.Split(','))
+                                    {
+                                        <span class="badge bg-light text-secondary">#@t.Trim()</span>
+                                    }
+                                </div>
+                            }
+
+                            <!-- Interaction Counts -->
+                            <div class="d-flex justify-content-between text-muted small pb-2 border-bottom mb-2">
+                                <div>
+                                    <i class="bi bi-heart-fill text-danger me-1"></i>
+                                    <span class="likes-count" id="likes-count-@post.Id">@post.LikesCount</span> người thích
+                                </div>
+                                <div class="d-flex gap-3">
+                                    <div><span class="comments-count" id="comments-count-@post.Id">@post.CommentsCount</span> bình luận</div>
+                                    <div><span class="shares-count" id="shares-count-@post.Id">@post.SharesCount</span> lượt chia sẻ</div>
+                                </div>
+                            </div>
+
+                            <!-- Interaction Actions -->
+                            <div class="d-flex justify-content-between mb-2">
+                                <button type="button" class="feed-btn @(isLiked ? "liked" : "")" onclick="toggleLike(@post.Id)">
+                                    <i class="bi @(isLiked ? "bi-heart-fill" : "bi-heart")"></i> Thích
+                                </button>
+                                <button type="button" class="feed-btn" onclick="toggleComments(@post.Id)">
+                                    <i class="bi bi-chat-left-text"></i> Bình luận
+                                </button>
+                                 <button type="button" class="feed-btn" onclick="sharePost(@post.Id, '@Url.Action("Details", "Blog", new { slug = post.Slug }, Context.Request.Scheme)')">
+                                     <i class="bi bi-share"></i> Chia sẻ
+                                 </button>
+                            </div>
+
+                            <!-- Comments Drawer -->
+                            <div class="comments-drawer mt-3 pt-2 border-top" id="comments-drawer-@post.Id" style="display: none;">
+                                <!-- Comments List -->
+                                <div class="comments-list d-flex flex-column gap-2 mb-3" id="comments-list-@post.Id">
+                                    @if (post.BlogPostComments != null && post.BlogPostComments.Any())
+                                    {
+                                        foreach (var comment in post.BlogPostComments.OrderByDescending(c => c.CreatedAt))
+                                        {
+                                            <div class="d-flex gap-2 text-start">
+                                                <img src="@(comment.User?.Avatar ?? "/images/default-avatar.png")" class="comment-avatar" alt="Avatar" />
+                                                <div class="comment-box">
+                                                    <div class="fw-bold" style="font-size: 13px;">@(comment.User?.FullName ?? comment.User?.Username ?? "Khách hàng")</div>
+                                                    <div class="text-dark" style="font-size: 13px;">@comment.Content</div>
+                                                    <small class="text-muted block mt-1" style="font-size: 10px;">@comment.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+
+                                <!-- Post Comment Input -->
+                                @if (currentUserId != null)
+                                {
+                                    <div class="d-flex gap-2">
+                                        <img src="/images/default-avatar.png" class="comment-avatar" alt="Avatar" />
+                                        <div class="flex-grow-1">
+                                            <input type="text" class="write-comment-input" id="comment-input-@post.Id" placeholder="Viết bình luận công khai..." onkeydown="handleCommentKey(event, @post.Id)" />
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="text-center py-2 bg-light rounded small">
+                                        Vui lòng <a href="@Url.Action("Login", "Account")">Đăng nhập</a> để bình luận bài viết này.
+                                    </div>
+                                }
                             </div>
                         </div>
                     }
                 }
                 else
                 {
-                    <div class="col-12 text-center py-5 text-muted bg-white border rounded">
-                        <i class="bi bi-journal-x fs-1"></i>
-                        <p class="mt-3 fs-5">Hiện tại chưa có bài viết nào được xuất bản.</p>
+                    <div class="widget-card text-center py-5 text-muted">
+                        <i class="bi bi-chat-square-text fs-1"></i>
+                        <p class="mt-3 mb-0">Chưa có bài thảo luận nào. Bạn hãy là người đăng đầu tiên!</p>
                     </div>
                 }
             </div>
         </div>
 
-        <!-- Right: Sidebar Widget -->
-        <div class="col-lg-4 ps-lg-4 mt-5 mt-lg-0 text-start">
+        <!-- Right: Social Sidebar -->
+        <div class="col-lg-4 ps-lg-4">
             
-            <!-- Widget 1: Popular Tags -->
-            <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius:12px; background:white;">
-                <h5 class="widget-title">Thẻ chủ đề</h5>
+            <!-- Widget: Popular Topics -->
+            <div class="widget-card">
+                <h5 class="widget-title">Chủ đề thảo luận hot</h5>
                 <div class="d-flex flex-wrap gap-2 mt-3">
                     @if (uniqueTags != null && uniqueTags.Any())
                     {
@@ -147,18 +361,18 @@
                 </div>
             </div>
 
-            <!-- Widget 2: Recent Posts -->
-            <div class="card border-0 shadow-sm p-4" style="border-radius:12px; background:white;">
-                <h5 class="widget-title">Bài viết mới nhất</h5>
+            <!-- Widget: Recent Articles -->
+            <div class="widget-card">
+                <h5 class="widget-title">Bài đăng mới nổi bật</h5>
                 <div class="mt-3 d-flex flex-column gap-3">
                     @if (recentPosts != null && recentPosts.Any())
                     {
                         foreach (var rp in recentPosts)
                         {
                             <div class="d-flex gap-3 align-items-center">
-                                <img src="@(string.IsNullOrEmpty(rp.ImageUrl) ? "https://placehold.co/80x80?text=skincare" : rp.ImageUrl)" class="rounded" style="width: 60px; height: 60px; object-fit: cover;" />
+                                <img src="@(string.IsNullOrEmpty(rp.ImageUrl) ? "https://placehold.co/80x80?text=MeiLing" : rp.ImageUrl)" class="rounded" style="width: 50px; height: 50px; object-fit: cover;" />
                                 <div>
-                                    <h6 class="fw-bold mb-1" style="font-size: 13.5px; line-height: 1.3;">
+                                    <h6 class="fw-bold mb-1" style="font-size: 13px; line-height: 1.3;">
                                         <a href="@Url.Action("Details", "Blog", new { slug = rp.Slug })" class="text-decoration-none text-dark hover-danger">@rp.Title</a>
                                     </h6>
                                     <small class="text-muted" style="font-size: 11px;">@rp.CreatedAt.ToString("dd/MM/yyyy")</small>
@@ -172,14 +386,256 @@
                     }
                 </div>
             </div>
-
         </div>
 
     </div>
 </div>
 
-<style>
-    .hover-danger:hover {
-        color: #800020 !important;
-    }
-</style>
+<!-- Toast Container for beautiful interactive notifications -->
+<div class="toast-container">
+    <div id="liveToast" class="toast align-items-center text-white bg-dark border-0" role="alert" aria-live="assertive" aria-atomic="true" style="border-radius: 8px;">
+        <div class="d-flex">
+            <div class="toast-body" id="toastMessage">
+                Thông báo ở đây.
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Chỉnh sửa bài viết -->
+<div class="modal fade" id="editPostModal" tabindex="-1" aria-labelledby="editPostModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:12px; border:none; overflow:hidden;">
+            <div style="background:#800020; color:white; padding: 15px 20px;" class="d-flex align-items-center justify-content-between">
+                <h5 class="modal-title fw-bold m-0" id="editPostModalLabel"><i class="bi bi-pencil-square me-2"></i>Chỉnh sửa bài viết của bạn</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="editPostId" />
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-dark">Tiêu đề bài viết</label>
+                    <input type="text" id="editPostTitle" class="form-control" placeholder="Tiêu đề..." style="border-radius:8px;" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-dark">Nội dung bài viết</label>
+                    <textarea id="editPostContent" class="form-control" rows="4" placeholder="Nội dung..." style="border-radius:8px; resize:none;"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-dark">Link hình ảnh minh họa (tùy chọn)</label>
+                    <input type="url" id="editPostImageUrl" class="form-control" placeholder="https://..." style="border-radius:8px;" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-dark">Thẻ tag phân loại</label>
+                    <input type="text" id="editPostTags" class="form-control" placeholder="Skincare, Vegan..." style="border-radius:8px;" />
+                </div>
+                <button type="button" class="btn btn-primary w-100 fw-bold mt-2" style="background:#800020; border:none; height:40px; border-radius:20px;" onclick="submitEditPost()">
+                    <i class="bi bi-check-circle me-1"></i> Lưu và Cập nhật bài viết
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showToast(message) {
+            const toastEl = document.getElementById('liveToast');
+            document.getElementById('toastMessage').innerText = message;
+            const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+            toast.show();
+        }
+
+        // Toggle Comments drawer
+        function toggleComments(postId) {
+            const drawer = document.getElementById(`comments-drawer-${postId}`);
+            if (drawer.style.display === "none" || !drawer.style.display) {
+                drawer.style.display = "block";
+            } else {
+                drawer.style.display = "none";
+            }
+        }
+
+        // Like & Dislike post via AJAX
+        function toggleLike(postId) {
+            $.ajax({
+                url: '@Url.Action("ToggleLike", "Blog")',
+                type: 'POST',
+                data: { postId: postId },
+                success: function(res) {
+                    if (res.success) {
+                        const postCard = document.getElementById(`post-${postId}`);
+                        const likeBtn = postCard.querySelector('.feed-btn');
+                        const likeIcon = likeBtn.querySelector('i');
+                        const countSpan = document.getElementById(`likes-count-${postId}`);
+                        
+                        countSpan.innerText = res.likesCount;
+                        if (res.isLiked) {
+                            likeBtn.classList.add('liked');
+                            likeIcon.classList.replace('bi-heart', 'bi-heart-fill');
+                        } else {
+                            likeBtn.classList.remove('liked');
+                            likeIcon.classList.replace('bi-heart-fill', 'bi-heart');
+                        }
+                    } else {
+                        showToast(res.message);
+                    }
+                },
+                error: function() {
+                    showToast("Có lỗi xảy ra khi thực hiện lượt thích.");
+                }
+            });
+        }
+
+        // Handle Add Comment on Enter key
+        function handleCommentKey(e, postId) {
+            if (e.key === "Enter") {
+                const input = document.getElementById(`comment-input-${postId}`);
+                const content = input.value.trim();
+                if (!content) return;
+
+                $.ajax({
+                    url: '@Url.Action("AddComment", "Blog")',
+                    type: 'POST',
+                    data: { postId: postId, content: content },
+                    success: function(res) {
+                        if (res.success) {
+                            input.value = ""; // Clear input
+                            
+                            // Prepend new comment to list
+                            const commentList = document.getElementById(`comments-list-${postId}`);
+                            const commentHtml = `
+                                <div class="d-flex gap-2 text-start animate__animated animate__fadeIn">
+                                    <img src="${res.comment.userAvatar}" class="comment-avatar" alt="Avatar" />
+                                    <div class="comment-box">
+                                        <div class="fw-bold" style="font-size: 13px;">${res.comment.userFullName}</div>
+                                        <div class="text-dark" style="font-size: 13px;">${res.comment.content}</div>
+                                        <small class="text-muted block mt-1" style="font-size: 10px;">${res.comment.createdAt}</small>
+                                    </div>
+                                </div>
+                            `;
+                            commentList.insertAdjacentHTML('afterbegin', commentHtml);
+
+                            // Update count UI
+                            document.getElementById(`comments-count-${postId}`).innerText = res.commentsCount;
+                        } else {
+                            showToast(res.message);
+                        }
+                    },
+                    error: function() {
+                        showToast("Không thể gửi bình luận.");
+                    }
+                });
+            }
+        }
+
+        // Share Post via Clipboard
+        function sharePost(postId, shareUrl) {
+            navigator.clipboard.writeText(shareUrl).then(function() {
+                // Call API to increase share count
+                $.ajax({
+                    url: '@Url.Action("SharePost", "Blog")',
+                    type: 'POST',
+                    data: { postId: postId },
+                    success: function(res) {
+                        if (res.success) {
+                            document.getElementById(`shares-count-${postId}`).innerText = res.sharesCount;
+                        }
+                    }
+                });
+                showToast("📋 Đã copy link liên kết bài viết vào Clipboard! Bạn có thể dán chia sẻ.");
+            }, function() {
+                showToast("Lỗi khi copy link.");
+            });
+        }
+
+        // Open edit post modal and fill fields
+        function openEditModal(postId, title, content, imageUrl, tags) {
+            document.getElementById('editPostId').value = postId;
+            document.getElementById('editPostTitle').value = title;
+            document.getElementById('editPostContent').value = content;
+            document.getElementById('editPostImageUrl').value = imageUrl === "null" ? "" : imageUrl;
+            document.getElementById('editPostTags').value = tags === "null" ? "" : tags;
+
+            const editModal = new bootstrap.Modal(document.getElementById('editPostModal'));
+            editModal.show();
+        }
+
+        // Submit edited post via AJAX
+        function submitEditPost() {
+            const postId = document.getElementById('editPostId').value;
+            const title = document.getElementById('editPostTitle').value.trim();
+            const content = document.getElementById('editPostContent').value.trim();
+            const imageUrl = document.getElementById('editPostImageUrl').value.trim();
+            const tags = document.getElementById('editPostTags').value.trim();
+
+            if (!title || !content) {
+                alert("Tiêu đề và nội dung bài viết không được để trống!");
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("EditPost", "Blog")',
+                type: 'POST',
+                data: {
+                    postId: postId,
+                    title: title,
+                    content: content,
+                    imageUrl: imageUrl,
+                    tags: tags
+                },
+                success: function(res) {
+                    if (res.success) {
+                        // Close modal
+                        const modalEl = document.getElementById('editPostModal');
+                        const modal = bootstrap.Modal.getInstance(modalEl);
+                        modal.hide();
+
+                        showToast("🎉 Cập nhật bài viết thành công!");
+                        
+                        // Reload page dynamically or force location.reload for complete tags update
+                        setTimeout(() => {
+                            location.reload();
+                        }, 800);
+                    } else {
+                        showToast(res.message);
+                    }
+                },
+                error: function() {
+                    showToast("Lỗi không thể cập nhật bài viết.");
+                }
+            });
+        }
+
+        // Delete post via AJAX
+        function deletePost(postId) {
+            if (confirm("⚠️ Bạn có chắc chắn muốn xóa bài viết này vĩnh viễn?")) {
+                $.ajax({
+                    url: '@Url.Action("DeletePost", "Blog")',
+                    type: 'POST',
+                    data: { postId: postId },
+                    success: function(res) {
+                        if (res.success) {
+                            showToast("🗑️ Đã xóa bài viết thành công!");
+                            const card = document.getElementById(`post-${postId}`);
+                            if (card) {
+                                // Dynamic fade out
+                                card.style.transition = "all 0.5s ease";
+                                card.style.opacity = "0";
+                                card.style.transform = "scale(0.9)";
+                                setTimeout(() => {
+                                    card.remove();
+                                }, 500);
+                            }
+                        } else {
+                            showToast(res.message);
+                        }
+                    },
+                    error: function() {
+                        showToast("Lỗi không thể xóa bài viết.");
+                    }
+                });
+            }
+        }
+    </script>
+}

@@ -42,9 +42,24 @@ namespace COSMETICC.Controllers
         public async Task<IActionResult> Index()
         {
             var posts = await _context.BlogPosts
+                .Include(p => p.User)
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
             return View(posts);
+        }
+
+        // POST: AdminBlog/TogglePublish/5
+        [HttpPost]
+        public async Task<IActionResult> TogglePublish(int id)
+        {
+            var post = await _context.BlogPosts.FindAsync(id);
+            if (post == null) return NotFound();
+
+            post.IsPublished = !post.IsPublished;
+            _context.BlogPosts.Update(post);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, isPublished = post.IsPublished });
         }
 
         // GET: AdminBlog/Details/5

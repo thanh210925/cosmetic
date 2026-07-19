@@ -21,6 +21,9 @@
                 <a asp-action="Create" class="btn-action btn-action-primary">
                     <i class="bi bi-plus-lg me-1"></i> Thêm sản phẩm mới
                 </a>
+                <a asp-action="ImportBulk" class="btn-action btn-action-outline text-success">
+                    <i class="bi bi-file-earmark-spreadsheet me-1"></i> Nhập hàng loạt Excel
+                </a>
                 <div style="width: 200px;">
                     <input type="text" id="prodSearch" class="form-control-admin" placeholder="Tìm sản phẩm..." onkeyup="filterProducts()" />
                 </div>
@@ -103,15 +106,18 @@
                                 </td>
                                 <td>
                                     <div class="d-flex gap-1">
-                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn-action btn-action-outline p-1 px-2" title="Xem chi tiết">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action btn-action-outline p-1 px-2 text-warning" title="Sửa">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </a>
-                                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn-action btn-action-danger p-1 px-2" title="Xóa">
-                                            <i class="bi bi-trash"></i>
-                                        </a>
+                                         <a asp-action="Details" asp-route-id="@item.Id" class="btn-action btn-action-outline p-1 px-2" title="Xem chi tiết">
+                                             <i class="bi bi-eye"></i>
+                                         </a>
+                                         <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action btn-action-outline p-1 px-2 text-warning" title="Sửa">
+                                             <i class="bi bi-pencil-square"></i>
+                                         </a>
+                                         <a asp-action="Clone" asp-route-id="@item.Id" class="btn-action btn-action-outline p-1 px-2 text-info" title="Nhân bản sản phẩm">
+                                             <i class="bi bi-copy"></i>
+                                         </a>
+                                         <a asp-action="Delete" asp-route-id="@item.Id" class="btn-action btn-action-danger p-1 px-2" title="Xóa">
+                                             <i class="bi bi-trash"></i>
+                                         </a>
                                     </div>
                                 </td>
                             </tr>

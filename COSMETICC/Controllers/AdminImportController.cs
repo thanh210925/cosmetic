@@ -167,7 +167,7 @@ namespace COSMETICC.Controllers
                     var log = new InventoryLog
                     {
                         ProductId = item.ProductId,
-                        Type = "NHAP",
+                        Type = "IMPORT",
                         Quantity = item.Quantity,
                         BatchNumber = batch.BatchNumber,
                         ReferenceCode = receipt.ReceiptCode,
@@ -177,6 +177,13 @@ namespace COSMETICC.Controllers
                     _context.InventoryLogs.Add(log);
                 }
 
+                await _context.SaveChangesAsync();
+
+                // 4. Update Product Expiry Dates based on new active batches
+                foreach (var item in receipt.ImportReceiptDetails)
+                {
+                    await Services.WarehouseHelper.UpdateProductExpiryDateAsync(_context, item.ProductId);
+                }
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
@@ -248,7 +255,7 @@ namespace COSMETICC.Controllers
                         var log = new InventoryLog
                         {
                             ProductId = item.ProductId,
-                            Type = "XUAT", // Trừ kho
+                            Type = "ADJUST", // Điều chỉnh kho
                             Quantity = item.Quantity,
                             BatchNumber = item.BatchNumber.ToUpper(),
                             ReferenceCode = receipt.ReceiptCode,
@@ -263,6 +270,16 @@ namespace COSMETICC.Controllers
                 _context.ImportReceipts.Update(receipt);
 
                 await _context.SaveChangesAsync();
+
+                // Update product expiry dates after batches removal
+                if (receipt.Status == "Cancelled")
+                {
+                    foreach (var item in receipt.ImportReceiptDetails)
+                    {
+                        await Services.WarehouseHelper.UpdateProductExpiryDateAsync(_context, item.ProductId);
+                    }
+                    await _context.SaveChangesAsync();
+                }
                 await transaction.CommitAsync();
 
                 TempData["SuccessMessage"] = $"Hủy phiếu nhập {receipt.ReceiptCode} và khôi phục tồn kho thành công!";

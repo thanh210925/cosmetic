@@ -1,7 +1,7 @@
 @model IEnumerable<COSMETICC.Models.BlogPost>
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-    ViewData["Title"] = "Quản lý Bài viết";
+    ViewData["Title"] = "Quản lý Bài viết & Cộng đồng";
 }
 
 <div class="container-fluid px-4">
@@ -16,11 +16,11 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h4 class="fw-bold text-dark mb-1"><i class="bi bi-journal-richtext text-muted me-2"></i>Quản lý Bài viết (Blog)</h4>
-            <small class="text-muted">Đăng bài viết mới, quản lý nội dung SEO, gắn thẻ tag và hình ảnh</small>
+            <h4 class="fw-bold text-dark mb-1"><i class="bi bi-journal-richtext text-muted me-2"></i>Quản lý Bài viết & Cộng đồng</h4>
+            <small class="text-muted">Kiểm duyệt các bài viết của thành viên, bật/tắt hiển thị, quản lý bài đăng SEO của Admin</small>
         </div>
         <a asp-action="Create" class="btn btn-primary fw-bold px-3" style="background:#800020; border:none; height: 38px; line-height: 24px;">
-            <i class="bi bi-plus-lg me-1"></i> Tạo bài viết mới
+            <i class="bi bi-plus-lg me-1"></i> Tạo bài viết của Admin
         </a>
     </div>
 
@@ -31,10 +31,11 @@
                     <tr>
                         <th>Ảnh</th>
                         <th style="width: 25%;">Tiêu đề</th>
-                        <th>SEO Slug</th>
-                        <th>Thẻ Tags</th>
+                        <th>Người đăng (Tác giả)</th>
+                        <th>Chủ đề (Tags)</th>
+                        <th>Tương tác</th>
                         <th>Ngày tạo</th>
-                        <th>Trạng thái</th>
+                        <th>Hiển thị (Duyệt)</th>
                         <th>Thao tác</th>
                     </tr>
                 </thead>
@@ -43,7 +44,7 @@
                     {
                         foreach (var post in Model)
                         {
-                            <tr>
+                            <tr id="row-@post.Id">
                                 <td>
                                     @if (!string.IsNullOrEmpty(post.ImageUrl))
                                     {
@@ -58,7 +59,17 @@
                                     <div class="fw-bold text-dark text-truncate" style="max-width: 250px;" title="@post.Title">@post.Title</div>
                                     <small class="text-muted text-truncate d-block" style="max-width: 250px;">@post.Summary</small>
                                 </td>
-                                <td class="font-monospace small">@post.Slug</td>
+                                <td>
+                                    @if (post.UserId == null)
+                                    {
+                                        <span class="badge bg-danger-subtle text-danger"><i class="bi bi-shield-lock me-1"></i>Admin</span>
+                                    }
+                                    else
+                                    {
+                                        <div class="fw-bold text-dark">@(post.User?.FullName ?? "User")</div>
+                                        <small class="text-muted font-monospace" style="font-size:11px;">#User-@post.UserId</small>
+                                    }
+                                </td>
                                 <td>
                                     @if (!string.IsNullOrEmpty(post.Tags))
                                     {
@@ -72,20 +83,26 @@
                                         <span class="text-muted small">-</span>
                                     }
                                 </td>
+                                <td>
+                                    <div class="small text-dark">
+                                        <div><i class="bi bi-heart text-danger me-1"></i>Thích: <strong>@post.LikesCount</strong></div>
+                                        <div><i class="bi bi-chat-text text-primary me-1"></i>Cmt: <strong>@post.CommentsCount</strong></div>
+                                        <div><i class="bi bi-share text-success me-1"></i>Share: <strong>@post.SharesCount</strong></div>
+                                    </div>
+                                </td>
                                 <td>@post.CreatedAt.ToString("dd/MM/yyyy")</td>
                                 <td>
-                                    @if (post.IsPublished)
-                                    {
-                                        <span class="badge bg-success">Đã xuất bản</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-warning text-dark">Bản nháp</span>
-                                    }
+                                    <!-- AJAX Publish Switch -->
+                                    <div class="form-check form-switch d-inline-block">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="publishSwitch-@post.Id" @(post.IsPublished ? "checked" : "") onchange="togglePublish(@post.Id)" style="cursor:pointer; width:40px; height:20px;" />
+                                        <label class="form-check-label small ms-1" id="publishLabel-@post.Id" for="publishSwitch-@post.Id">
+                                            @(post.IsPublished ? "Đang hiện" : "Đang ẩn")
+                                        </label>
+                                    </div>
                                 </td>
                                 <td>
                                     <div class="d-flex gap-1">
-                                        <a asp-action="Details" asp-route-id="@post.Id" class="btn btn-sm btn-outline-info" title="Xem chi tiết">
+                                        <a href="@Url.Action("Details", "Blog", new { slug = post.Slug })" target="_blank" class="btn btn-sm btn-outline-info" title="Xem trên web">
                                             <i class="bi bi-eye"></i>
                                         </a>
                                         <a asp-action="Edit" asp-route-id="@post.Id" class="btn btn-sm btn-outline-primary" title="Chỉnh sửa">
@@ -105,7 +122,7 @@
                                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                 </div>
                                                 <div class="modal-body text-dark text-start">
-                                                    Bạn có chắc chắn muốn xóa bài viết <strong>@post.Title</strong>? Hành động này không thể hoàn tác!
+                                                    Bạn có chắc chắn muốn xóa bài viết <strong>@post.Title</strong>? Hành động này sẽ xóa vĩnh viễn cả bài đăng, lượt thích và bình luận!
                                                 </div>
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -124,9 +141,9 @@
                     else
                     {
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-5">
+                            <td colspan="8" class="text-center text-muted py-5">
                                 <i class="bi bi-journal-x fs-1 d-block mb-3" style="color: #cbd5e1;"></i>
-                                Chưa có bài viết nào được đăng. Hãy bấm "Tạo bài viết mới"!
+                                Chưa có bài viết nào được đăng.
                             </td>
                         </tr>
                     }
@@ -135,3 +152,30 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function togglePublish(id) {
+            $.ajax({
+                url: '@Url.Action("TogglePublish", "AdminBlog")',
+                type: 'POST',
+                data: { id: id },
+                success: function (res) {
+                    if (res.success) {
+                        const label = document.getElementById(`publishLabel-${id}`);
+                        if (res.isPublished) {
+                            label.innerText = "Đang hiện";
+                            label.className = "form-check-label small ms-1 text-success fw-bold";
+                        } else {
+                            label.innerText = "Đang ẩn";
+                            label.className = "form-check-label small ms-1 text-danger fw-bold";
+                        }
+                    }
+                },
+                error: function () {
+                    alert("Có lỗi xảy ra khi cập nhật trạng thái hiển thị.");
+                }
+            });
+        }
+    </script>
+}

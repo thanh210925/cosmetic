@@ -100,4 +100,7 @@ public partial class Product
 
     [InverseProperty("Product")]
     public virtual ICollection<Wishlist> Wishlists { get; set; } = new List<Wishlist>();
+
+    [InverseProperty("Product")]
+    public virtual ICollection<ProductBatch> ProductBatches { get; set; } = new List<ProductBatch>();
 }

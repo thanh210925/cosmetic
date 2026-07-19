@@ -11,10 +11,23 @@ namespace COSMETICC.Controllers
     public class CartController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly Services.OrderCodeService _orderCodeService;
+        private readonly Services.EmailService _emailService;
+        private readonly Services.NotificationService _notificationService;
+        private readonly Services.FraudDetectionService _fraudService;
 
-        public CartController(AppDbContext context)
+        public CartController(
+            AppDbContext context,
+            Services.OrderCodeService orderCodeService,
+            Services.EmailService emailService,
+            Services.NotificationService notificationService,
+            Services.FraudDetectionService fraudService)
         {
             _context = context;
+            _orderCodeService = orderCodeService;
+            _emailService = emailService;
+            _notificationService = notificationService;
+            _fraudService = fraudService;
         }
 
         // GET: /Cart
@@ -237,6 +250,287 @@ namespace COSMETICC.Controllers
                 .ToListAsync();
 
             return Json(items);
+        }
+
+        // GET: /Cart/Checkout
+        [HttpGet]
+        public async Task<IActionResult> Checkout()
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+            {
+                TempData["ErrorMessage"] = "Vui lòng đăng nhập để tiến hành đặt hàng!";
+                return RedirectToAction("Login", "Account");
+            }
+
+            var cart = await _context.Carts
+                .Include(c => c.CartItems)
+                    .ThenInclude(ci => ci.Product)
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+
+            if (cart == null || !cart.CartItems.Any())
+            {
+                TempData["ErrorMessage"] = "Giỏ hàng của bạn đang trống!";
+                return RedirectToAction("Index");
+            }
+
+            // Load user addresses to let them choose
+            var addresses = await _context.UserAddresses
+                .Where(a => a.UserId == userId)
+                .OrderByDescending(a => a.IsDefault)
+                .ToListAsync();
+
+            ViewBag.Addresses = addresses;
+            return View(cart);
+        }
+
+        // POST: /Cart/PlaceOrder
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> PlaceOrder(string receiverName, string receiverPhone, string specificAddress, string city, string? notes, string paymentMethod)
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return NotFound();
+
+            var cart = await _context.Carts
+                .Include(c => c.CartItems)
+                    .ThenInclude(ci => ci.Product)
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+
+            if (cart == null || !cart.CartItems.Any())
+            {
+                TempData["ErrorMessage"] = "Giỏ hàng rỗng!";
+                return RedirectToAction("Index");
+            }
+
+            // Calculate Total Amount
+            decimal totalAmount = cart.CartItems.Sum(ci => (ci.Product.PromoPrice ?? ci.Product.Price) * (ci.Quantity ?? 1));
+
+            // Start Transaction to guarantee database consistency (FIFO)
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // 1. Check Fraud Rules
+                var fraudCheck = await _fraudService.CheckOrderAsync(userId, totalAmount);
+                if (fraudCheck.IsSuspect)
+                {
+                    // Raise admin alert via Email / Log
+                    var adminEmail = _context.Admins.FirstOrDefault(a => a.Role == "ADMIN")?.Email ?? "admin@meilingcosmetics.vn";
+                    await _emailService.SendFraudAlertToAdminAsync(
+                        adminEmail,
+                        0, // Will update actual ID after saving
+                        fraudCheck.Reason,
+                        $"Khách hàng: {user.FullName} ({user.Username}) - SĐT: {receiverPhone}"
+                    );
+                }
+
+                // 2. Generate unique order code
+                string orderCode = _orderCodeService.Generate();
+
+                // 3. Create Order
+                var order = new Order
+                {
+                    UserId = userId,
+                    OrderDate = DateTime.Now,
+                    TotalAmount = totalAmount,
+                    Status = "Chờ xác nhận", // Trạng thái ban đầu
+                    OrderCode = orderCode,
+                    Notes = notes
+                };
+                _context.Orders.Add(order);
+                await _context.SaveChangesAsync();
+
+                // 4. Create Shipping Info
+                var shipping = new Shipping
+                {
+                    OrderId = order.Id,
+                    Address = $"{specificAddress}, {city}",
+                    Phone = receiverPhone,
+                    ShippingStatus = "Đang chuẩn bị hàng",
+                    ShippingDate = null
+                };
+                _context.Shippings.Add(shipping);
+
+                // 5. Create Payment Info
+                var payment = new Payment
+                {
+                    OrderId = order.Id,
+                    PaymentMethod = paymentMethod,
+                    PaymentStatus = "Chưa thanh toán",
+                    PaymentDate = null
+                };
+                _context.Payments.Add(payment);
+
+                // 6. Add Order Details & Apply FIFO warehouse deduction
+                string itemsSummaryHtml = "";
+                foreach (var cartItem in cart.CartItems)
+                {
+                    var product = cartItem.Product;
+                    int qtyOrdered = cartItem.Quantity ?? 1;
+                    decimal price = product.PromoPrice ?? product.Price;
+
+                    itemsSummaryHtml += $"• {product.Name} (x{qtyOrdered}) - {price:N0}₫<br/>";
+
+                    // Check stock first
+                    if (product.Stock < qtyOrdered)
+                    {
+                        throw new Exception($"Sản phẩm '{product.Name}' không đủ số lượng trong kho (Còn {product.Stock} sản phẩm).");
+                    }
+
+                    // OrderDetail record
+                    var orderDetail = new OrderDetail
+                    {
+                        OrderId = order.Id,
+                        ProductId = cartItem.ProductId,
+                        Quantity = qtyOrdered,
+                        Price = price
+                    };
+                    _context.OrderDetails.Add(orderDetail);
+
+                    // FIFO DEDUCTION ALGORITHM
+                    int qtyNeeded = qtyOrdered;
+
+                    // Fetch active batches for this product with RemainingQuantity > 0 ordered by ExpiryDate ASC, ImportDate ASC
+                    var activeBatches = await _context.ProductBatches
+                        .Where(b => b.ProductId == cartItem.ProductId && b.RemainingQuantity > 0 && b.ExpiryDate > DateTime.Now)
+                        .OrderBy(b => b.ExpiryDate)
+                        .ThenBy(b => b.ImportDate)
+                        .ToListAsync();
+
+                    int totalBatchQtyAvailable = activeBatches.Sum(b => b.RemainingQuantity);
+                    if (totalBatchQtyAvailable < qtyNeeded)
+                    {
+                        throw new Exception($"Không đủ tồn kho khả dụng theo lô cho sản phẩm '{product.Name}' (Lô khả dụng còn {totalBatchQtyAvailable}).");
+                    }
+
+                    foreach (var batch in activeBatches)
+                    {
+                        if (qtyNeeded <= 0) break;
+
+                        int qtyDeducted = 0;
+                        if (batch.RemainingQuantity >= qtyNeeded)
+                        {
+                            qtyDeducted = qtyNeeded;
+                            batch.RemainingQuantity -= qtyNeeded;
+                            qtyNeeded = 0;
+                        }
+                        else
+                        {
+                            qtyDeducted = batch.RemainingQuantity;
+                            qtyNeeded -= batch.RemainingQuantity;
+                            batch.RemainingQuantity = 0;
+                        }
+
+                        _context.ProductBatches.Update(batch);
+
+                        // Ghi nhận log kho xuất chi tiết cho lô hàng này
+                        var log = new InventoryLog
+                        {
+                            ProductId = product.Id,
+                            Type = "SELL",
+                            Quantity = qtyDeducted,
+                            BatchNumber = batch.BatchNumber,
+                            ReferenceCode = orderCode,
+                            Note = $"Xuất bán đơn hàng #{orderCode} | Trừ từ lô: {batch.BatchNumber}",
+                            CreatedAt = DateTime.Now
+                        };
+                        _context.InventoryLogs.Add(log);
+                    }
+
+                    // Deduct main Product total stock
+                    product.Stock -= qtyOrdered;
+                    _context.Products.Update(product);
+                }
+
+                // 7. Clear Cart Items
+                _context.CartItems.RemoveRange(cart.CartItems);
+
+                await _context.SaveChangesAsync();
+
+                // 8. Update Product Expiry Dates based on active remaining batches
+                foreach (var cartItem in cart.CartItems)
+                {
+                    await Services.WarehouseHelper.UpdateProductExpiryDateAsync(_context, cartItem.ProductId);
+                }
+                await _context.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+
+                // 9. Trigger Notifications (Fail-safe email sending)
+                try
+                {
+                    // Send Email Confirmation to customer
+                    if (!string.IsNullOrEmpty(user.Email))
+                    {
+                        await _emailService.SendOrderConfirmationAsync(
+                            user.Email,
+                            user.FullName ?? user.Username,
+                            orderCode,
+                            totalAmount,
+                            itemsSummaryHtml
+                        );
+                    }
+                }
+                catch { /* Suppress email errors to prevent transaction crash */ }
+
+                // In-app Notification to customer
+                await _notificationService.SendAsync(
+                    userId,
+                    "🛒 Đặt hàng thành công",
+                    $"Đơn hàng #{orderCode} trị giá {totalAmount:N0}₫ đã được ghi nhận.",
+                    "order",
+                    "/Cart/OrderHistory"
+                );
+
+                TempData["SuccessMessage"] = $"🎉 Đặt hàng thành công! Mã đơn của bạn là <strong>#{orderCode}</strong>. Email xác nhận đã được gửi.";
+                return RedirectToAction("OrderSuccess", new { orderCode = orderCode });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                TempData["ErrorMessage"] = $"Đặt hàng không thành công: {ex.Message}";
+                return RedirectToAction("Checkout");
+            }
+        }
+
+        // GET: /Cart/OrderSuccess
+        [HttpGet]
+        public async Task<IActionResult> OrderSuccess(string orderCode)
+        {
+            var order = await _context.Orders
+                .Include(o => o.OrderDetails)
+                    .ThenInclude(d => d.Product)
+                .FirstOrDefaultAsync(o => o.OrderCode == orderCode);
+
+            if (order == null) return NotFound();
+
+            return View(order);
+        }
+
+        // GET: /Cart/OrderHistory
+        [HttpGet]
+        public async Task<IActionResult> OrderHistory()
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var orders = await _context.Orders
+                .Include(o => o.OrderDetails)
+                    .ThenInclude(d => d.Product)
+                .Where(o => o.UserId == userId)
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
+
+            return View(orders);
         }
     }
 }

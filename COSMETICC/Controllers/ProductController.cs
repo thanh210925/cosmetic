@@ -27,6 +27,20 @@ namespace COSMETICC.Controllers
             string? search,
             bool? hasPromo)
         {
+            // Tự động tải ảnh thật và chuyển thành Base64 ở background
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    using (var scope = HttpContext.RequestServices.CreateScope())
+                    {
+                        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                        await COSMETICC.Services.ProductImageDownloader.ConvertAllProductImagesToBase64Async(dbContext);
+                    }
+                }
+                catch { }
+            });
+
             // Base query for products including category, brand, and reviews
             var query = _context.Products
                 .Include(p => p.Category)

@@ -81,4 +81,13 @@ public partial class User
 
     [InverseProperty("User")]
     public virtual ICollection<Wishlist> Wishlists { get; set; } = new List<Wishlist>();
+
+    [InverseProperty("User")]
+    public virtual ICollection<BlogPost> BlogPosts { get; set; } = new List<BlogPost>();
+
+    [InverseProperty("User")]
+    public virtual ICollection<BlogPostLike> BlogPostLikes { get; set; } = new List<BlogPostLike>();
+
+    [InverseProperty("User")]
+    public virtual ICollection<BlogPostComment> BlogPostComments { get; set; } = new List<BlogPostComment>();
 }

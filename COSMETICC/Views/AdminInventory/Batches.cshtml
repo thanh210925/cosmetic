@@ -35,9 +35,9 @@
             <a asp-action="Index" class="btn btn-outline-secondary btn-sm fw-bold">
                 <i class="bi bi-arrow-left me-1"></i> Quay lại Tồn kho
             </a>
-            <button type="button" class="btn btn-primary btn-sm fw-bold px-3" style="background:#800020; border:none;" data-bs-toggle="modal" data-bs-target="#addBatchModal">
-                <i class="bi bi-plus-lg me-1"></i> Nhập lô hàng mới
-            </button>
+            <a href="@Url.Action("Create", "AdminImport")" class="btn btn-primary btn-sm fw-bold px-3" style="background:#800020; border:none;">
+                <i class="bi bi-plus-lg me-1"></i> Nhập lô hàng mới (Lập Phiếu Nhập)
+            </a>
         </div>
     </div>
 
@@ -85,9 +85,9 @@
                                 <td>@b.ImportDate.ToString("dd/MM/yyyy")</td>
                                 <td class="fw-bold">@b.ExpiryDate.ToString("dd/MM/yyyy")</td>
                                 <td>@b.ImportQuantity.ToString("N0")</td>
-                                <td class="fw-bold">@b.Quantity.ToString("N0")</td>
+                                <td class="fw-bold">@b.RemainingQuantity.ToString("N0")</td>
                                 <td>
-                                    @if (b.Quantity == 0)
+                                    @if (b.RemainingQuantity == 0)
                                     {
                                         <span class="badge bg-secondary text-white">Đã bán hết</span>
                                     }

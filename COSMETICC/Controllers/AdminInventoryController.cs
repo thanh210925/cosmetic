@@ -76,58 +76,9 @@ namespace COSMETICC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddBatch(int productId, string batchNumber, int importQuantity, DateTime expiryDate, string? notes)
         {
-            var product = await _context.Products.FindAsync(productId);
-            if (product == null)
-            {
-                TempData["ErrorMessage"] = "Sản phẩm không tồn tại!";
-                return RedirectToAction(nameof(Batches));
-            }
-
-            if (importQuantity <= 0)
-            {
-                TempData["ErrorMessage"] = "Số lượng nhập lô phải lớn hơn 0!";
-                return RedirectToAction(nameof(Batches));
-            }
-
-            if (expiryDate <= DateTime.Now)
-            {
-                TempData["ErrorMessage"] = "Hạn sử dụng của lô hàng phải lớn hơn ngày hiện tại!";
-                return RedirectToAction(nameof(Batches));
-            }
-
-            // Create new batch
-            var batch = new ProductBatch
-            {
-                ProductId = productId,
-                BatchNumber = batchNumber.Trim().ToUpper(),
-                ImportQuantity = importQuantity,
-                Quantity = importQuantity,
-                ImportDate = DateTime.Now,
-                ExpiryDate = expiryDate,
-                Notes = notes
-            };
-
-            _context.ProductBatches.Add(batch);
-
-            // Update product total stock
-            product.Stock = (product.Stock ?? 0) + importQuantity;
-            _context.Products.Update(product);
-
-            // Write inventory log
-            var log = new InventoryLog
-            {
-                ProductId = productId,
-                Type = "NHAP",
-                Quantity = importQuantity,
-                Note = $"Nhập lô hàng mới: {batch.BatchNumber} | HSD: {expiryDate:dd/MM/yyyy}. {notes}",
-                CreatedAt = DateTime.Now
-            };
-            _context.InventoryLogs.Add(log);
-
-            await _context.SaveChangesAsync();
-
-            TempData["SuccessMessage"] = $"Nhập lô hàng {batch.BatchNumber} thành công cho sản phẩm {product.Name}!";
-            return RedirectToAction(nameof(Batches));
+            // Redirect to AdminImport/Create to enforce Import Receipts workflow
+            TempData["ErrorMessage"] = "Vui lòng lập Phiếu Nhập Kho để nhập thêm lô hàng mới!";
+            return RedirectToAction("Create", "AdminImport");
         }
 
         // POST: AdminInventory/Manage
@@ -147,9 +98,22 @@ namespace COSMETICC.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            string finalType = type;
             if (type == "NHAP")
             {
                 product.Stock = (product.Stock ?? 0) + quantity;
+                finalType = "IMPORT";
+
+                // Log without batch details since it's direct adjust
+                var directLog = new InventoryLog
+                {
+                    ProductId = productId,
+                    Type = "IMPORT",
+                    Quantity = quantity,
+                    Note = $"Điều chỉnh tăng kho trực tiếp: {note}",
+                    CreatedAt = DateTime.Now
+                };
+                _context.InventoryLogs.Add(directLog);
             }
             else if (type == "XUAT")
             {
@@ -159,11 +123,12 @@ namespace COSMETICC.Controllers
                     return RedirectToAction(nameof(Index));
                 }
                 product.Stock = (product.Stock ?? 0) - quantity;
+                finalType = "ADJUST";
 
-                // Deduct from oldest active batches first (FIFO)
+                // Deduct from oldest active batches first (FIFO) using RemainingQuantity
                 int quantityToDeduct = quantity;
                 var activeBatches = await _context.ProductBatches
-                    .Where(b => b.ProductId == productId && b.Quantity > 0)
+                    .Where(b => b.ProductId == productId && b.RemainingQuantity > 0)
                     .OrderBy(b => b.ExpiryDate) // oldest expiry date first
                     .ToListAsync();
 
@@ -171,34 +136,43 @@ namespace COSMETICC.Controllers
                 {
                     if (quantityToDeduct <= 0) break;
 
-                    if (batch.Quantity >= quantityToDeduct)
+                    int qtyDeducted = 0;
+                    if (batch.RemainingQuantity >= quantityToDeduct)
                     {
-                        batch.Quantity -= quantityToDeduct;
+                        qtyDeducted = quantityToDeduct;
+                        batch.RemainingQuantity -= quantityToDeduct;
                         quantityToDeduct = 0;
                     }
                     else
                     {
-                        quantityToDeduct -= batch.Quantity;
-                        batch.Quantity = 0;
+                        qtyDeducted = batch.RemainingQuantity;
+                        quantityToDeduct -= batch.RemainingQuantity;
+                        batch.RemainingQuantity = 0;
                     }
                     _context.ProductBatches.Update(batch);
+
+                    // Log audit details per batch
+                    var batchLog = new InventoryLog
+                    {
+                        ProductId = productId,
+                        Type = "ADJUST",
+                        Quantity = qtyDeducted,
+                        BatchNumber = batch.BatchNumber,
+                        Note = $"Điều chỉnh giảm kho trực tiếp (Lô: {batch.BatchNumber}). Lý do: {note}",
+                        CreatedAt = DateTime.Now
+                    };
+                    _context.InventoryLogs.Add(batchLog);
                 }
             }
 
-            var log = new InventoryLog
-            {
-                ProductId = productId,
-                Type = type,
-                Quantity = quantity,
-                Note = note,
-                CreatedAt = DateTime.Now
-            };
-
-            _context.InventoryLogs.Add(log);
             _context.Products.Update(product);
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = $"{(type == "NHAP" ? "Nhập" : "Xuất")} kho thành công cho sản phẩm {product.Name}!";
+            // Tự động tính toán lại HSD từ lô hàng còn tồn gần nhất
+            await Services.WarehouseHelper.UpdateProductExpiryDateAsync(_context, productId);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = $"Điều chỉnh kho thành công cho sản phẩm {product.Name}!";
             return RedirectToAction(nameof(Index));
         }
 
@@ -225,15 +199,15 @@ namespace COSMETICC.Controllers
                 return Json(new { success = false, message = "Không tìm thấy sản phẩm nào khớp với mã Barcode/SKU này!" });
             }
 
-            // Get product batches
+            // Get product batches using RemainingQuantity
             var batches = await _context.ProductBatches
-                .Where(b => b.ProductId == product.Id && b.Quantity > 0)
+                .Where(b => b.ProductId == product.Id && b.RemainingQuantity > 0)
                 .OrderBy(b => b.ExpiryDate)
                 .Select(b => new
                 {
                     b.Id,
                     b.BatchNumber,
-                    b.Quantity,
+                    Quantity = b.RemainingQuantity,
                     ExpiryDate = b.ExpiryDate.ToString("dd/MM/yyyy")
                 })
                 .ToListAsync();
@@ -273,20 +247,66 @@ namespace COSMETICC.Controllers
                 return Json(new { success = true, message = "Số lượng thực tế khớp hoàn hảo với hệ thống! Không cần điều chỉnh." });
             }
 
+            // If quantity decreases, we deduct using FIFO
+            if (diff < 0)
+            {
+                int qtyToDeduct = Math.Abs(diff);
+                var activeBatches = await _context.ProductBatches
+                    .Where(b => b.ProductId == productId && b.RemainingQuantity > 0)
+                    .OrderBy(b => b.ExpiryDate)
+                    .ToListAsync();
+
+                foreach (var batch in activeBatches)
+                {
+                    if (qtyToDeduct <= 0) break;
+
+                    int qtyDeducted = 0;
+                    if (batch.RemainingQuantity >= qtyToDeduct)
+                    {
+                        qtyDeducted = qtyToDeduct;
+                        batch.RemainingQuantity -= qtyToDeduct;
+                        qtyToDeduct = 0;
+                    }
+                    else
+                    {
+                        qtyDeducted = batch.RemainingQuantity;
+                        qtyToDeduct -= batch.RemainingQuantity;
+                        batch.RemainingQuantity = 0;
+                    }
+                    _context.ProductBatches.Update(batch);
+
+                    var batchLog = new InventoryLog
+                    {
+                        ProductId = productId,
+                        Type = "AUDIT",
+                        Quantity = qtyDeducted,
+                        BatchNumber = batch.BatchNumber,
+                        Note = $"Kiểm kê chênh lệch âm (Lô: {batch.BatchNumber}). Chi tiết: {note}",
+                        CreatedAt = DateTime.Now
+                    };
+                    _context.InventoryLogs.Add(batchLog);
+                }
+            }
+            else // diff > 0, we can't easily assign new batch info directly, we log to general direct import
+            {
+                var auditLog = new InventoryLog
+                {
+                    ProductId = productId,
+                    Type = "AUDIT",
+                    Quantity = diff,
+                    Note = $"Kiểm kê chênh lệch dương. SL hệ thống: {systemQty} | SL thực tế: {actualQty}. Ghi chú: {note}",
+                    CreatedAt = DateTime.Now
+                };
+                _context.InventoryLogs.Add(auditLog);
+            }
+
             product.Stock = actualQty;
             _context.Products.Update(product);
 
-            // Record as AUDIT log
-            var log = new InventoryLog
-            {
-                ProductId = productId,
-                Type = "KIEMKE",
-                Quantity = Math.Abs(diff),
-                Note = $"Kiểm kê kho bằng QR/Barcode. SL hệ thống: {systemQty} | SL thực tế: {actualQty} | Chênh lệch: {(diff > 0 ? "+" : "")}{diff}. Ghi chú: {note}",
-                CreatedAt = DateTime.Now
-            };
-            _context.InventoryLogs.Add(log);
+            await _context.SaveChangesAsync();
 
+            // Tự động tính toán lại HSD từ lô hàng còn tồn gần nhất
+            await Services.WarehouseHelper.UpdateProductExpiryDateAsync(_context, productId);
             await _context.SaveChangesAsync();
 
             return Json(new { 

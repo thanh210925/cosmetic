@@ -190,8 +190,34 @@ body {
 /* Product Grid */
 .hasaki-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+}
+
+@media (max-width: 1600px) {
+    .hasaki-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+@media (max-width: 1300px) {
+    .hasaki-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+@media (max-width: 1000px) {
+    .hasaki-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+@media (max-width: 768px) {
+    .hasaki-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+@media (max-width: 480px) {
+    .hasaki-grid {
+        grid-template-columns: repeat(1, 1fr);
+    }
 }
 
 .hasaki-card {
@@ -281,12 +307,12 @@ body {
 
 /* ── Card Image Area — dual image hover ── */
 .card-img-area {
-    height: 210px;
+    height: 170px;
     overflow: hidden;
     display: block;
     position: relative;
     background: #fff;
-    padding: 12px;
+    padding: 10px;
 }
 
 .card-img-primary,
@@ -295,8 +321,8 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    max-height: 186px;
-    max-width: calc(100% - 24px);
+    max-height: 150px;
+    max-width: calc(100% - 20px);
     object-fit: contain;
     transition: opacity 0.35s ease;
 }
@@ -358,11 +384,11 @@ body {
 }
 
 .card-title-text {
-    font-size: 13.5px;
+    font-size: 12.5px;
     font-weight: 500;
     color: #333;
     line-height: 1.4;
-    height: 38px;
+    height: 35px;
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
