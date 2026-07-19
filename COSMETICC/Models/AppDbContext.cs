@@ -59,6 +59,22 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<ProductVariant> ProductVariants { get; set; }
 
+    public virtual DbSet<ChatMessage> ChatMessages { get; set; }
+
+    public virtual DbSet<CollectedVoucher> CollectedVouchers { get; set; }
+
+    public virtual DbSet<ProductBatch> ProductBatches { get; set; }
+
+    public virtual DbSet<BlogPost> BlogPosts { get; set; }
+
+    public virtual DbSet<UserAddress> UserAddresses { get; set; }
+
+    public virtual DbSet<Notification> Notifications { get; set; }
+
+    public virtual DbSet<ImportReceipt> ImportReceipts { get; set; }
+
+    public virtual DbSet<ImportReceiptDetail> ImportReceiptDetails { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseSqlServer("Server=localhost\\BANGTHANHSSMS22;Database=CosmeticsDB;User Id=sa;Password=Bt@0923113;TrustServerCertificate=True;");
@@ -79,6 +95,14 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
 
             entity.HasOne(d => d.Admin).WithMany(p => p.AdminLogs).HasConstraintName("FK__AdminLogs__Admin__71D1E811");
+        });
+
+        modelBuilder.Entity<UserAddress>(entity =>
+        {
+            entity.HasOne(d => d.User).WithMany(p => p.UserAddresses)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_UserAddresses_Users");
         });
 
         modelBuilder.Entity<Cart>(entity =>

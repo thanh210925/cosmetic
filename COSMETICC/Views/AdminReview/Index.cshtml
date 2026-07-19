@@ -39,8 +39,8 @@
                         {
                             <tr>
                                 <td>
-                                    <div class="fw-bold text-dark">@(review.User?.FullName ?? "N/A")</div>
-                                    <small class="text-muted">@@@(review.User?.Username ?? "N/A")</small>
+                                    <div class="fw-bold text-dark">@(review.User?.FullName ?? review.GuestName ?? "Khách ẩn danh")</div>
+                                    <small class="text-muted">@(review.User != null ? "@" + review.User.Username : "Khách vãng lai")</small>
                                 </td>
                                 <td>
                                     <div class="text-truncate" style="max-width: 150px;" title="@review.Product?.Name">

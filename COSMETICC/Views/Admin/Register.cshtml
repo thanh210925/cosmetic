@@ -65,6 +65,15 @@
             </div>
         </div>
 
+        <!-- Role select input -->
+        <div class="form-group-custom">
+            <select asp-for="Role" class="form-input-custom" style="padding-left: 45px; background: white;" required>
+                <option value="ADMIN">Quản trị viên (ADMIN)</option>
+                <option value="STAFF">Nhân viên (STAFF)</option>
+            </select>
+            <i class="bi bi-shield-shaded input-icon-left"></i>
+        </div>
+
         <!-- Password input -->
         <div class="form-group-custom">
             <input asp-for="Password" 

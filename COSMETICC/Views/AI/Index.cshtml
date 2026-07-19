@@ -1,0 +1,183 @@
+@{
+    ViewData["Title"] = "AI Skincare Hub — MeiLing";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    body { background: #0f0f1a; }
+
+    .ai-hero {
+        background: linear-gradient(135deg, #1a0a2e 0%, #16213e 50%, #0f3460 100%);
+        padding: 80px 0 60px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    .ai-hero::before {
+        content: '';
+        position: absolute; inset: 0;
+        background: radial-gradient(circle at 50% 50%, rgba(200,80,120,0.15) 0%, transparent 60%);
+        pointer-events: none;
+    }
+    .ai-hero h1 {
+        font-size: 3rem; font-weight: 900;
+        background: linear-gradient(90deg, #f9a8d4, #c084fc, #60a5fa);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 12px;
+    }
+    .ai-hero p { color: #94a3b8; font-size: 1.15rem; }
+    .ai-badge {
+        display: inline-block;
+        background: linear-gradient(90deg, #7c3aed, #db2777);
+        color: white; font-size: 11px; font-weight: 700;
+        padding: 3px 10px; border-radius: 20px; letter-spacing: 1px;
+        margin-bottom: 20px;
+    }
+
+    .ai-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 24px;
+        padding: 60px 0;
+    }
+    .ai-card {
+        background: linear-gradient(145deg, #1e1b4b, #1e293b);
+        border: 1px solid rgba(139,92,246,0.2);
+        border-radius: 20px;
+        padding: 36px 28px;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none !important;
+        color: white !important;
+        display: block;
+        position: relative;
+        overflow: hidden;
+    }
+    .ai-card::before {
+        content: '';
+        position: absolute; top: 0; left: 0; right: 0; height: 3px;
+        background: var(--card-color, linear-gradient(90deg, #7c3aed, #db2777));
+        opacity: 0; transition: opacity 0.3s;
+    }
+    .ai-card:hover { 
+        transform: translateY(-8px);
+        border-color: rgba(139,92,246,0.6);
+        box-shadow: 0 20px 60px rgba(139,92,246,0.15);
+        color: white !important;
+    }
+    .ai-card:hover::before { opacity: 1; }
+    .ai-card-icon {
+        font-size: 52px;
+        margin-bottom: 20px;
+        display: block;
+        filter: drop-shadow(0 0 12px rgba(192,132,252,0.5));
+    }
+    .ai-card h3 {
+        font-size: 1.2rem; font-weight: 800;
+        margin-bottom: 10px;
+        background: linear-gradient(90deg, #e2e8f0, #c084fc);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .ai-card p { color: #94a3b8; font-size: 14px; line-height: 1.6; margin: 0; }
+    .ai-card .badge-new {
+        position: absolute; top: 16px; right: 16px;
+        background: linear-gradient(90deg, #7c3aed, #db2777);
+        color: white; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
+    }
+
+    .ai-stats {
+        background: linear-gradient(135deg, #1e1b4b 0%, #1e293b 100%);
+        border-radius: 16px; border: 1px solid rgba(139,92,246,0.2);
+        padding: 32px; margin-bottom: 50px;
+        display: flex; gap: 40px; justify-content: center; flex-wrap: wrap;
+    }
+    .ai-stat { text-align: center; }
+    .ai-stat-num { font-size: 2.2rem; font-weight: 900; color: #c084fc; display: block; }
+    .ai-stat-label { color: #64748b; font-size: 13px; }
+
+    @@media (max-width: 768px) {
+        .ai-hero h1 { font-size: 2rem; }
+    }
+</style>
+
+<!-- AI Hero -->
+<div class="ai-hero">
+    <div class="container">
+        <span class="ai-badge">✨ AI POWERED</span>
+        <h1>AI Skincare Assistant</h1>
+        <p>Trợ lý thông minh cá nhân hóa trải nghiệm làm đẹp của bạn</p>
+    </div>
+</div>
+
+<div class="container py-2" style="background:#0f0f1a; min-height: 80vh;">
+
+    <!-- Stats -->
+    <div class="ai-stats mt-4">
+        <div class="ai-stat">
+            <span class="ai-stat-num">5</span>
+            <span class="ai-stat-label">Tính năng AI</span>
+        </div>
+        <div class="ai-stat">
+            <span class="ai-stat-num">16+</span>
+            <span class="ai-stat-label">Thành phần phân tích</span>
+        </div>
+        <div class="ai-stat">
+            <span class="ai-stat-num">5</span>
+            <span class="ai-stat-label">Loại da hỗ trợ</span>
+        </div>
+        <div class="ai-stat">
+            <span class="ai-stat-num">24/7</span>
+            <span class="ai-stat-label">Tư vấn liên tục</span>
+        </div>
+    </div>
+
+    <!-- Feature Cards -->
+    <div class="ai-grid">
+        <a href="@Url.Action("Recommendations", "AI")" class="ai-card" style="--card-color: linear-gradient(90deg, #f97316, #db2777);">
+            <span class="ai-card-icon">🎯</span>
+            <h3>AI Gợi ý Sản phẩm</h3>
+            <p>Phân tích lịch sử mua hàng của bạn để gợi ý những sản phẩm hoàn toàn phù hợp với nhu cầu và sở thích.</p>
+        </a>
+
+        <a href="#" onclick="openChatbot(); return false;" class="ai-card" style="--card-color: linear-gradient(90deg, #7c3aed, #2563eb);">
+            <span class="badge-new">Gemini AI</span>
+            <span class="ai-card-icon">🤖</span>
+            <h3>AI Chatbot Skincare</h3>
+            <p>Chat trực tiếp với AI tư vấn viên skincare được tích hợp Gemini AI, giải đáp mọi câu hỏi về làm đẹp.</p>
+        </a>
+
+        <a href="@Url.Action("SkinAnalysis", "AI")" class="ai-card" style="--card-color: linear-gradient(90deg, #0891b2, #7c3aed);">
+            <span class="ai-card-icon">🔬</span>
+            <h3>Phân tích Loại da</h3>
+            <p>Quiz thông minh 6 câu hỏi phân tích chính xác loại da của bạn: Dầu, Khô, Hỗn hợp, Nhạy cảm hay Da mụn.</p>
+        </a>
+
+        <a href="@Url.Action("Routine", "AI")" class="ai-card" style="--card-color: linear-gradient(90deg, #059669, #0891b2);">
+            <span class="ai-card-icon">✨</span>
+            <h3>Routine Chăm sóc Da</h3>
+            <p>Xây dựng routine Sáng & Tối cá nhân hóa hoàn toàn theo loại da, kết hợp sản phẩm từ cửa hàng của chúng tôi.</p>
+        </a>
+
+        <a href="@Url.Action("Ingredients", "AI")" class="ai-card" style="--card-color: linear-gradient(90deg, #d97706, #059669);">
+            <span class="ai-card-icon">🧬</span>
+            <h3>Tìm theo Thành phần</h3>
+            <p>Tìm sản phẩm theo thành phần cụ thể: Niacinamide, Retinol, Vitamin C, Ceramide... kèm giải thích khoa học.</p>
+        </a>
+
+        <a href="@Url.Action("Recommendations", "AI")" class="ai-card" style="--card-color: linear-gradient(90deg, #be185d, #7c3aed); opacity:0.7;">
+            <span class="ai-card-icon">📊</span>
+            <h3>Đang phát triển</h3>
+            <p>Tính năng AI phân tích nâng cao đang trong quá trình phát triển. Hãy theo dõi các cập nhật tiếp theo!</p>
+        </a>
+    </div>
+</div>
+
+<script>
+    function openChatbot() {
+        const btn = document.getElementById('aiBotBubble');
+        if (btn) btn.click();
+        else alert('Chatbot đang tải...');
+    }
+</script>

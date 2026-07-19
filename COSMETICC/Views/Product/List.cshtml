@@ -244,25 +244,40 @@
                                             }
                                         </div>
 
-                                        @* Sold info + progress bar *@
+                                        @* Sold info + progress bar (real data) *@
                                         @{
-                                            var soldCount = item.Stock.HasValue ? Math.Max(0, 500 - item.Stock.Value) : 120;
-                                            var stockPct = item.Stock.HasValue && item.Stock.Value > 0
-                                                ? Math.Max(10, Math.Min(95, (int)(100 - ((double)item.Stock.Value / 600 * 100))))
-                                                : 75;
+                                            var realSold = item.OrderDetails?.Sum(od => od.Quantity) ?? 0;
+                                            var currentStock = item.Stock ?? 0;
+                                            var totalEver = realSold + currentStock;
+                                            var soldPct = totalEver > 0
+                                                ? Math.Max(5, Math.Min(98, (int)((double)realSold / totalEver * 100)))
+                                                : 0;
                                         }
                                         <div class="sold-info-row">
-                                            <span class="sold-count"><i class="bi bi-bag-check me-1"></i>Đã bán @soldCount.ToString("N0")</span>
-                                            <span class="stock-left">Còn @(item.Stock ?? 0)</span>
+                                            <span class="sold-count"><i class="bi bi-bag-check me-1"></i>Đã bán @realSold.ToString("N0")</span>
+                                            <span class="stock-left">Còn @currentStock</span>
                                         </div>
                                         <div class="stock-progress-bar">
-                                            <div class="stock-progress-fill" style="width: @stockPct%"></div>
+                                            <div class="stock-progress-fill" style="width: @soldPct%"></div>
                                         </div>
 
-                                        @* Buy Button *@
-                                        <button type="button" class="btn-buy-now mt-2" onclick="addToCart(@item.Id)">
-                                            <i class="bi bi-cart-plus"></i> Thêm vào giỏ
+                                        @* Initial Add to Cart button *@
+                                        <button type="button" class="btn-buy-now mt-2 w-100 btn-add-init" id="btnInit-@item.Id"
+                                                data-prod-id="@item.Id"
+                                                data-prod-name="@item.Name"
+                                                onclick="initAddToCart(this)">
+                                            <i class="bi bi-cart-plus me-1"></i> Thêm vào giỏ
                                         </button>
+
+                                        @* Hidden stepper picker, shows when added *@
+                                        <div class="qty-buy-row mt-2 d-none" id="qtyRow-@item.Id">
+                                            <div class="qty-stepper">
+                                                <button type="button" class="qty-btn" onclick="changeQtyAndSync(@item.Id, -1)">−</button>
+                                                <input type="number" class="qty-input" id="qtyInput-@item.Id" value="1" min="0" max="@currentStock" readonly />
+                                                <button type="button" class="qty-btn" onclick="changeQtyAndSync(@item.Id, 1)">+</button>
+                                            </div>
+                                            <span class="text-success small ms-2"><i class="bi bi-check-circle-fill"></i> Đã thêm</span>
+                                        </div>
                                     </div>
                                 </div>
                             }
@@ -318,19 +333,79 @@
         }
     }
 
-    function addToCart(prodId) {
-        fetch('/Cart/AddToCart?productId=' + prodId + '&quantity=1', { method: 'POST' })
+    function initAddToCart(btn) {
+        const prodId = btn.dataset.prodId;
+        const prodName = btn.dataset.prodName || 'Sản phẩm';
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+
+        fetch(`/Cart/AddToCart?productId=${prodId}&quantity=1`, { method: 'POST' })
             .then(res => res.json())
             .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-cart-plus me-1"></i> Thêm vào giỏ';
                 if (data.success) {
-                    alert('Đã thêm sản phẩm vào giỏ hàng!');
+                    // Hide init button, show stepper
+                    document.getElementById(`btnInit-${prodId}`).classList.add('d-none');
+                    const row = document.getElementById(`qtyRow-${prodId}`);
+                    row.classList.remove('d-none');
+                    document.getElementById(`qtyInput-${prodId}`).value = 1;
+
+                    if (typeof showCartToast === 'function') {
+                        showCartToast(`Đã thêm ${prodName} vào giỏ hàng!`);
+                    }
+                    if (typeof refreshCartBadge === 'function') {
+                        refreshCartBadge();
+                    }
                 } else {
                     alert(data.message || 'Lỗi khi thêm sản phẩm vào giỏ.');
                 }
             })
-            .catch(err => {
-                console.error(err);
+            .catch(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-cart-plus me-1"></i> Thêm vào giỏ';
                 alert('Lỗi kết nối máy chủ.');
+            });
+    }
+
+    function changeQtyAndSync(prodId, delta) {
+        const input = document.getElementById(`qtyInput-${prodId}`);
+        const currentQty = parseInt(input.value) || 0;
+        const newQty = currentQty + delta;
+        const max = parseInt(input.max) || 999;
+
+        if (newQty > max) {
+            alert(`Rất tiếc, chỉ còn ${max} sản phẩm trong kho!`);
+            return;
+        }
+
+        fetch(`/Cart/SetProductQuantity?productId=${prodId}&quantity=${newQty}`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    if (newQty <= 0) {
+                        // Hide stepper, show init button
+                        document.getElementById(`qtyRow-${prodId}`).classList.add('d-none');
+                        document.getElementById(`btnInit-${prodId}`).classList.remove('d-none');
+                        if (typeof showCartToast === 'function') {
+                            showCartToast('Đã xóa sản phẩm khỏi giỏ hàng.');
+                        }
+                    } else {
+                        input.value = newQty;
+                        if (typeof showCartToast === 'function') {
+                            showCartToast(`Đã cập nhật số lượng thành ${newQty}!`);
+                        }
+                    }
+                    if (typeof refreshCartBadge === 'function') {
+                        refreshCartBadge();
+                    }
+                } else {
+                    alert(data.message || 'Lỗi khi cập nhật số lượng.');
+                }
+            })
+            .catch(() => {
+                alert('Lỗi kết nối máy chủ khi cập nhật giỏ hàng.');
             });
     }
 
@@ -381,7 +456,39 @@
         }
     }
 
-    // Set heart states on load
+    // Toggle Wishlist handler
+    function toggleWishlist(productId, btn) {
+        fetch('/Wishlist/ToggleWishlist', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `productId=${productId}`
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                if (data.isWishlisted) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+                if (typeof showCartToast === 'function') {
+                    showCartToast(data.message);
+                } else {
+                    alert(data.message);
+                }
+            } else {
+                if (data.requireLogin) {
+                    alert(data.message);
+                    window.location.href = '/Account/Login';
+                } else {
+                    alert(data.message || 'Lỗi khi cập nhật danh sách yêu thích.');
+                }
+            }
+        })
+        .catch(() => alert('Lỗi kết nối máy chủ khi cập nhật danh sách yêu thích.'));
+    }
+
+    // Set heart states and initial cart stepper states on load
     document.addEventListener("DOMContentLoaded", function() {
         // Initialize range slider text and colors
         if (sliderOne && sliderTwo) {
@@ -389,8 +496,8 @@
             slideTwo();
         }
 
-        // Query server or local storage for wishlist items to mark heart active
-        fetch('/Wishlist/GetWishlist')
+        // Query server for wishlist items to mark heart active
+        fetch('/Wishlist/GetUserWishlist')
             .then(res => res.json())
             .then(ids => {
                 if (ids && Array.isArray(ids)) {
@@ -402,5 +509,25 @@
                     });
                 }
             });
+
+        // Sync initial cart stepper quantities
+        fetch('/Cart/GetCartItems')
+            .then(res => res.ok ? res.json() : [])
+            .then(items => {
+                if (items && Array.isArray(items)) {
+                    items.forEach(item => {
+                        const btnInit = document.getElementById(`btnInit-${item.productId}`);
+                        const qtyRow = document.getElementById(`qtyRow-${item.productId}`);
+                        const qtyInput = document.getElementById(`qtyInput-${item.productId}`);
+                        
+                        if (btnInit && qtyRow && qtyInput) {
+                            btnInit.classList.add('d-none');
+                            qtyRow.classList.remove('d-none');
+                            qtyInput.value = item.quantity;
+                        }
+                    });
+                }
+            })
+            .catch(err => console.error('Failed to sync initial cart items', err));
     });
 </script>

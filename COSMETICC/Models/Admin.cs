@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -26,6 +26,10 @@ public partial class Admin
 
     [Column(TypeName = "datetime")]
     public DateTime? CreatedAt { get; set; }
+
+    [Required]
+    [StringLength(50)]
+    public string Role { get; set; } = "ADMIN";
 
     [InverseProperty("Admin")]
     public virtual ICollection<AdminLog> AdminLogs { get; set; } = new List<AdminLog>();

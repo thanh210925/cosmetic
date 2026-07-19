@@ -37,11 +37,38 @@ public partial class User
 
     public int Points { get; set; } = 0;
 
+    [Column(TypeName = "date")]
+    public DateTime? BirthDate { get; set; }
+
+    [NotMapped]
+    public string MembershipTier
+    {
+        get
+        {
+            if (Points >= 10000) return "Platinum";
+            if (Points >= 5000) return "Gold";
+            if (Points >= 1000) return "Silver";
+            return "Bronze";
+        }
+    }
+
     [StringLength(255)]
     public string? GoogleId { get; set; }
 
     [StringLength(255)]
     public string? FacebookId { get; set; }
+
+    [StringLength(500)]
+    public string? Avatar { get; set; }
+
+    [StringLength(20)]
+    public string? Gender { get; set; }
+
+    [StringLength(100)]
+    public string? SkinType { get; set; }
+
+    [InverseProperty("User")]
+    public virtual ICollection<UserAddress> UserAddresses { get; set; } = new List<UserAddress>();
 
     [InverseProperty("User")]
     public virtual ICollection<Cart> Carts { get; set; } = new List<Cart>();

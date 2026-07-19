@@ -33,6 +33,7 @@ namespace COSMETICC.Controllers
                 .Include(p => p.Brand)
                 .Include(p => p.Reviews)
                 .Include(p => p.ProductImages)
+                .Include(p => p.OrderDetails)
                 .Where(p => p.IsActive)
                 .AsQueryable();
 
@@ -187,6 +188,55 @@ namespace COSMETICC.Controllers
                 .ToListAsync();
 
             return View(product);
+        }
+
+        // POST: /Product/PostReview
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> PostReview(int productId, int rating, string comment, string? guestName)
+        {
+            var product = await _context.Products.FindAsync(productId);
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            if (rating < 1 || rating > 5)
+            {
+                TempData["ErrorMessage"] = "Số sao đánh giá phải từ 1 đến 5!";
+                return RedirectToAction("Details", new { id = productId });
+            }
+
+            if (string.IsNullOrEmpty(comment))
+            {
+                TempData["ErrorMessage"] = "Nội dung nhận xét không được để trống!";
+                return RedirectToAction("Details", new { id = productId });
+            }
+
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            int? userId = null;
+            if (!string.IsNullOrEmpty(userIdStr) && int.TryParse(userIdStr, out int uid))
+            {
+                userId = uid;
+            }
+
+            var review = new Review
+            {
+                ProductId = productId,
+                UserId = userId,
+                Rating = rating,
+                Comment = comment.Trim(),
+                GuestName = userId.HasValue ? null : (string.IsNullOrEmpty(guestName) ? "Khách ẩn danh" : guestName.Trim()),
+                CreatedAt = DateTime.Now,
+                IsApproved = true,
+                IsSpam = false
+            };
+
+            _context.Reviews.Add(review);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Đăng đánh giá thành công! Cảm ơn bạn đã đóng góp ý kiến.";
+            return RedirectToAction("Details", new { id = productId });
         }
     }
 }

@@ -32,6 +32,7 @@ public class AdminProductsController : AdminBaseController
 
         var product = await _context.Products
             .Include(p => p.Category)
+            .Include(p => p.Brand)
             .FirstOrDefaultAsync(m => m.Id == id);
 
         if (product == null)
@@ -60,6 +61,7 @@ public class AdminProductsController : AdminBaseController
             product.CreatedAt = DateTime.Now;
             _context.Add(product);
             await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Đã thêm sản phẩm mới thành công!";
             return RedirectToAction(nameof(Index));
         }
         ViewBag.Categories = _context.Categories.ToList();
@@ -78,6 +80,7 @@ public class AdminProductsController : AdminBaseController
         ViewBag.Categories = _context.Categories.ToList();
 
         await _context.SaveChangesAsync();
+        TempData["SuccessMessage"] = "Đã thêm danh sách sản phẩm thành công!";
 
         return RedirectToAction(nameof(Index));
     }
@@ -116,6 +119,7 @@ public class AdminProductsController : AdminBaseController
             {
                 _context.Update(product);
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Đã cập nhật thông tin sản phẩm thành công!";
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -162,9 +166,10 @@ public class AdminProductsController : AdminBaseController
         if (product != null)
         {
             _context.Products.Remove(product);
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Đã xóa sản phẩm thành công!";
         }
 
-        await _context.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
     }
 

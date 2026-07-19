@@ -116,13 +116,19 @@
                 </div>
 
                 <!-- Action buttons -->
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 align-items-center">
                     <button class="btn-cart-hasaki" onclick="addDetailToCart(false)">
                         <i class="bi bi-cart-plus"></i> Thêm vào giỏ
                     </button>
                     <button class="btn-buy-hasaki" onclick="addDetailToCart(true)">
                         Mua ngay
                     </button>
+                    <button type="button" class="btn btn-outline-secondary d-flex align-items-center justify-content-center" id="detailWishlistBtn" onclick="toggleDetailWishlist()" style="border-radius: 6px; width: 45px; height: 42px; border-color: #ddd; background: white;" title="Yêu thích">
+                        <i class="bi bi-heart text-danger" id="detailWishlistIcon" style="font-size: 20px;"></i>
+                    </button>
+                    <a href="/Compare?id1=@Model.Id" class="btn btn-outline-secondary d-flex align-items-center justify-content-center" style="border-radius: 6px; width: 45px; height: 42px; border-color: #ddd; background: white;" title="So sánh sản phẩm">
+                        <i class="bi bi-arrow-left-right text-info" style="font-size: 20px;"></i>
+                    </a>
                 </div>
 
             </div>
@@ -243,6 +249,72 @@
     <!-- Section 4: Customer Reviews -->
     <div id="tab-reviews" class="details-wrapper p-4 bg-white mt-3 tab-section">
         <h5 class="fw-bold text-dark border-bottom pb-2 mb-4">Nhận xét khách hàng</h5>
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show mb-4 small" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show mb-4 small" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <!-- New Review Form -->
+        <div class="p-4 bg-light rounded border mb-4">
+            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-pencil-square text-danger me-2"></i>Viết nhận xét của bạn</h6>
+            <form asp-controller="Product" asp-action="PostReview" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="productId" value="@Model.Id" />
+
+                <div class="row g-3 mb-3">
+                    @if (Context.Session.GetString("UserId") == null)
+                    {
+                        <!-- Guest Name -->
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-dark">Họ và tên của bạn:</label>
+                            <input type="text" name="guestName" class="form-control" placeholder="Ví dụ: Nguyễn Văn A..." required />
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-dark">Đăng nhận xét dưới tên:</label>
+                            <input type="text" class="form-control" value="@Context.Session.GetString("FullName")" disabled style="background:#e9ecef;" />
+                        </div>
+                    }
+
+                    <!-- Star Rating Select -->
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-dark">Đánh giá sản phẩm:</label>
+                        <div class="d-flex align-items-center gap-2">
+                            <select name="rating" class="form-select" style="width: 140px;" required>
+                                <option value="5">⭐⭐⭐⭐⭐ (5)</option>
+                                <option value="4">⭐⭐⭐⭐ (4)</option>
+                                <option value="3">⭐⭐⭐ (3)</option>
+                                <option value="2">⭐⭐ (2)</option>
+                                <option value="1">⭐ (1)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comment Input -->
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-dark">Nội dung nhận xét:</label>
+                    <textarea name="comment" class="form-control" rows="3" placeholder="Chia sẻ cảm nhận thực tế của bạn về sản phẩm..." required></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-danger px-4 fw-bold" style="background:#800020; border:none; height:38px;">
+                    Gửi nhận xét <i class="bi bi-send-fill ms-1"></i>
+                </button>
+            </form>
+        </div>
         
         <div class="row align-items-center mb-4 p-4 bg-light rounded border mx-0">
             <div class="col-md-4 text-center border-end">
@@ -281,8 +353,15 @@
                     <div class="review-item py-3 border-bottom">
                         <div class="d-flex justify-content-between mb-2">
                             <div>
-                                <span class="fw-bold text-dark me-2">@(r.User?.FullName ?? "Khách hàng ẩn danh")</span>
-                                <span class="badge bg-success-subtle text-success small"><i class="bi bi-patch-check-fill"></i> Đã mua hàng</span>
+                                <span class="fw-bold text-dark me-2">@(r.User?.FullName ?? r.GuestName ?? "Khách hàng ẩn danh")</span>
+                                @if (r.UserId.HasValue)
+                                {
+                                    <span class="badge bg-success-subtle text-success small"><i class="bi bi-patch-check-fill"></i> Đã mua hàng</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary-subtle text-secondary small"><i class="bi bi-person-fill"></i> Khách vãng lai</span>
+                                }
                             </div>
                             <div class="text-muted small">@r.CreatedAt?.ToString("dd/MM/yyyy HH:mm")</div>
                         </div>
@@ -528,6 +607,52 @@
                 });
             }
         });
+
+        // Check if current product is wishlisted
+        fetch('/Wishlist/GetUserWishlist')
+            .then(res => res.json())
+            .then(ids => {
+                if (ids && Array.isArray(ids)) {
+                    const currentId = parseInt('@Model.Id');
+                    const icon = document.getElementById('detailWishlistIcon');
+                    if (ids.includes(currentId) && icon) {
+                        icon.classList.remove('bi-heart');
+                        icon.classList.add('bi-heart-fill');
+                    }
+                }
+            });
     });
+
+    function toggleDetailWishlist() {
+        fetch('/Wishlist/ToggleWishlist', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'productId=@Model.Id'
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const icon = document.getElementById('detailWishlistIcon');
+                if (icon) {
+                    if (data.isWishlisted) {
+                        icon.classList.remove('bi-heart');
+                        icon.classList.add('bi-heart-fill');
+                    } else {
+                        icon.classList.remove('bi-heart-fill');
+                        icon.classList.add('bi-heart');
+                    }
+                }
+                alert(data.message);
+            } else {
+                if (data.requireLogin) {
+                    alert(data.message);
+                    window.location.href = '/Account/Login';
+                } else {
+                    alert(data.message || 'Lỗi khi cập nhật danh sách yêu thích.');
+                }
+            }
+        })
+        .catch(() => alert('Lỗi kết nối máy chủ.'));
+    }
 </script>
 }

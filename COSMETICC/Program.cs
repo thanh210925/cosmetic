@@ -1,5 +1,8 @@
 
+
 using COSMETICC.Models;
+using COSMETICC.Services;
+using COSMETICC.BackgroundServices;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +17,23 @@ namespace Cosmetic
 
             // MVC
             builder.Services.AddControllersWithViews();
+
+            // ======== AUTOMATION SERVICES ========
+            builder.Services.AddSingleton<OrderCodeService>();       // stateful sequence generator
+            builder.Services.AddScoped<EmailService>();
+            builder.Services.AddScoped<OtpService>();
+            builder.Services.AddScoped<SmsService>();
+            builder.Services.AddScoped<NotificationService>();
+            builder.Services.AddScoped<PdfInvoiceService>();
+            builder.Services.AddScoped<FraudDetectionService>();
+            builder.Services.AddScoped<SpamFilterService>();
+            builder.Services.AddScoped<ComboSuggestionService>();
+            builder.Services.AddScoped<ShippingSyncService>();
+            // ======== BACKGROUND SERVICES ========
+            builder.Services.AddHostedService<AutoCancelOrderService>();
+            builder.Services.AddHostedService<ReviewReminderService>();
+            // IHttpContextAccessor for OtpService
+            builder.Services.AddHttpContextAccessor();
 
             // DB (FIX NAME)
             builder.Services.AddDbContext<AppDbContext>(options =>

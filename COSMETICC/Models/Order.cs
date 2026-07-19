@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -21,6 +21,15 @@ public partial class Order
 
     [StringLength(50)]
     public string? Status { get; set; }
+
+    [StringLength(30)]
+    public string? OrderCode { get; set; }
+
+    [StringLength(500)]
+    public string? Notes { get; set; }
+
+    [Column(TypeName = "datetime")]
+    public DateTime? CancelledAt { get; set; }
 
     [InverseProperty("Order")]
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();

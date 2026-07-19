@@ -1,0 +1,195 @@
+@model List<COSMETICC.Models.Product>
+@{
+    ViewData["Title"] = "Tìm sản phẩm theo Thành phần — AI";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string query = ViewBag.Query ?? "";
+    string ingDesc = ViewBag.IngredientDescription ?? "";
+    var ingredientInfo = ViewBag.IngredientInfo as Dictionary<string, string> ?? new();
+}
+
+<style>
+    .ing-hero {
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        padding: 50px 0 40px; text-align: center; color: white;
+    }
+    .ing-hero h1 {
+        font-size: 2.2rem; font-weight: 900;
+        background: linear-gradient(90deg, #a8edea, #fed6e3);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .ing-search-box {
+        display: flex; max-width: 540px; margin: 20px auto 0;
+        background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 40px; overflow: hidden; backdrop-filter: blur(10px);
+    }
+    .ing-search-box input {
+        flex: 1; background: transparent; border: none; color: white;
+        padding: 14px 22px; font-size: 15px; outline: none;
+    }
+    .ing-search-box input::placeholder { color: rgba(255,255,255,0.5); }
+    .ing-search-box button {
+        background: linear-gradient(90deg, #7c3aed, #db2777);
+        border: none; color: white; padding: 14px 24px; font-weight: 700;
+        cursor: pointer; transition: opacity 0.2s;
+    }
+    .ing-search-box button:hover { opacity: 0.9; }
+
+    .quick-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 16px; }
+    .quick-chip {
+        background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+        color: rgba(255,255,255,0.85); padding: 5px 14px; border-radius: 20px;
+        font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+        text-decoration: none;
+    }
+    .quick-chip:hover { background: rgba(124,58,237,0.4); border-color: #7c3aed; color: white; }
+    .quick-chip.active { background: linear-gradient(90deg, #7c3aed, #db2777); border-color: transparent; color: white; }
+
+    .ing-description {
+        background: linear-gradient(90deg, #f0f9ff, #e0f2fe);
+        border-left: 4px solid #0891b2; border-radius: 8px;
+        padding: 16px 20px; margin: 30px 0;
+    }
+    .ing-description h5 { color: #0891b2; font-weight: 800; margin-bottom: 4px; }
+    .ing-description p { color: #1e293b; margin: 0; font-size: 14px; }
+
+    .product-results-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 18px;
+    }
+    .res-card {
+        background: white; border-radius: 12px;
+        border: 1px solid #f1f5f9;
+        overflow: hidden; transition: all 0.3s;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+    .res-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+        border-color: rgba(14,165,233,0.3);
+    }
+    .res-card img { width:100%; aspect-ratio:1; object-fit:cover; background:#f8fafc; }
+    .res-card-body { padding: 14px; }
+    .res-brand { font-size: 10px; color: #800020; font-weight: 700; text-transform: uppercase; }
+    .res-name { font-size: 13px; font-weight: 600; color: #1e293b; margin: 4px 0 6px; line-height: 1.4; }
+    .res-price { font-size: 15px; font-weight: 800; color: #800020; }
+
+    .ingredient-dictionary { margin-top: 50px; }
+    .dict-card {
+        background: white; border-radius: 12px; border: 1px solid #f1f5f9;
+        padding: 20px; cursor: pointer; transition: all 0.2s;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+    .dict-card:hover {
+        border-color: rgba(124,58,237,0.3);
+        box-shadow: 0 8px 20px rgba(124,58,237,0.08);
+        transform: translateY(-2px);
+    }
+    .dict-name { font-weight: 800; color: #7c3aed; font-size: 15px; margin-bottom: 6px; }
+    .dict-desc { font-size: 13px; color: #64748b; line-height: 1.5; }
+    .dict-search { font-size: 11px; color: #94a3b8; margin-top: 8px; }
+</style>
+
+<div class="ing-hero">
+    <div class="container">
+        <span style="font-size:11px; color:#a8edea; font-weight:700; letter-spacing:1px;">🧬 AI INGREDIENT FINDER</span>
+        <h1>Tìm sản phẩm theo Thành phần</h1>
+        <p style="color:rgba(255,255,255,0.6); font-size:14px;">Nhập thành phần bạn muốn, AI sẽ tìm sản phẩm phù hợp và giải thích công dụng</p>
+        <form method="get" action="@Url.Action("Ingredients", "AI")" class="ing-search-box">
+            <input id="ingQuery" type="text" name="q" value="@query" placeholder="Ví dụ: Niacinamide, Retinol, Vitamin C..." autofocus />
+            <button type="submit">Tìm →</button>
+        </form>
+        <div class="quick-chips mt-3">
+            @{
+                var chips = new[] { "Niacinamide", "Retinol", "Vitamin C", "Hyaluronic Acid", "Ceramide", "AHA", "BHA", "Salicylic Acid", "Peptide", "Centella", "Tea Tree", "SPF" };
+                foreach (var chip in chips)
+                {
+                    <a href="@Url.Action("Ingredients", "AI")?q=@chip" class="quick-chip @(query.Equals(chip, StringComparison.OrdinalIgnoreCase) ? "active" : "")">@chip</a>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+
+    @if (!string.IsNullOrEmpty(query))
+    {
+        <!-- Results Header -->
+        <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+            <h5 class="fw-bold text-dark mb-0">
+                Kết quả cho <span style="color:#7c3aed;">"@query"</span>
+                <span class="text-muted fw-normal ms-2 small">— @Model.Count sản phẩm</span>
+            </h5>
+            <a href="@Url.Action("Ingredients", "AI")" class="text-muted small text-decoration-none">✕ Xoá tìm kiếm</a>
+        </div>
+
+        @if (!string.IsNullOrEmpty(ingDesc))
+        {
+            <div class="ing-description">
+                <h5><i class="bi bi-flask me-2"></i>@query — Là gì?</h5>
+                <p>@ingDesc</p>
+            </div>
+        }
+
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-search" style="font-size:50px; color:#c084fc;"></i>
+                <p class="mt-3 mb-1 fw-bold text-dark">Không tìm thấy sản phẩm nào</p>
+                <p class="small">Chưa có sản phẩm chứa "@query" trong cửa hàng. Thử thành phần khác!</p>
+            </div>
+        }
+        else
+        {
+            <div class="product-results-grid">
+                @foreach (var product in Model)
+                {
+                    <div class="res-card">
+                        <a href="@Url.Action("Details", "Product", new { id = product.Id })">
+                            <img src="@(product.ImageUrl ?? "/img/placeholder.png")" alt="@product.Name" loading="lazy" />
+                        </a>
+                        <div class="res-card-body">
+                            <div class="res-brand">@(product.Brand?.Name ?? "MeiLing")</div>
+                            <div class="res-name">
+                                <a href="@Url.Action("Details", "Product", new { id = product.Id })" class="text-decoration-none text-dark">@product.Name</a>
+                            </div>
+                            @if (product.Reviews.Any())
+                            {
+                                <div style="font-size:11px; color:#f59e0b; margin-bottom:4px;">
+                                    @for (int s = 1; s <= 5; s++)
+                                    { @(s <= (int)(product.Reviews.Average(r => r.Rating)) ? "★" : "☆") }
+                                    <span class="text-muted">(@product.Reviews.Count)</span>
+                                </div>
+                            }
+                            <div class="res-price">@String.Format("{0:N0}", product.PromoPrice ?? product.Price)₫</div>
+                            <a href="@Url.Action("Details", "Product", new { id = product.Id })" 
+                               class="btn btn-sm w-100 mt-2" 
+                               style="background:#800020; color:white; border:none; border-radius:8px; font-size:12px;">
+                                Xem chi tiết
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+
+    <!-- Ingredient Dictionary -->
+    <div class="ingredient-dictionary">
+        <h4 class="fw-bold text-dark mb-1">📖 Từ điển Thành phần Skincare</h4>
+        <p class="text-muted small mb-4">Nhấn vào thành phần để tìm sản phẩm tương ứng</p>
+        <div class="row g-3">
+            @foreach (var (ingredient, description) in ingredientInfo)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="dict-card" onclick="window.location.href='@Url.Action("Ingredients", "AI")?q=@ingredient'">
+                        <div class="dict-name">@ingredient</div>
+                        <div class="dict-desc">@description.Substring(0, Math.Min(description.Length, 100))@(description.Length > 100 ? "..." : "")</div>
+                        <div class="dict-search">🔍 Tìm sản phẩm →</div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

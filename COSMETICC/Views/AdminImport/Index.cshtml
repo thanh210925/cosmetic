@@ -1,0 +1,108 @@
+@model IEnumerable<COSMETICC.Models.ImportReceipt>
+
+@{
+    ViewData["Title"] = "Quản lý Phiếu Nhập Kho";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">📦 Phiếu Nhập Kho</h2>
+            <p class="text-muted small mb-0">Quản lý các đợt nhập hàng từ nhà cung cấp vào kho</p>
+        </div>
+        <a href="@Url.Action("Create", "AdminImport")" class="btn btn-primary d-inline-flex align-items-center gap-2">
+            <i class="bi bi-plus-circle-fill"></i> Lập Phiếu Nhập Mới
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success border-0 alert-dismissible fade show mb-4 small shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger border-0 alert-dismissible fade show mb-4 small shadow-sm" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Mã Phiếu</th>
+                            <th>Nhà Cung Cấp</th>
+                            <th>Ngày Nhập</th>
+                            <th>Người Nhập</th>
+                            <th class="text-end">Tổng Tiền</th>
+                            <th class="text-center">Trạng Thái</th>
+                            <th class="text-center pe-4">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-2 mb-2 d-block"></i>
+                                    Chưa có phiếu nhập kho nào được tạo.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var item in Model)
+                            {
+                                var statusColor = item.Status switch
+                                {
+                                    "Confirmed" => "success",
+                                    "Draft" => "warning",
+                                    "Cancelled" => "danger",
+                                    _ => "secondary"
+                                };
+                                
+                                var statusText = item.Status switch
+                                {
+                                    "Confirmed" => "Đã Nhập Kho",
+                                    "Draft" => "Phiếu Nháp",
+                                    "Cancelled" => "Đã Hủy",
+                                    _ => item.Status
+                                };
+
+                                <tr>
+                                    <td class="ps-4">
+                                        <a href="@Url.Action("Details", "AdminImport", new { id = item.Id })" class="fw-bold text-decoration-none text-primary">
+                                            @item.ReceiptCode
+                                        </a>
+                                    </td>
+                                    <td class="fw-semibold">@(item.Supplier?.Name ?? "—")</td>
+                                    <td>@item.ImportDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>@(item.Admin?.Username ?? "Hệ thống")</td>
+                                    <td class="text-end fw-bold text-dark">@String.Format("{0:N0}", item.TotalAmount)₫</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-@statusColor bg-opacity-10 text-@statusColor px-3 py-2 rounded-pill font-monospace" style="font-size:11px;">
+                                            @statusText
+                                        </span>
+                                    </td>
+                                    <td class="text-center pe-4">
+                                        <a href="@Url.Action("Details", "AdminImport", new { id = item.Id })" class="btn btn-sm btn-outline-secondary px-3 py-1 rounded-pill">
+                                            Chi tiết →
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

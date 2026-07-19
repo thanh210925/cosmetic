@@ -1,0 +1,203 @@
+@model COSMETICC.Models.ImportReceipt
+
+@{
+    ViewData["Title"] = "Chi tiết Phiếu Nhập " + Model.ReceiptCode;
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var statusColor = Model.Status switch
+    {
+        "Confirmed" => "success",
+        "Draft" => "warning",
+        "Cancelled" => "danger",
+        _ => "secondary"
+    };
+
+    var statusText = Model.Status switch
+    {
+        "Confirmed" => "Đã Nhập Kho",
+        "Draft" => "Phiếu Nháp (Draft)",
+        "Cancelled" => "Đã Hủy",
+        _ => Model.Status
+    };
+}
+
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+        <div>
+            <a href="@Url.Action("Index", "AdminImport")" class="text-decoration-none text-muted small">← Quay lại danh sách</a>
+            <h2 class="fw-bold text-dark mb-1 mt-2">📄 Chi tiết Phiếu Nhập: @Model.ReceiptCode</h2>
+            <span class="badge bg-@statusColor bg-opacity-10 text-@statusColor px-3 py-2 rounded-pill font-monospace" style="font-size:12px;">
+                ● @statusText
+            </span>
+        </div>
+        <div class="d-flex gap-2">
+            @if (Model.Status == "Draft")
+            {
+                <form asp-action="Confirm" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xác nhận phiếu nhập này để đưa sản phẩm vào kho? Hành động này không thể hoàn tác nếu sản phẩm được bán.');">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" class="btn btn-success d-inline-flex align-items-center gap-2 px-4 py-2">
+                        <i class="bi bi-check2-circle"></i> Xác Nhận Nhập Kho
+                    </button>
+                </form>
+            }
+
+            @if (Model.Status == "Draft" || Model.Status == "Confirmed")
+            {
+                <form asp-action="Cancel" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn hủy phiếu nhập này? Tồn kho sản phẩm và số lượng lô sẽ tự động trừ đi hoàn trả.');">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" class="btn btn-danger d-inline-flex align-items-center gap-2 px-4 py-2">
+                        <i class="bi bi-x-circle"></i> Hủy Phiếu Nhập
+                    </button>
+                </form>
+            }
+            <button onclick="window.print()" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2 px-4 py-2">
+                <i class="bi bi-printer"></i> In Phiếu
+            </button>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success border-0 alert-dismissible fade show mb-4 small shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @Html.Raw(TempData["SuccessMessage"])
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger border-0 alert-dismissible fade show mb-4 small shadow-sm" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row g-4">
+        <!-- Thông tin chung -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-3 mb-4">
+                <div class="card-header bg-light border-0 py-3">
+                    <h5 class="card-title fw-bold text-dark mb-0 fs-6">Thông Tin Chung</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush small">
+                        <li class="list-group-item d-flex justify-content-between px-0 py-3">
+                            <span class="text-muted">Mã Phiếu Nhập:</span>
+                            <strong class="text-dark">@Model.ReceiptCode</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between px-0 py-3">
+                            <span class="text-muted">Ngày Nhập Kho:</span>
+                            <strong class="text-dark">@Model.ImportDate.ToString("dd/MM/yyyy HH:mm")</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between px-0 py-3">
+                            <span class="text-muted">Nhà Cung Cấp:</span>
+                            <strong class="text-primary fw-bold">@(Model.Supplier?.Name ?? "—")</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between px-0 py-3">
+                            <span class="text-muted">Mã Số Thuế:</span>
+                            <strong class="text-dark">@(Model.Supplier?.TaxCode ?? "Chưa cập nhật")</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between px-0 py-3">
+                            <span class="text-muted">Admin Tạo Phiếu:</span>
+                            <strong class="text-dark">@(Model.Admin?.Username ?? "Hệ thống")</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between px-0 py-3">
+                            <span class="text-muted">Ghi chú phiếu:</span>
+                            <span class="text-dark text-end" style="max-width: 60%">@(Model.Note ?? "Không có")</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chi tiết sản phẩm nhập -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-3 mb-4">
+                <div class="card-header bg-light border-0 py-3">
+                    <h5 class="card-title fw-bold text-dark mb-0 fs-6">Danh Sách Hàng Nhập</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0 small">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3">Sản Phẩm</th>
+                                    <th>Số Lô</th>
+                                    <th class="text-center">Ngày SX - HSD</th>
+                                    <th class="text-end">Đơn Giá</th>
+                                    <th class="text-center">Số Lượng</th>
+                                    <th class="text-end pe-3">Thành Tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.ImportReceiptDetails)
+                                {
+                                    var lineTotal = item.Quantity * item.UnitPrice;
+                                    <tr>
+                                        <td class="ps-3">
+                                            <div class="fw-bold text-dark">@item.Product.Name</div>
+                                            <span class="text-muted" style="font-size: 11px;">Mã SP: @item.ProductId</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 font-monospace px-2 py-1">
+                                                @item.BatchNumber.ToUpper()
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <div>@(item.ManufactureDate?.ToString("MM/yyyy") ?? "—")</div>
+                                            <div class="text-danger fw-semibold" style="font-size:11px;">HSD: @item.ExpiryDate.ToString("MM/yyyy")</div>
+                                        </td>
+                                        <td class="text-end fw-semibold text-dark">@String.Format("{0:N0}", item.UnitPrice)₫</td>
+                                        <td class="text-center fw-bold">@item.Quantity</td>
+                                        <td class="text-end pe-3 fw-bold text-dark">@String.Format("{0:N0}", lineTotal)₫</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Summary Area -->
+                    <div class="p-4 bg-light border-top rounded-bottom-3 d-flex justify-content-end">
+                        <div class="w-50 text-end text-dark small" style="min-width: 250px;">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Cộng tiền hàng:</span>
+                                <strong>@String.Format("{0:N0}", Model.SubTotal)₫</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Chiết khấu:</span>
+                                <strong class="text-danger">-@String.Format("{0:N0}", Model.Discount)₫</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Phí vận chuyển nhập:</span>
+                                <strong>+@String.Format("{0:N0}", Model.ShippingFee)₫</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Thuế (VAT):</span>
+                                <strong>+@String.Format("{0:N0}", Model.Tax)₫</strong>
+                            </div>
+                            <hr class="my-2 border-secondary border-opacity-25" />
+                            <div class="d-flex justify-content-between mb-0 align-items-center">
+                                <span class="text-muted fw-bold">Tổng thanh toán:</span>
+                                <span class="text-danger fw-black fs-5">@String.Format("{0:N0}", Model.TotalAmount)₫</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @@media print {
+        body { background: white; color: black; }
+        .btn, form, a, .offcanvas, header, footer { display: none !important; }
+        .container-fluid { padding: 0 !important; }
+        .card { border: none !important; box-shadow: none !important; }
+        .card-header { background: transparent !important; border-bottom: 2px solid #000 !important; }
+        .table-light { background: transparent !important; }
+        table th { color: black !important; }
+    }
+</style>

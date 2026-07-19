@@ -1,0 +1,264 @@
+@{
+    ViewData["Title"] = "Quản lý Chat Trực Tuyến";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid px-4 py-3" style="height: calc(100vh - 120px);">
+    <div class="row h-100 g-3">
+        
+        <!-- Left Column: Active Chats List -->
+        <div class="col-md-4 h-100">
+            <div class="admin-card m-0 h-100 d-flex flex-column" style="padding: 15px;">
+                <div class="border-bottom pb-2 mb-3">
+                    <h5 class="fw-bold text-dark m-0"><i class="bi bi-chat-left-text me-2"></i>Cuộc hội thoại active</h5>
+                    <small class="text-muted">Danh sách khách hàng đang gửi tin nhắn</small>
+                </div>
+                
+                <!-- Search bar for chat -->
+                <div class="mb-3">
+                    <input type="text" id="chatSearch" class="form-control-admin" placeholder="Tìm theo tên khách..." onkeyup="filterActiveChats()" />
+                </div>
+
+                <!-- Chat list container -->
+                <div id="activeChatsList" class="flex-grow-1 overflow-y-auto" style="display: flex; flex-direction: column; gap: 8px;">
+                    <!-- Populated via JS -->
+                    <div class="text-center text-muted py-5 small">Đang tải cuộc hội thoại...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Chat Box panel -->
+        <div class="col-md-8 h-100">
+            <div class="admin-card m-0 h-100 d-flex flex-column" style="padding: 15px;" id="adminChatContainer">
+                
+                <!-- Chat Window Header -->
+                <div class="border-bottom pb-2 mb-3 d-flex align-items-center justify-content-between" id="chatWindowHeader" style="display: none !important;">
+                    <div class="d-flex align-items-center gap-2">
+                        <div style="width: 40px; height: 40px; background: #800020; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;" id="chatHeaderInitial">
+                            K
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark" id="chatHeaderCustomerName">Chọn khách hàng</div>
+                            <small class="text-success d-flex align-items-center gap-1"><span style="width:6px; height:6px; background:#2ecc71; border-radius:50%;"></span> Trực tuyến</small>
+                        </div>
+                    </div>
+                    <div class="text-muted small" id="chatHeaderConnectionId" style="font-family: monospace; font-size: 11px;"></div>
+                </div>
+
+                <!-- Chat Window Messages Area -->
+                <div id="adminChatMessagesArea" class="flex-grow-1 overflow-y-auto p-3 rounded mb-3" style="background: #f8fafc; display: flex; flex-direction: column; gap: 10px; font-size: 13.5px;">
+                    <div class="text-center text-muted py-5 my-auto">
+                        <i class="bi bi-chat-dots fs-1 d-block mb-3" style="color: #cbd5e1;"></i>
+                        Hãy chọn một cuộc hội thoại bên trái để bắt đầu trả lời khách hàng.
+                    </div>
+                </div>
+
+                <!-- Chat Window Input Area -->
+                <form id="adminChatInputForm" onsubmit="sendAdminChatMessage(e)" class="d-none" style="display: flex; align-items: center; gap: 10px; border-top: 1px solid #eee; padding-top: 12px;">
+                    <input type="text" id="adminChatInputText" class="form-control-admin flex-grow-1" placeholder="Nhập câu trả lời của nhân viên hỗ trợ..." required autocomplete="off" />
+                    <button type="submit" class="btn btn-primary px-4 fw-bold" style="background: #800020; border: none; height: 38px;">
+                        <i class="bi bi-send me-1"></i> Gửi đi
+                    </button>
+                </form>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    .chat-session-item {
+        padding: 12px;
+        border: 1px solid #edf2f7;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+    }
+    .chat-session-item:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+    }
+    .chat-session-item.active {
+        border-color: #800020;
+        background: #faf0f2;
+    }
+    .admin-msg-bubble {
+        background: #800020;
+        color: white;
+        padding: 8px 14px;
+        border-radius: 12px 12px 2px 12px;
+        max-width: 70%;
+        align-self: flex-end;
+        word-break: break-all;
+    }
+    .customer-msg-bubble {
+        background: white;
+        color: #333;
+        padding: 8px 14px;
+        border-radius: 12px 12px 12px 2px;
+        max-width: 70%;
+        align-self: flex-start;
+        border: 1px solid #eef0f3;
+        word-break: break-all;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        let currentConnectionId = "";
+        let activeChatList = [];
+        let messagePollInterval = null;
+
+        $(document).ready(function() {
+            // Load list of chats initially
+            loadActiveChatsList();
+            
+            // Poll chat list every 5 seconds
+            setInterval(loadActiveChatsList, 5000);
+
+            // Bind enter key or form submit manually
+            $('#adminChatInputForm').on('submit', function(e) {
+                e.preventDefault();
+                sendAdminChatMessage();
+            });
+        });
+
+        function loadActiveChatsList() {
+            fetch('/Chat/GetActiveChats')
+                .then(r => r.ok ? r.json() : [])
+                .then(chats => {
+                    activeChatList = chats;
+                    renderActiveChatsList();
+                });
+        }
+
+        function renderActiveChatsList() {
+            const container = document.getElementById('activeChatsList');
+            if (activeChatList.length === 0) {
+                container.innerHTML = `<div class="text-center text-muted py-5 small">Chưa nhận được tin nhắn chat nào.</div>`;
+                return;
+            }
+
+            const filter = document.getElementById('chatSearch').value.toLowerCase();
+            let html = "";
+            activeChatList.forEach(chat => {
+                if (filter && chat.customerName.toLowerCase().indexOf(filter) === -1) {
+                    return;
+                }
+
+                const isActive = chat.connectionId === currentConnectionId ? "active" : "";
+                const senderLabel = chat.lastMsgSender === 'Staff' ? 'Bạn: ' : '';
+                
+                html += `
+                    <div class="chat-session-item ${isActive}" onclick="selectChatSession('${chat.connectionId}', '${chat.customerName}')">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold text-dark" style="font-size:13.5px;">${chat.customerName}</span>
+                            <span class="text-muted" style="font-size:10.5px;">${chat.lastMsgTime}</span>
+                        </div>
+                        <div class="text-truncate text-muted" style="font-size:12.5px;">
+                            <strong>${senderLabel}</strong>${chat.lastMsgText}
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function filterActiveChats() {
+            renderActiveChatsList();
+        }
+
+        function selectChatSession(connectionId, customerName) {
+            currentConnectionId = connectionId;
+            
+            // Highlight list item
+            renderActiveChatsList();
+
+            // Set headers
+            document.getElementById('chatWindowHeader').style.setProperty('display', 'flex', 'important');
+            document.getElementById('chatHeaderCustomerName').innerText = customerName;
+            document.getElementById('chatHeaderConnectionId').innerText = "ID: " + connectionId.substring(0, 8) + "...";
+            document.getElementById('chatHeaderInitial').innerText = customerName.charAt(0).toUpperCase();
+
+            // Show Form
+            document.getElementById('adminChatInputForm').classList.remove('d-none');
+
+            // Load messages immediately
+            loadAdminChatMessages();
+
+            // Reset polling interval for messages
+            if (messagePollInterval) clearInterval(messagePollInterval);
+            messagePollInterval = setInterval(loadAdminChatMessages, 2500);
+        }
+
+        function loadAdminChatMessages() {
+            if (!currentConnectionId) return;
+
+            fetch(`/Chat/GetAdminMessages?connectionId=${currentConnectionId}`)
+                .then(r => r.ok ? r.json() : [])
+                .then(msgs => {
+                    const area = document.getElementById('adminChatMessagesArea');
+                    let html = "";
+                    msgs.forEach(m => {
+                        const isStaff = m.sender === 'Staff';
+                        if (isStaff) {
+                            html += `
+                                <div class="admin-msg-bubble">
+                                    ${m.message}
+                                    <div style="font-size: 9px; text-align: right; margin-top: 3px; opacity: 0.8;">${m.timestamp}</div>
+                                </div>
+                            `;
+                        } else {
+                            html += `
+                                <div class="customer-msg-bubble">
+                                    ${m.message}
+                                    <div style="font-size: 9px; margin-top: 3px; opacity: 0.5;">${m.timestamp}</div>
+                                </div>
+                            `;
+                        }
+                    });
+
+                    const oldHtml = area.dataset.lastHtml || "";
+                    if (oldHtml !== html) {
+                        area.innerHTML = html;
+                        area.dataset.lastHtml = html;
+                        setTimeout(scrollAdminChatToBottom, 50);
+                    }
+                });
+        }
+
+        function sendAdminChatMessage() {
+            const input = document.getElementById('adminChatInputText');
+            const message = input.value.trim();
+            if (!message || !currentConnectionId) return;
+
+            input.value = '';
+
+            fetch('/Chat/AdminSendMessage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `connectionId=${currentConnectionId}&message=${encodeURIComponent(message)}`
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    loadAdminChatMessages();
+                    loadActiveChatsList();
+                } else {
+                    alert(data.message || 'Lỗi gửi tin nhắn.');
+                }
+            });
+        }
+
+        function scrollAdminChatToBottom() {
+            const area = document.getElementById('adminChatMessagesArea');
+            if (area) {
+                area.scrollTop = area.scrollHeight;
+            }
+        }
+    </script>
+}

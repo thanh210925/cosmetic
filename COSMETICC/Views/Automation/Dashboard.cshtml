@@ -1,0 +1,310 @@
+@{
+    ViewData["Title"] = "Automation Dashboard — Admin";
+    Layout = null; // Use admin layout if needed
+    
+    var pendingOrders = (int)(ViewBag.PendingOrders ?? 0);
+    var cancelledToday = (int)(ViewBag.CancelledToday ?? 0);
+    var unreadNotifs = (int)(ViewBag.UnreadNotifs ?? 0);
+    var recentOrders = ViewBag.RecentOrders as List<COSMETICC.Models.Order> ?? new();
+    var recentNotifs = ViewBag.RecentNotifs as List<COSMETICC.Models.Notification> ?? new();
+    var fraudSuspects = ViewBag.FraudSuspects as List<COSMETICC.Models.Order> ?? new();
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Automation Dashboard — MeiLing Admin</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+        body { background: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', sans-serif; }
+        .auto-header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            padding: 20px 30px;
+        }
+        .stat-card {
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px; padding: 24px;
+            transition: all 0.3s;
+        }
+        .stat-card:hover { border-color: rgba(124,58,237,0.4); transform: translateY(-2px); }
+        .stat-num { font-size: 2.4rem; font-weight: 900; }
+        .stat-label { color: #64748b; font-size: 13px; margin-top: 4px; }
+        .panel {
+            background: #1e293b; border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px; padding: 24px; margin-bottom: 20px;
+        }
+        .panel h5 {
+            font-weight: 700; color: #e2e8f0; margin-bottom: 16px;
+            padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .table-dark-custom { color: #cbd5e1; }
+        .table-dark-custom th { color: #64748b; font-size: 12px; font-weight: 600; border-color: rgba(255,255,255,0.06); }
+        .table-dark-custom td { border-color: rgba(255,255,255,0.06); font-size: 13px; padding: 10px 12px; }
+        .badge-status {
+            font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 700;
+        }
+        .notif-item { 
+            padding: 10px 14px; border-radius: 10px; 
+            background: rgba(255,255,255,0.03); margin-bottom: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .notif-item.unread { border-left: 3px solid #7c3aed; }
+        .fraud-alert { 
+            background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); 
+            border-radius: 10px; padding: 12px 16px; margin-bottom: 8px;
+        }
+        .action-card {
+            background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1);
+            border-radius: 12px; padding: 20px; text-align: center; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .action-card:hover { background: rgba(124,58,237,0.1); border-color: rgba(124,58,237,0.4); }
+        .back-btn { color: #7c3aed; text-decoration: none; font-size: 13px; }
+        .back-btn:hover { color: #c084fc; }
+    </style>
+</head>
+<body>
+
+<div class="auto-header d-flex align-items-center justify-content-between">
+    <div>
+        <a href="/Admin/Dashboard" class="back-btn">← Admin Panel</a>
+        <h4 class="mb-0 mt-1 fw-bold" style="color:white;">⚙️ Automation Dashboard</h4>
+        <small style="color:#64748b;">Hệ thống tự động hóa & thông báo — MeiLing Cosmetics</small>
+    </div>
+    <div class="text-end">
+        <span style="font-size:12px;color:#64748b;">Cập nhật: @DateTime.Now.ToString("HH:mm dd/MM")</span>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success m-3 mb-0 small border-0" style="background:rgba(22,163,74,0.2); color:#86efac;">
+        <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+    </div>
+}
+
+<div class="container-fluid px-4 py-4">
+    
+    <!-- Stats Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-num text-warning">@pendingOrders</div>
+                <div class="stat-label">⏳ Đơn đang chờ xử lý</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-num text-danger">@cancelledToday</div>
+                <div class="stat-label">🚫 Đơn hủy hôm nay</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-num" style="color:#c084fc;">@unreadNotifs</div>
+                <div class="stat-label">🔔 Thông báo chưa đọc</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-num text-danger" style="font-size:1.8rem;">@fraudSuspects.Count</div>
+                <div class="stat-label">⚠️ Nghi vấn gian lận</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        
+        <!-- Left column -->
+        <div class="col-lg-8">
+            
+            <!-- Recent Orders -->
+            <div class="panel">
+                <h5><i class="bi bi-receipt me-2 text-warning"></i>Đơn hàng gần đây</h5>
+                <div class="table-responsive">
+                    <table class="table table-dark-custom mb-0">
+                        <thead>
+                            <tr>
+                                <th>MÃ ĐƠN</th>
+                                <th>KHÁCH HÀNG</th>
+                                <th>TỔNG TIỀN</th>
+                                <th>TRẠNG THÁI</th>
+                                <th>THAO TÁC</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var o in recentOrders)
+                            {
+                                var statusColor = o.Status switch {
+                                    "Đã giao" => "success",
+                                    "Đang giao" => "info",
+                                    "Đã hủy (Quá hạn)" => "danger",
+                                    "Chờ xác nhận" => "warning",
+                                    _ => "secondary"
+                                };
+                                <tr>
+                                    <td>
+                                        <span style="color:#c084fc; font-weight:700;">@(o.OrderCode ?? $"#{o.Id}")</span>
+                                    </td>
+                                    <td>@(o.User?.FullName ?? o.User?.Username ?? "—")</td>
+                                    <td class="fw-bold">@String.Format("{0:N0}", o.TotalAmount)₫</td>
+                                    <td>
+                                        <span class="badge-status bg-@statusColor bg-opacity-25 text-@statusColor border border-@statusColor border-opacity-25">
+                                            @(o.Status ?? "Không rõ")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="@Url.Action("DownloadInvoice", "Automation", new { orderId = o.Id })"
+                                           class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size:11px;" title="Tải hóa đơn PDF">
+                                            <i class="bi bi-file-earmark-pdf"></i> PDF
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Fraud Suspects -->
+            @if (fraudSuspects.Any())
+            {
+                <div class="panel">
+                    <h5><i class="bi bi-shield-exclamation me-2 text-danger"></i>Cảnh báo Gian lận</h5>
+                    @foreach (var o in fraudSuspects)
+                    {
+                        <div class="fraud-alert d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-bold" style="color:#fca5a5;">⚠️ Đơn #@(o.OrderCode ?? o.Id.ToString())</div>
+                                <small style="color:#94a3b8;">Khách: @(o.User?.FullName ?? "—") | Tổng: @String.Format("{0:N0}", o.TotalAmount)₫</small>
+                            </div>
+                            <span class="badge bg-danger">Giá trị cao</span>
+                        </div>
+                    }
+                </div>
+            }
+
+            <!-- Manual Actions -->
+            <div class="panel">
+                <h5><i class="bi bi-lightning-fill me-2" style="color:#f59e0b;"></i>Thao tác thủ công</h5>
+                <div class="row g-3">
+                    
+                    <!-- Test Email -->
+                    <div class="col-md-6">
+                        <div class="action-card">
+                            <i class="bi bi-envelope-fill fs-2 mb-2" style="color:#60a5fa;"></i>
+                            <h6 class="fw-bold mb-1 text-white">Gửi Email Test</h6>
+                            <form asp-action="TestEmail" method="post" class="mt-2">
+                                @Html.AntiForgeryToken()
+                                <input type="email" name="toEmail" class="form-control form-control-sm mb-2"
+                                       style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.1);color:white;"
+                                       placeholder="email@example.com" required />
+                                <button type="submit" class="btn btn-sm btn-outline-primary w-100">Gửi →</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Broadcast Notification -->
+                    <div class="col-md-6">
+                        <div class="action-card">
+                            <i class="bi bi-megaphone-fill fs-2 mb-2" style="color:#a78bfa;"></i>
+                            <h6 class="fw-bold mb-1 text-white">Broadcast Thông báo</h6>
+                            <form asp-action="BroadcastNotification" method="post" class="mt-2">
+                                @Html.AntiForgeryToken()
+                                <input type="text" name="title" class="form-control form-control-sm mb-2"
+                                       style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.1);color:white;"
+                                       placeholder="Tiêu đề thông báo..." required />
+                                <input type="text" name="message" class="form-control form-control-sm mb-2"
+                                       style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.1);color:white;"
+                                       placeholder="Nội dung..." required />
+                                <button type="submit" class="btn btn-sm btn-outline-primary w-100">Gửi đến tất cả →</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right column: Notifications -->
+        <div class="col-lg-4">
+            <div class="panel">
+                <h5><i class="bi bi-bell-fill me-2" style="color:#c084fc;"></i>Thông báo hệ thống</h5>
+                @if (!recentNotifs.Any())
+                {
+                    <div class="text-center py-4 text-muted small">
+                        <i class="bi bi-bell-slash fs-3 mb-2 d-block"></i>
+                        Chưa có thông báo nào
+                    </div>
+                }
+                else
+                {
+                    @foreach (var n in recentNotifs)
+                    {
+                        var typeIcon = n.Type switch {
+                            "order" => "🛒",
+                            "payment" => "💳",
+                            "review" => "⭐",
+                            "promo" => "🎁",
+                            _ => "🔔"
+                        };
+                        <div class="notif-item @(n.IsRead ? "" : "unread")">
+                            <div class="d-flex align-items-start gap-2">
+                                <span style="font-size:18px;">@typeIcon</span>
+                                <div class="flex-grow-1">
+                                    <div style="font-size:13px; font-weight:@(n.IsRead ? "400" : "700"); color:@(n.IsRead ? "#64748b" : "#e2e8f0");">
+                                        @n.Title
+                                    </div>
+                                    <div style="font-size:12px; color:#64748b;">@n.Message.Substring(0, Math.Min(n.Message.Length, 70))@(n.Message.Length > 70 ? "..." : "")</div>
+                                    <div style="font-size:11px; color:#475569; margin-top:2px;">
+                                        @(n.User?.FullName ?? "Hệ thống") · @n.CreatedAt.ToString("HH:mm dd/MM")
+                                    </div>
+                                </div>
+                                @if (!n.IsRead)
+                                {
+                                    <div style="width:8px;height:8px;background:#7c3aed;border-radius:50%;flex-shrink:0;margin-top:4px;"></div>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+
+            <!-- Service Status -->
+            <div class="panel">
+                <h5><i class="bi bi-activity me-2 text-success"></i>Trạng thái dịch vụ</h5>
+                <div class="d-flex flex-column gap-2">
+                    @{
+                        var services = new[] {
+                            ("🤖 Auto-Cancel Orders", "Chạy mỗi 30 phút", "success"),
+                            ("⭐ Review Reminder", "Chạy mỗi 6 giờ", "success"),
+                            ("📧 Email Service", "Placeholder (cần cấu hình SMTP)", "warning"),
+                            ("📱 SMS Service", "Placeholder (cần Twilio)", "warning"),
+                            ("🔬 Fraud Detection", "Hoạt động", "success"),
+                            ("🚫 Spam Filter", "Hoạt động", "success"),
+                            ("📄 PDF Invoice", "QuestPDF v2025.7", "success"),
+                        };
+                        foreach (var (name, desc, color) in services)
+                        {
+                            <div class="d-flex align-items-center justify-content-between py-1" style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                                <div>
+                                    <div style="font-size:13px; color:#e2e8f0;">@name</div>
+                                    <div style="font-size:11px; color:#64748b;">@desc</div>
+                                </div>
+                                <span class="badge bg-@color bg-opacity-25 text-@color" style="font-size:10px;">●</span>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

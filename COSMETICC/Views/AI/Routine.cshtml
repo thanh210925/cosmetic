@@ -1,0 +1,265 @@
+@{
+    ViewData["Title"] = "AI Routine Chăm sóc Da — " + ViewBag.SkinType;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string skinType = ViewBag.SkinType ?? "Da hỗn hợp";
+    var routine = ViewBag.Routine as List<(string Step, string Icon, string Desc)> ?? new();
+    var matchedProducts = ViewBag.MatchedProducts as Dictionary<string, List<COSMETICC.Models.Product>> ?? new();
+
+    var skinEmoji = skinType switch {
+        "Da dầu" => "💦",
+        "Da khô" => "🌵",
+        "Da hỗn hợp" => "⚖️",
+        "Da nhạy cảm" => "🌸",
+        "Da mụn" => "🎯",
+        _ => "✨"
+    };
+    var skinColor = skinType switch {
+        "Da dầu" => "#0891b2",
+        "Da khô" => "#d97706",
+        "Da hỗn hợp" => "#7c3aed",
+        "Da nhạy cảm" => "#db2777",
+        "Da mụn" => "#059669",
+        _ => "#7c3aed"
+    };
+}
+
+<style>
+    body { background: #f8fafc; }
+    .routine-hero {
+        background: linear-gradient(135deg, #1a0a2e 0%, #16213e 100%);
+        padding: 50px 0 40px;
+        text-align: center;
+        color: white;
+    }
+    .skin-badge {
+        display: inline-block;
+        background: @skinColor;
+        color: white; font-size: 16px; font-weight: 800;
+        padding: 8px 24px; border-radius: 30px;
+        margin-bottom: 16px;
+    }
+    .routine-hero h1 {
+        font-size: 2.2rem; font-weight: 900; color: white; margin-bottom: 8px;
+    }
+    .routine-hero p { color: #94a3b8; }
+
+    .time-tabs {
+        display: flex; gap: 0;
+        background: #f1f5f9; border-radius: 12px; padding: 4px;
+        max-width: 340px; margin: 0 auto;
+    }
+    .time-tab {
+        flex: 1; padding: 10px 20px;
+        border-radius: 9px; border: none; background: transparent;
+        font-weight: 700; font-size: 14px; color: #64748b;
+        cursor: pointer; transition: all 0.2s;
+    }
+    .time-tab.active {
+        background: white; color: #1e293b;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .step-card {
+        background: white; border-radius: 16px;
+        border: 1px solid #f1f5f9;
+        padding: 28px; margin-bottom: 16px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        transition: all 0.3s;
+    }
+    .step-card:hover {
+        box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        transform: translateX(4px);
+    }
+    .step-num {
+        width: 36px; height: 36px; border-radius: 50%;
+        background: linear-gradient(135deg, @skinColor, #7c3aed);
+        color: white; font-weight: 900; font-size: 15px;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+    }
+    .step-title { font-size: 1.05rem; font-weight: 800; color: #1e293b; }
+    .step-desc { font-size: 13px; color: #64748b; margin-top: 4px; }
+    .step-icon { font-size: 28px; }
+
+    .suggested-products { margin-top: 14px; }
+    .mini-product {
+        display: flex; align-items: center; gap: 10px;
+        padding: 8px 12px; border-radius: 8px; background: #f8fafc;
+        border: 1px solid #f1f5f9; margin-bottom: 6px;
+        transition: all 0.2s; text-decoration: none; color: #1e293b;
+    }
+    .mini-product:hover { border-color: @skinColor; background: #f0f9ff; color: #1e293b; }
+    .mini-product img { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; }
+    .mini-product-info { flex: 1; min-width: 0; }
+    .mini-product-name { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mini-product-brand { font-size: 11px; color: #94a3b8; }
+    .mini-product-price { font-size: 13px; font-weight: 700; color: #800020; flex-shrink: 0; }
+
+    .routine-tip {
+        background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+        border-left: 4px solid #16a34a;
+        border-radius: 8px; padding: 16px 20px;
+        margin-bottom: 30px;
+    }
+    .change-skin-btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        color: #94a3b8; text-decoration: none; font-size: 13px;
+        transition: color 0.2s;
+    }
+    .change-skin-btn:hover { color: #e2e8f0; }
+</style>
+
+<div class="routine-hero">
+    <div class="container">
+        <a href="@Url.Action("SkinAnalysis", "AI")" class="change-skin-btn mb-3 d-inline-flex">
+            ← Làm lại bài quiz
+        </a>
+        <br />
+        <span class="skin-badge">@skinEmoji @skinType</span>
+        <h1>Routine của bạn</h1>
+        <p>Routine 5 bước được thiết kế riêng cho loại da <strong>@skinType</strong></p>
+    </div>
+</div>
+
+<div class="container py-4">
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-4 small" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @Html.Raw(TempData["SuccessMessage"])
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="routine-tip">
+        <i class="bi bi-lightbulb-fill text-success me-2"></i>
+        <strong>Mẹo:</strong> Áp dụng sản phẩm từ loãng đến đặc. Luôn kết thúc buổi sáng bằng kem chống nắng SPF50+. Kiên trì ít nhất 4 tuần để thấy kết quả!
+    </div>
+
+    <!-- Time Tabs -->
+    <div class="d-flex justify-content-center mb-4">
+        <div class="time-tabs">
+            <button class="time-tab active" onclick="switchTime('morning', this)">☀️ Buổi sáng</button>
+            <button class="time-tab" onclick="switchTime('evening', this)">🌙 Buổi tối</button>
+        </div>
+    </div>
+
+    <!-- Morning Routine -->
+    <div id="morning-routine">
+        <div class="row g-3">
+            @{int stepIdx = 0;}
+            @foreach (var (step, icon, desc) in routine)
+            {
+                stepIdx++;
+                var products = matchedProducts.ContainsKey(step) ? matchedProducts[step] : new();
+                <div class="col-12">
+                    <div class="step-card">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="step-num">@stepIdx</div>
+                            <span class="step-icon">@icon</span>
+                            <div class="flex-grow-1">
+                                <div class="step-title">@step</div>
+                                <div class="step-desc">@desc</div>
+
+                                @if (products.Any())
+                                {
+                                    <div class="suggested-products">
+                                        <div class="text-muted" style="font-size:11px; font-weight:700; margin-bottom:6px; letter-spacing:0.5px;">SẢN PHẨM GỢI Ý</div>
+                                        @foreach (var p in products)
+                                        {
+                                            <a href="@Url.Action("Details", "Product", new { id = p.Id })" class="mini-product">
+                                                <img src="@(p.ImageUrl ?? "/img/placeholder.png")" alt="@p.Name" />
+                                                <div class="mini-product-info">
+                                                    <div class="mini-product-name">@p.Name</div>
+                                                    <div class="mini-product-brand">@(p.Brand?.Name ?? "MeiLing")</div>
+                                                </div>
+                                                <div class="mini-product-price">@String.Format("{0:N0}", p.PromoPrice ?? p.Price)₫</div>
+                                            </a>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Evening Routine (same steps without SPF) -->
+    <div id="evening-routine" style="display:none;">
+        <div class="row g-3">
+            @{
+                var eveningSteps = routine.Where((s, i) => i < 4).ToList();
+                int eIdx = 0;
+            }
+            @foreach (var (step, icon, desc) in eveningSteps)
+            {
+                eIdx++;
+                var products = matchedProducts.ContainsKey(step) ? matchedProducts[step] : new();
+                <div class="col-12">
+                    <div class="step-card">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="step-num">@eIdx</div>
+                            <span class="step-icon">@icon</span>
+                            <div class="flex-grow-1">
+                                <div class="step-title">@step</div>
+                                <div class="step-desc">@desc</div>
+                                @if (products.Any())
+                                {
+                                    <div class="suggested-products">
+                                        <div class="text-muted" style="font-size:11px; font-weight:700; margin-bottom:6px; letter-spacing:0.5px;">SẢN PHẨM GỢI Ý</div>
+                                        @foreach (var p in products)
+                                        {
+                                            <a href="@Url.Action("Details", "Product", new { id = p.Id })" class="mini-product">
+                                                <img src="@(p.ImageUrl ?? "/img/placeholder.png")" alt="@p.Name" />
+                                                <div class="mini-product-info">
+                                                    <div class="mini-product-name">@p.Name</div>
+                                                    <div class="mini-product-brand">@(p.Brand?.Name ?? "MeiLing")</div>
+                                                </div>
+                                                <div class="mini-product-price">@String.Format("{0:N0}", p.PromoPrice ?? p.Price)₫</div>
+                                            </a>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            <!-- Night Cream bonus step -->
+            <div class="col-12">
+                <div class="step-card" style="border: 1px dashed #c084fc; background: #fdf4ff;">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="step-num" style="background: linear-gradient(135deg, #7c3aed, #db2777);">5</div>
+                        <span class="step-icon">🌙</span>
+                        <div class="flex-grow-1">
+                            <div class="step-title">Kem dưỡng đêm (Night Cream)</div>
+                            <div class="step-desc">Buổi tối là lúc da tái tạo tốt nhất. Dùng kem dưỡng đặc hơn hoặc retinol (da lão hóa) để tối ưu hóa quá trình phục hồi.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="d-flex gap-3 justify-content-center mt-5 flex-wrap">
+        <a href="@Url.Action("Ingredients", "AI")" class="btn btn-outline-secondary px-4 fw-bold">
+            🧬 Tìm theo thành phần
+        </a>
+        <a href="@Url.Action("List", "Product", new { skinType = skinType })" class="btn btn-danger px-4 fw-bold" style="background:#800020; border:none;">
+            🛍️ Mua sản phẩm phù hợp
+        </a>
+    </div>
+</div>
+
+<script>
+function switchTime(time, btn) {
+    document.querySelectorAll('.time-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+
+    document.getElementById('morning-routine').style.display = time === 'morning' ? 'block' : 'none';
+    document.getElementById('evening-routine').style.display = time === 'evening' ? 'block' : 'none';
+}
+</script>

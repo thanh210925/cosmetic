@@ -29,7 +29,8 @@ namespace COSMETICC.Controllers
 
             var cart = await _context.Carts
                 .Include(c => c.CartItems)
-                .ThenInclude(ci => ci.Product)
+                    .ThenInclude(ci => ci.Product)
+                        .ThenInclude(p => p.Brand)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
 
             if (cart == null)
@@ -142,6 +143,100 @@ namespace COSMETICC.Controllers
             await _context.SaveChangesAsync();
 
             return Json(new { success = true, message = "Đã xóa mặt hàng khỏi giỏ hàng thành công!" });
+        }
+        // GET: /Cart/GetCartCount
+        [HttpGet]
+        public async Task<IActionResult> GetCartCount()
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+                return Json(new { count = 0 });
+
+            var count = await _context.CartItems
+                .Where(ci => ci.Cart.UserId == userId)
+                .SumAsync(ci => (int?)ci.Quantity) ?? 0;
+
+            return Json(new { count });
+        }
+
+        // POST: /Cart/SetProductQuantity
+        [HttpPost]
+        public async Task<IActionResult> SetProductQuantity(int productId, int quantity)
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+            {
+                return Json(new { success = false, message = "Vui lòng đăng nhập để thực hiện tính năng này!" });
+            }
+
+            var product = await _context.Products.FindAsync(productId);
+            if (product == null)
+            {
+                return Json(new { success = false, message = "Sản phẩm không tồn tại!" });
+            }
+
+            var cart = await _context.Carts.FirstOrDefaultAsync(c => c.UserId == userId);
+            if (cart == null)
+            {
+                cart = new Cart { UserId = userId };
+                _context.Carts.Add(cart);
+                await _context.SaveChangesAsync();
+            }
+
+            var cartItem = await _context.CartItems
+                .FirstOrDefaultAsync(ci => ci.CartId == cart.Id && ci.ProductId == productId);
+
+            if (quantity <= 0)
+            {
+                if (cartItem != null)
+                {
+                    _context.CartItems.Remove(cartItem);
+                    await _context.SaveChangesAsync();
+                }
+                return Json(new { success = true, count = 0, message = "Đã xóa khỏi giỏ hàng!" });
+            }
+
+            if (product.Stock < quantity)
+            {
+                return Json(new { success = false, message = $"Số lượng sản phẩm trong kho không đủ (Hiện còn {product.Stock} sản phẩm)!" });
+            }
+
+            if (cartItem == null)
+            {
+                cartItem = new CartItem
+                {
+                    CartId = cart.Id,
+                    ProductId = productId,
+                    Quantity = quantity
+                };
+                _context.CartItems.Add(cartItem);
+            }
+            else
+            {
+                cartItem.Quantity = quantity;
+                _context.CartItems.Update(cartItem);
+            }
+
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, count = quantity, message = "Cập nhật giỏ hàng thành công!" });
+        }
+
+        // GET: /Cart/GetCartItems
+        [HttpGet]
+        public async Task<IActionResult> GetCartItems()
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+            {
+                return Json(new List<object>());
+            }
+
+            var items = await _context.CartItems
+                .Where(ci => ci.Cart.UserId == userId)
+                .Select(ci => new { ci.ProductId, ci.Quantity })
+                .ToListAsync();
+
+            return Json(items);
         }
     }
 }

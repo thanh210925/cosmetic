@@ -1,0 +1,438 @@
+@model dynamic
+@{
+    ViewData["Title"] = "So sánh sản phẩm";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var allProducts = (List<COSMETICC.Models.Product>)ViewBag.AllProducts;
+    var p1 = (COSMETICC.Models.Product?)ViewBag.Product1;
+    var p2 = (COSMETICC.Models.Product?)ViewBag.Product2;
+
+    // Helper to calculate rating
+    double GetRating(COSMETICC.Models.Product p)
+    {
+        return p.Reviews.Any() ? Math.Round(p.Reviews.Average(r => r.Rating ?? 5), 1) : 5.0;
+    }
+
+    // Helper to get active price
+    decimal GetPrice(COSMETICC.Models.Product p)
+    {
+        return p.PromoPrice ?? p.Price;
+    }
+}
+
+<style>
+    body {
+        background-color: #f8fafc;
+    }
+    .compare-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    .compare-header {
+        background: linear-gradient(135deg, #800020 0%, #5c0017 100%);
+        color: white;
+        padding: 40px 0;
+        text-align: center;
+        border-radius: 12px;
+        margin-bottom: 30px;
+    }
+    .compare-table {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+    }
+    .compare-table th {
+        background: #f8fafc;
+        font-weight: 700;
+        color: #475569;
+        text-align: left;
+        width: 20%;
+        vertical-align: middle;
+        border-right: 1px solid #edf2f7;
+    }
+    .compare-table td {
+        width: 40%;
+        vertical-align: top;
+        border-right: 1px solid #edf2f7;
+        padding: 20px;
+    }
+    .compare-table td:last-child {
+        border-right: none;
+    }
+    .compare-select {
+        height: 42px;
+        border-radius: 6px;
+        border: 1px solid #cbd5e1;
+        font-weight: 500;
+    }
+    .vs-badge {
+        background: #e2e8f0;
+        color: #475569;
+        font-weight: 800;
+        padding: 10px 15px;
+        border-radius: 50%;
+        font-size: 14px;
+    }
+    .compare-img {
+        max-height: 180px;
+        object-fit: contain;
+        margin-bottom: 15px;
+    }
+    .compare-placeholder {
+        background: #f8fafc;
+        border: 2px dashed #cbd5e1;
+        border-radius: 8px;
+        height: 250px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: #64748b;
+    }
+    .better-price-badge {
+        background: #d1fae5;
+        color: #065f46;
+        font-size: 11px;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-weight: bold;
+        display: inline-block;
+        margin-top: 5px;
+    }
+</style>
+
+<div class="container py-5 compare-container text-start">
+    
+    <!-- Header banner -->
+    <div class="compare-header shadow-sm">
+        <h2 class="fw-bold"><i class="bi bi-arrow-left-right me-2"></i>SO SÁNH SẢN PHẨM LÀM ĐẸP</h2>
+        <p class="mb-0 opacity-75">So sánh chi tiết giá, thành phần, loại da và công dụng để tìm ra sản phẩm phù hợp nhất</p>
+    </div>
+
+    <!-- Product selectors row -->
+    <div class="row g-3 align-items-center mb-4 p-4 bg-white rounded border shadow-sm mx-0">
+        <div class="col-md-5">
+            <label class="form-label small fw-bold text-dark">Sản phẩm thứ nhất (A):</label>
+            <select id="selectProd1" class="form-select compare-select" onchange="updateCompare()">
+                <option value="">-- Chọn sản phẩm A --</option>
+                @foreach (var p in allProducts)
+                {
+                    <option value="@p.Id" selected="@(p1?.Id == p.Id ? "selected" : null)">[@(p.Brand?.Name ?? "Hãng khác")] - @p.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2 text-center my-3 my-md-0">
+            <span class="vs-badge">VS</span>
+        </div>
+        <div class="col-md-5">
+            <label class="form-label small fw-bold text-dark">Sản phẩm thứ hai (B):</label>
+            <select id="selectProd2" class="form-select compare-select" onchange="updateCompare()">
+                <option value="">-- Chọn sản phẩm B --</option>
+                @foreach (var p in allProducts)
+                {
+                    <option value="@p.Id" selected="@(p2?.Id == p.Id ? "selected" : null)">[@(p.Brand?.Name ?? "Hãng khác")] - @p.Name</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    <!-- Comparison Table -->
+    <div class="table-responsive compare-table">
+        <table class="table mb-0 align-middle">
+            <tbody>
+                <!-- Row 1: Image -->
+                <tr>
+                    <th class="p-3">Hình ảnh</th>
+                    <td>
+                        @if (p1 != null)
+                        {
+                            <div class="text-center">
+                                <img src="@(string.IsNullOrEmpty(p1.ImageUrl) ? "https://placehold.co/200x200?text=No+Image" : p1.ImageUrl)" class="compare-img img-fluid" alt="" />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="compare-placeholder">
+                                <i class="bi bi-box-seam fs-2 mb-2"></i>
+                                <span class="small">Chưa chọn sản phẩm A</span>
+                            </div>
+                        }
+                    </td>
+                    <td>
+                        @if (p2 != null)
+                        {
+                            <div class="text-center">
+                                <img src="@(string.IsNullOrEmpty(p2.ImageUrl) ? "https://placehold.co/200x200?text=No+Image" : p2.ImageUrl)" class="compare-img img-fluid" alt="" />
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="compare-placeholder">
+                                <i class="bi bi-box-seam fs-2 mb-2"></i>
+                                <span class="small">Chưa chọn sản phẩm B</span>
+                            </div>
+                        }
+                    </td>
+                </tr>
+
+                <!-- Row 2: Name & Brand -->
+                <tr>
+                    <th class="p-3">Tên & Thương hiệu</th>
+                    <td>
+                        @if (p1 != null)
+                        {
+                            <h5 class="fw-bold text-dark mb-1">@p1.Name</h5>
+                            <span class="badge bg-secondary-subtle text-secondary">Hãng: @(p1.Brand?.Name ?? "MeiLing")</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                    </td>
+                    <td>
+                        @if (p2 != null)
+                        {
+                            <h5 class="fw-bold text-dark mb-1">@p2.Name</h5>
+                            <span class="badge bg-secondary-subtle text-secondary">Hãng: @(p2.Brand?.Name ?? "MeiLing")</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                    </td>
+                </tr>
+
+                <!-- Row 3: Price -->
+                <tr>
+                    <th class="p-3">Giá bán</th>
+                    <td>
+                        @if (p1 != null)
+                        {
+                            var price1 = GetPrice(p1);
+                            <div class="fw-bold text-danger fs-5">@String.Format("{0:N0} đ", price1)</div>
+                            @if (p1.PromoPrice.HasValue && p1.PromoPrice < p1.Price)
+                            {
+                                <div class="text-muted text-decoration-line-through small">@String.Format("{0:N0} đ", p1.Price)</div>
+                            }
+                            @if (p2 != null && price1 < GetPrice(p2))
+                            {
+                                <div class="better-price-badge"><i class="bi bi-piggy-bank-fill me-1"></i> Giá rẻ hơn</div>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                    </td>
+                    <td>
+                        @if (p2 != null)
+                        {
+                            var price2 = GetPrice(p2);
+                            <div class="fw-bold text-danger fs-5">@String.Format("{0:N0} đ", price2)</div>
+                            @if (p2.PromoPrice.HasValue && p2.PromoPrice < p2.Price)
+                            {
+                                <div class="text-muted text-decoration-line-through small">@String.Format("{0:N0} đ", p2.Price)</div>
+                            }
+                            @if (p1 != null && price2 < GetPrice(p1))
+                            {
+                                <div class="better-price-badge"><i class="bi bi-piggy-bank-fill me-1"></i> Giá rẻ hơn</div>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                    </td>
+                </tr>
+
+                <!-- Row 4: Skin Type -->
+                <tr>
+                    <th class="p-3">Loại da phù hợp</th>
+                    <td>
+                        @if (p1 != null)
+                        {
+                            <span class="fw-semibold text-dark">@(string.IsNullOrEmpty(p1.SkinType) ? "Mọi loại da" : p1.SkinType)</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                    </td>
+                    <td>
+                        @if (p2 != null)
+                        {
+                            <span class="fw-semibold text-dark">@(string.IsNullOrEmpty(p2.SkinType) ? "Mọi loại da" : p2.SkinType)</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                    </td>
+                </tr>
+
+                <!-- Row 5: Ingredients -->
+                <tr>
+                    <th class="p-3">Thành phần</th>
+                    <td>
+                        @if (p1 != null)
+                        {
+                            <div class="small text-secondary" style="max-height: 120px; overflow-y: auto; line-height: 1.5;">
+                                @(string.IsNullOrEmpty(p1.Ingredient) ? "Đang cập nhật thành phần..." : p1.Ingredient)
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                    </td>
+                    <td>
+                        @if (p2 != null)
+                        {
+                            <div class="small text-secondary" style="max-height: 120px; overflow-y: auto; line-height: 1.5;">
+                                @(string.IsNullOrEmpty(p2.Ingredient) ? "Đang cập nhật thành phần..." : p2.Ingredient)
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                    </td>
+                </tr>
+
+                <!-- Row 6: Description / Benefits -->
+                <tr>
+                    <th class="p-3">Công dụng / Mô tả</th>
+                    <td>
+                        @if (p1 != null)
+                        {
+                            <div class="small text-dark" style="max-height: 150px; overflow-y: auto; line-height: 1.6;">
+                                @p1.Description
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                    </td>
+                    <td>
+                        @if (p2 != null)
+                        {
+                            <div class="small text-dark" style="max-height: 150px; overflow-y: auto; line-height: 1.6;">
+                                @p2.Description
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                    </td>
+                </tr>
+
+                <!-- Row 7: Reviews -->
+                <tr>
+                    <th class="p-3">Đánh giá khách hàng</th>
+                    <td>
+                        @if (p1 != null)
+                        {
+                            var r1 = GetRating(p1);
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="text-warning fw-bold fs-6"><i class="bi bi-star-fill me-1"></i>@r1/5</span>
+                                <span class="text-muted small">(@(p1.Reviews.Count()) nhận xét)</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                    </td>
+                    <td>
+                        @if (p2 != null)
+                        {
+                            var r2 = GetRating(p2);
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="text-warning fw-bold fs-6"><i class="bi bi-star-fill me-1"></i>@r2/5</span>
+                                <span class="text-muted small">(@(p2.Reviews.Count()) nhận xét)</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                    </td>
+                </tr>
+
+                <!-- Row 8: Stock and Action -->
+                <tr>
+                    <th class="p-3">Tác vụ</th>
+                    <td>
+                        @if (p1 != null)
+                        {
+                            <div class="mb-2 small">
+                                Tình trạng: 
+                                @if (p1.Stock > 0)
+                                {
+                                    <span class="text-success fw-bold">Còn hàng (@p1.Stock)</span>
+                                }
+                                else
+                                {
+                                    <span class="text-danger fw-bold">Tạm hết hàng</span>
+                                }
+                            </div>
+                            <a href="@Url.Action("Details", "Product", new { id = p1.Id })" class="btn btn-sm btn-danger w-100 fw-bold" style="background:#800020; border:none; height:34px; line-height:22px;">
+                                Xem chi tiết A
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                    </td>
+                    <td>
+                        @if (p2 != null)
+                        {
+                            <div class="mb-2 small">
+                                Tình trạng: 
+                                @if (p2.Stock > 0)
+                                {
+                                    <span class="text-success fw-bold">Còn hàng (@p2.Stock)</span>
+                                }
+                                else
+                                {
+                                    <span class="text-danger fw-bold">Tạm hết hàng</span>
+                                }
+                            </div>
+                            <a href="@Url.Action("Details", "Product", new { id = p2.Id })" class="btn btn-sm btn-danger w-100 fw-bold" style="background:#800020; border:none; height:34px; line-height:22px;">
+                                Xem chi tiết B
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+    function updateCompare() {
+        const id1 = document.getElementById('selectProd1').value;
+        const id2 = document.getElementById('selectProd2').value;
+        
+        let url = '/Compare';
+        const params = [];
+        if (id1) params.push(`id1=${id1}`);
+        if (id2) params.push(`id2=${id2}`);
+        
+        if (params.length > 0) {
+            url += '?' + params.join('&');
+        }
+        
+        window.location.href = url;
+    }
+</script>

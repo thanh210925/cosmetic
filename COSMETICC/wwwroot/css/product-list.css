@@ -439,10 +439,9 @@ body {
     color: white;
     border: none;
     border-radius: 4px;
-    padding: 8px 15px;
-    font-size: 13px;
+    padding: 8px 12px;
+    font-size: 14px;
     font-weight: bold;
-    width: 100%;
     transition: all 0.2s ease;
     display: flex;
     align-items: center;
@@ -453,3 +452,59 @@ body {
 .btn-buy-now:hover {
     background-color: #590016;
 }
+
+/* ── Quantity picker row ── */
+.qty-buy-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.qty-stepper {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    overflow: hidden;
+    height: 34px;
+    flex-shrink: 0;
+}
+
+.qty-btn {
+    background: #f5f5f5;
+    border: none;
+    width: 28px;
+    height: 34px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #444;
+    transition: background 0.15s, color 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.qty-btn:hover {
+    background: var(--hasaki-green);
+    color: white;
+}
+
+.qty-input {
+    width: 32px;
+    border: none;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    background: white;
+    height: 34px;
+    outline: none;
+    -moz-appearance: textfield;
+}
+
+.qty-input::-webkit-outer-spin-button,
+.qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }

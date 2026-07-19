@@ -53,8 +53,17 @@ namespace Cosmetic.Controllers
 
             admin.CreatedAt = DateTime.Now;
 
-            _context.Admins.Add(admin);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Admins.Add(admin);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                var innerMsg = ex.InnerException?.Message ?? ex.Message;
+                ViewBag.Error = $"Lỗi cơ sở dữ liệu: {innerMsg}";
+                return View(admin);
+            }
 
             return RedirectToAction("Login");
         }
@@ -77,6 +86,7 @@ namespace Cosmetic.Controllers
             {
                 HttpContext.Session.SetString("AdminId", admin.Id.ToString());
                 HttpContext.Session.SetString("AdminName", admin.FullName ?? "");
+                HttpContext.Session.SetString("AdminRole", admin.Role ?? "ADMIN");
 
                 return RedirectToAction("Dashboard");
             }

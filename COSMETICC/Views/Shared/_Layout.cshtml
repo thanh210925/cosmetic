@@ -3,9 +3,11 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - COSMETICC</title>
+    <title>@ViewData["Title"] - MeiLing Cosmetics</title>
+    <meta name="description" content="@(ViewData["MetaDescription"] ?? "Mỹ phẩm thuần chay MeiLing - Cung cấp sản phẩm dưỡng da, trị mụn, làm sạch sâu từ thiên nhiên an toàn và hiệu quả.")" />
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/COSMETICC.styles.css" asp-append-version="true" />
 
@@ -48,6 +50,12 @@
                         </a>
 
                         <a asp-controller="Account"
+                           asp-action="Loyalty"
+                           class="text-decoration-none text-warning small fw-bold">
+                            <i class="bi bi-gift-fill me-1"></i>Voucher & Tích điểm
+                        </a>
+
+                        <a asp-controller="Account"
                            asp-action="Logout"
                            class="btn btn-outline-danger btn-sm">
                             Đăng xuất
@@ -64,8 +72,38 @@
                     </a>
                 }
 
-                <a asp-controller="Cart" asp-action="Index" class="text-decoration-none" style="font-size: 20px; color: #333;" title="Giỏ hàng">
-                    🛒
+                <!-- 🔔 NOTIFICATION BELL -->
+                @if (Context.Session.GetString("UserId") != null)
+                {
+                    <div class="position-relative" id="notifWrap">
+                        <button id="notifBell" onclick="toggleNotifPanel()" title="Thông báo"
+                                style="background:none;border:none;cursor:pointer;padding:4px;position:relative;color:white;">
+                            <i class="bi bi-bell-fill" style="font-size:21px;"></i>
+                            <span id="notifBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:#ef4444;color:white;font-size:9px;font-weight:800;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;"></span>
+                        </button>
+                        <!-- Dropdown Panel -->
+                        <div id="notifPanel" style="display:none;position:absolute;right:0;top:36px;width:320px;background:#1e293b;border:1px solid rgba(255,255,255,0.12);border-radius:14px;box-shadow:0 16px 40px rgba(0,0,0,0.4);z-index:9999;overflow:hidden;">
+                            <div style="padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-between;align-items:center;">
+                                <span style="color:white;font-weight:700;font-size:14px;">🔔 Thông báo</span>
+                                <button onclick="markAllRead()" style="background:none;border:none;color:#7c3aed;font-size:11px;cursor:pointer;font-weight:700;">Đánh dấu đã đọc</button>
+                            </div>
+                            <div id="notifList" style="max-height:340px;overflow-y:auto;padding:8px;">
+                                <div style="text-align:center;padding:30px;color:#64748b;font-size:13px;">
+                                    <i class="bi bi-bell-slash" style="font-size:30px;display:block;margin-bottom:8px;"></i>
+                                    Chưa có thông báo
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <a asp-controller="Wishlist" asp-action="Index" class="text-white text-decoration-none" title="Yêu thích" style="transition: opacity 0.2s;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">
+                    <i class="bi bi-heart-fill text-danger-hover" style="font-size:21px;"></i>
+                </a>
+
+                <a asp-controller="Cart" asp-action="Index" class="cart-icon-btn text-decoration-none" title="Giỏ hàng" id="cartNavBtn">
+                    <i class="bi bi-cart3" style="font-size:22px;"></i>
+                    <span class="cart-badge" id="cartBadge" style="display:none;">0</span>
                 </a>
                 <!-- BUTTON MOBILE -->
 
@@ -95,11 +133,12 @@
 
                     <a asp-controller="Product" asp-action="List">Danh mục nổi bật</a>
                     <a asp-controller="Product" asp-action="List" asp-route-sort="bestseller">Sản phẩm bán chạy</a>
-                    <a href="#">BLOG làm đẹp</a>
+                    <a asp-controller="Blog" asp-action="Index">BLOG làm đẹp</a>
                     <a asp-controller="Product" asp-action="List" asp-route-hasPromo="true">Sản phẩm giảm giá</a>
                     <a asp-controller="Home" asp-action="About">Về chúng tôi</a>
                     <a href="#">Media</a>
-                    <a href="#">B2B Inquiry</a>
+                    <a asp-controller="Compare" asp-action="Index">So sánh sản phẩm</a>
+                    <a asp-controller="AI" asp-action="Index" style="color:#c084fc;">✨ AI Skincare</a>
 
                 </div>
 
@@ -110,11 +149,15 @@
         <div class="menu container d-none d-lg-flex">
             <a asp-controller="Product" asp-action="List">Danh mục nổi bật</a>
             <a asp-controller="Product" asp-action="List" asp-route-sort="bestseller">Sản phẩm bán chạy</a>
-            <a href="#">BLOG làm đẹp</a>
+            <a asp-controller="Blog" asp-action="Index">BLOG làm đẹp</a>
             <a asp-controller="Product" asp-action="List" asp-route-hasPromo="true">Sản phẩm giảm giá</a>
             <a asp-controller="Home" asp-action="About">Về chúng tôi</a>
             <a href="#">Media</a>
-            <a href="#">B2B Inquiry</a>
+            <a asp-controller="Compare" asp-action="Index">So sánh sản phẩm</a>
+            <a asp-controller="AI" asp-action="Index"
+               style="background:linear-gradient(135deg,#7c3aed,#db2777); color:white !important; padding:5px 14px; border-radius:20px; font-weight:700; font-size:13px; letter-spacing:0.3px; box-shadow:0 2px 10px rgba(124,58,237,0.35); transition:all 0.2s;"
+               onmouseover="this.style.boxShadow='0 4px 18px rgba(124,58,237,0.6)'; this.style.transform='translateY(-1px)'"
+               onmouseout="this.style.boxShadow='0 2px 10px rgba(124,58,237,0.35)'; this.style.transform='translateY(0)'">✨ AI Skincare</a>
         </div>
 
     </header>
@@ -135,6 +178,459 @@
 
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+
+    <!-- ====== AI CHATBOT BUBBLE ====== -->
+    <div id="aiChatbotWrap" style="position:fixed; bottom:88px; right:24px; z-index:99998; display:none; flex-direction:column; width:360px; height:500px; background:#1e1b4b; border-radius:20px; border:1px solid rgba(139,92,246,0.4); box-shadow:0 20px 60px rgba(0,0,0,0.5); overflow:hidden; animation: chatPop 0.3s ease;">
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg,#7c3aed,#db2777); padding:16px 20px; display:flex; align-items:center; gap:12px; justify-content:space-between;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;">🤖</div>
+                <div>
+                    <div style="color:white;font-weight:800;font-size:14px;">AI Skincare Advisor</div>
+                    <div style="color:rgba(255,255,255,0.7);font-size:11px;">⚡ Powered by Gemini AI</div>
+                </div>
+            </div>
+            <button onclick="toggleChatbot()" style="background:rgba(255,255,255,0.15);border:none;color:white;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">✕</button>
+        </div>
+        <!-- Messages -->
+        <div id="aiMessages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;">
+            <div class="ai-msg-bot" style="max-width:85%;background:rgba(124,58,237,0.2);border:1px solid rgba(124,58,237,0.3);border-radius:12px 12px 12px 0;padding:10px 14px;color:#e2e8f0;font-size:13px;line-height:1.5;">
+                💕 Xin chào! Tôi là AI tư vấn viên skincare của MeiLing. Bạn có câu hỏi gì về chăm sóc da không?
+            </div>
+        </div>
+        <!-- Quick Replies -->
+        <div id="aiQuickReplies" style="padding:8px 16px;display:flex;gap:6px;flex-wrap:wrap;">
+            <button onclick="sendQuickMsg('Da dầu nên dùng gì?')" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">💦 Da dầu</button>
+            <button onclick="sendQuickMsg('Da khô cần chăm sóc thế nào?')" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">🌵 Da khô</button>
+            <button onclick="sendQuickMsg('Bị mụn nên dùng gì?')" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">🎯 Trị mụn</button>
+            <button onclick="sendQuickMsg('Routine chăm sóc da cơ bản')" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">✨ Routine</button>
+        </div>
+        <!-- Input -->
+        <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,0.08);display:flex;gap:8px;">
+            <input id="aiChatInput" type="text" placeholder="Hỏi về skincare..." onkeydown="if(event.key==='Enter')sendAiMessage()"
+                   style="flex:1;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:20px;color:white;padding:8px 14px;font-size:13px;outline:none;" />
+            <button onclick="sendAiMessage()" style="background:linear-gradient(135deg,#7c3aed,#db2777);border:none;color:white;width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">→</button>
+        </div>
+    </div>
+
+    <!-- Chatbot Trigger Button -->
+    @* <button id="aiBotBubble" onclick="toggleChatbot()" title="AI Skincare Advisor"
+            style="position:fixed;bottom:24px;right:24px;z-index:99999;width:58px;height:58px;background:linear-gradient(135deg,#7c3aed,#db2777);border:none;border-radius:50%;cursor:pointer;box-shadow:0 8px 24px rgba(124,58,237,0.4);transition:all 0.3s;display:flex;align-items:center;justify-content:center;font-size:26px;">
+        🤖
+        <span id="aiUnreadBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:#ef4444;color:white;font-size:10px;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;">1</span>
+    </button> *@
+
+    <style>
+        @@keyframes chatPop { from { opacity:0; transform:scale(0.9) translateY(20px); } to { opacity:1; transform:scale(1) translateY(0); } }
+        #aiBotBubble:hover { transform:scale(1.1); box-shadow:0 12px 32px rgba(124,58,237,0.6); }
+        #aiMessages::-webkit-scrollbar { width:4px; }
+        #aiMessages::-webkit-scrollbar-track { background:transparent; }
+        #aiMessages::-webkit-scrollbar-thumb { background:rgba(124,58,237,0.4); border-radius:2px; }
+        #aiChatInput::placeholder { color:rgba(255,255,255,0.4); }
+    </style>
+
+    <script>
+        var chatOpen = false;
+        function toggleChatbot() {
+            chatOpen = !chatOpen;
+            var wrap = document.getElementById('aiChatbotWrap');
+            wrap.style.display = chatOpen ? 'flex' : 'none';
+            if (chatOpen) {
+                document.getElementById('aiUnreadBadge').style.display = 'none';
+                document.getElementById('aiChatInput').focus();
+                scrollToBottom();
+            }
+        }
+        function scrollToBottom() {
+            var msgs = document.getElementById('aiMessages');
+            msgs.scrollTop = msgs.scrollHeight;
+        }
+        function appendMsg(text, isBot) {
+            var msgs = document.getElementById('aiMessages');
+            var div = document.createElement('div');
+            div.style.cssText = isBot
+                ? 'max-width:85%;background:rgba(124,58,237,0.2);border:1px solid rgba(124,58,237,0.3);border-radius:12px 12px 12px 0;padding:10px 14px;color:#e2e8f0;font-size:13px;line-height:1.6;white-space:pre-wrap;'
+                : 'max-width:85%;background:linear-gradient(135deg,#7c3aed,#db2777);border-radius:12px 12px 0 12px;padding:10px 14px;color:white;font-size:13px;align-self:flex-end;line-height:1.5;';
+            div.textContent = text;
+            msgs.appendChild(div);
+            scrollToBottom();
+        }
+        function appendTyping() {
+            var msgs = document.getElementById('aiMessages');
+            var div = document.createElement('div');
+            div.id = 'typingIndicator';
+            div.style.cssText = 'max-width:85%;background:rgba(124,58,237,0.2);border:1px solid rgba(124,58,237,0.3);border-radius:12px 12px 12px 0;padding:10px 14px;color:#94a3b8;font-size:13px;';
+            div.textContent = '...';
+            msgs.appendChild(div);
+            scrollToBottom();
+            return div;
+        }
+        function sendQuickMsg(msg) {
+            document.getElementById('aiChatInput').value = msg;
+            sendAiMessage();
+        }
+        async function sendAiMessage() {
+            var input = document.getElementById('aiChatInput');
+            var msg = input.value.trim();
+            if (!msg) return;
+            input.value = '';
+            document.getElementById('aiQuickReplies').style.display = 'none';
+            appendMsg(msg, false);
+            var typing = appendTyping();
+            try {
+                var resp = await fetch('/AI/AiChat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || '' },
+                    body: JSON.stringify({ message: msg })
+                });
+                var data = await resp.json();
+                typing.remove();
+                appendMsg(data.reply || 'Xin lỗi, có lỗi xảy ra.', true);
+                if (!chatOpen) document.getElementById('aiUnreadBadge').style.display = 'flex';
+            } catch (e) {
+                typing.remove();
+                appendMsg('Kết nối thất bại. Vui lòng thử lại!', true);
+            }
+        }
+    <\/script>
+
+    <!-- ====== NOTIFICATION BELL JS ====== -->
+    <script>
+        var notifOpen = false;
+        var notifLoaded = false;
+
+        async function loadNotifications() {
+            try {
+                var resp = await fetch('/Automation/GetMyNotifications');
+                if (!resp.ok) return;
+                var data = await resp.json();
+
+                // Update badge
+                var badge = document.getElementById('notifBadge');
+                if (badge) {
+                    if (data.count > 0) {
+                        badge.textContent = data.count > 9 ? '9+' : data.count;
+                        badge.style.display = 'flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+
+                // Update list
+                var list = document.getElementById('notifList');
+                if (!list) return;
+
+                if (!data.items || data.items.length === 0) {
+                    list.innerHTML = '<div style="text-align:center;padding:30px;color:#64748b;font-size:13px;"><i class="bi bi-bell-slash" style="font-size:30px;display:block;margin-bottom:8px;"></i>Chưa có thông báo</div>';
+                    return;
+                }
+
+                var icons = { order: '🛒', payment: '💳', review: '⭐', promo: '🎁', system: '🔔' };
+                list.innerHTML = data.items.map(n => `
+                    <div onclick="openNotif(${n.id}, '${n.link || ''}')"
+                         style="padding:10px 12px;border-radius:8px;margin-bottom:6px;cursor:pointer;
+                                background:${n.isRead ? 'rgba(255,255,255,0.02)' : 'rgba(124,58,237,0.12)'};
+                                border:1px solid ${n.isRead ? 'rgba(255,255,255,0.04)' : 'rgba(124,58,237,0.25)'};
+                                border-left:${n.isRead ? '1px solid rgba(255,255,255,0.04)' : '3px solid #7c3aed'};
+                                transition:background 0.2s;"
+                         onmouseover="this.style.background='rgba(124,58,237,0.15)'"
+                         onmouseout="this.style.background='${n.isRead ? 'rgba(255,255,255,0.02)' : 'rgba(124,58,237,0.12)'}'">
+                        <div style="display:flex;gap:10px;align-items:flex-start;">
+                            <span style="font-size:18px;">${icons[n.type] || '🔔'}</span>
+                            <div style="flex:1;min-width:0;">
+                                <div style="font-size:13px;font-weight:${n.isRead ? '400' : '700'};color:${n.isRead ? '#94a3b8' : '#e2e8f0'};">${n.title}</div>
+                                <div style="font-size:11px;color:#64748b;margin-top:2px;">${n.message.substring(0, 65)}${n.message.length > 65 ? '...' : ''}</div>
+                                <div style="font-size:10px;color:#475569;margin-top:3px;">${n.time}</div>
+                            </div>
+                        </div>
+                    </div>`).join('');
+
+            } catch(e) { /* silent fail */ }
+        }
+
+        function toggleNotifPanel() {
+            notifOpen = !notifOpen;
+            var panel = document.getElementById('notifPanel');
+            if (!panel) return;
+            panel.style.display = notifOpen ? 'block' : 'none';
+            if (notifOpen && !notifLoaded) {
+                loadNotifications();
+                notifLoaded = true;
+            }
+        }
+
+        async function markAllRead() {
+            await fetch('/Automation/MarkNotificationsRead', { method: 'POST',
+                headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken\"]')?.value || '' }});
+            loadNotifications();
+        }
+
+        function openNotif(id, link) {
+            fetch('/Automation/MarkOneRead', { method: 'POST',
+                headers: { 'Content-Type': 'application/json',
+                           'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken\"]')?.value || '' },
+                body: JSON.stringify(id) });
+            if (link && link !== '') window.location.href = link;
+            loadNotifications();
+        }
+
+        // Close panel on outside click
+        document.addEventListener('click', function(e) {
+            var wrap = document.getElementById('notifWrap');
+            if (wrap && !wrap.contains(e.target)) {
+                var panel = document.getElementById('notifPanel');
+                if (panel) panel.style.display = 'none';
+                notifOpen = false;
+            }
+        });
+
+        // Auto-refresh badge every 60s
+        if (document.getElementById('notifBell')) {
+            loadNotifications();
+            setInterval(loadNotifications, 60000);
+        }
+    </script>
+
+
+    <div id="cartToastWrap" aria-live="polite" aria-atomic="true"
+         style="position:fixed; bottom:28px; right:24px; z-index:99999; min-width:290px;">
+        <div id="cartToast" class="toast align-items-center text-white border-0 shadow-lg"
+             role="alert" style="background:#800020; border-radius:12px;">
+            <div class="d-flex">
+                <div class="toast-body d-flex align-items-center gap-2" style="font-size:14px; font-weight:500;">
+                    <i class="bi bi-cart-check-fill" style="font-size:20px;"></i>
+                    <span id="cartToastMsg">Đã thêm vào giỏ hàng!</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Cart icon badge */
+        .cart-icon-btn {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            color: white !important;
+            padding: 4px;
+        }
+        .cart-icon-btn:hover { color: #ffd6db !important; }
+        .cart-badge {
+            position: absolute;
+            top: -6px;
+            right: -8px;
+            background: #ff4d4f;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            border: 2px solid #800020;
+            animation: badgePop 0.25s ease;
+        }
+        @@keyframes badgePop {
+            0% { transform: scale(0.5); opacity:0; }
+            70% { transform: scale(1.25); }
+            100% { transform: scale(1); opacity:1; }
+        }
+    </style>
+
+    <script>
+        // ======== GLOBAL CART BADGE & TOAST ========
+        function showCartToast(msg) {
+            document.getElementById('cartToastMsg').textContent = msg || 'Đã thêm vào giỏ hàng!';
+            const toastEl = document.getElementById('cartToast');
+            const toast = new bootstrap.Toast(toastEl, { delay: 2500 });
+            toast.show();
+        }
+
+        function updateCartBadge(count) {
+            const badge = document.getElementById('cartBadge');
+            if (!badge) return;
+            if (count > 0) {
+                badge.textContent = count > 99 ? '99+' : count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function refreshCartBadge() {
+            fetch('/Cart/GetCartCount', { method: 'GET' })
+                .then(r => r.ok ? r.json() : null)
+                .then(data => { if (data != null) updateCartBadge(data.count ?? 0); })
+                .catch(() => {});
+        }
+
+        // Init badge on page load
+        document.addEventListener('DOMContentLoaded', refreshCartBadge);
+    </script>
+    <!-- ====== CUSTOMER CHAT WIDGET ====== -->
+    <div id="customerChatWidget" style="position: fixed; bottom: 24px; right: 24px; z-index: 9999;">
+        <!-- Chat Bubble Button -->
+        <button id="chatBubbleBtn" onclick="toggleChatWindow()" 
+                style="background: #800020; color: white; border: none; width: 56px; height: 56px; border-radius: 50%; box-shadow: 0 4px 15px rgba(128,0,32,0.25); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; outline:none;">
+            <i class="bi bi-chat-dots-fill" id="chatIcon" style="font-size: 24px;"></i>
+        </button>
+
+        <!-- Chat Window -->
+        <div id="chatWindow" class="d-none" 
+             style="position: absolute; bottom: 70px; right: 0; width: 330px; height: 425px; background: white; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid #eef0f3; display: flex; flex-direction: column; overflow: hidden; transition: all 0.3s;">
+            <!-- Header -->
+            <div style="background: #800020; color: white; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;">
+                <div class="d-flex align-items-center gap-2">
+                    <div style="width: 10px; height: 10px; background: #2ecc71; border-radius: 50%; animation: pulseChat 1.5s infinite;"></div>
+                    <span style="font-weight: 600; font-size: 14.5px;">Hỗ trợ trực tuyến MeiLing</span>
+                </div>
+                <button onclick="toggleChatWindow()" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer; padding: 0; display:flex; align-items:center;">
+                    <i class="bi bi-dash-lg"></i>
+                </button>
+            </div>
+            
+            <!-- Messages Area -->
+            <div id="chatMessagesArea" style="flex-grow: 1; padding: 15px; overflow-y: auto; background: #f8fafc; display: flex; flex-direction: column; gap: 10px; font-size: 13px; line-height:1.5;">
+                <!-- Welcoming auto message -->
+                <div class="d-flex gap-2 align-items-start">
+                    <div style="background: #e2e8f0; color: #333; padding: 8px 12px; border-radius: 4px 12px 12px 12px; max-width: 85%;">
+                        Xin chào! Cảm ơn bạn đã ghé thăm MeiLing. Bạn cần tư vấn về sản phẩm hay soi da có thể gửi tin nhắn tại đây nhé!
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <form id="chatInputForm" onsubmit="sendChatMessage(event)" 
+                  style="border-top: 1px solid #edf2f7; display: flex; padding: 10px 14px; background: white; align-items: center; gap: 8px;">
+                <input type="text" id="chatInputText" placeholder="Nhập tin nhắn của bạn..." 
+                       style="flex-grow: 1; border: 1px solid #cbd5e1; padding: 8px 14px; border-radius: 20px; font-size: 13px; outline: none; transition: border 0.2s;" required />
+                <button type="submit" style="background: #800020; color: white; border: none; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s;">
+                    <i class="bi bi-send-fill" style="font-size: 14px;"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <style>
+        @@keyframes pulseChat {
+            0% { transform: scale(0.9); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0.9); opacity: 0.5; }
+        }
+        #chatBubbleBtn:hover {
+            transform: scale(1.08);
+            background: #66001a !important;
+        }
+        #chatInputText:focus {
+            border-color: #800020 !important;
+        }
+    </style>
+
+    <script>
+        let isChatOpen = false;
+        let chatPollInterval = null;
+
+        function toggleChatWindow() {
+            const win = document.getElementById('chatWindow');
+            const icon = document.getElementById('chatIcon');
+            isChatOpen = !isChatOpen;
+
+            if (isChatOpen) {
+                win.classList.remove('d-none');
+                icon.className = 'bi bi-x-lg';
+                loadChatMessages();
+                setTimeout(scrollChatToBottom, 100);
+                chatPollInterval = setInterval(loadChatMessages, 3000);
+            } else {
+                win.classList.add('d-none');
+                icon.className = 'bi bi-chat-dots-fill';
+                if (chatPollInterval) {
+                    clearInterval(chatPollInterval);
+                    chatPollInterval = null;
+                }
+            }
+        }
+
+        function loadChatMessages() {
+            fetch('/Chat/GetMessages')
+                .then(r => r.ok ? r.json() : [])
+                .then(msgs => {
+                    const area = document.getElementById('chatMessagesArea');
+                    
+                    let html = `
+                        <div class="d-flex gap-2 align-items-start">
+                            <div style="background: #e2e8f0; color: #333; padding: 8px 12px; border-radius: 4px 12px 12px 12px; max-width: 85%;">
+                                Xin chào! Cảm ơn bạn đã ghé thăm MeiLing. Bạn cần tư vấn về sản phẩm hay soi da có thể gửi tin nhắn tại đây nhé!
+                            </div>
+                        </div>
+                    `;
+
+                    msgs.forEach(m => {
+                        const isCustomer = m.sender === 'Customer';
+                        if (isCustomer) {
+                            html += `
+                                <div class="d-flex justify-content-end">
+                                    <div style="background: #800020; color: white; padding: 8px 12px; border-radius: 12px 12px 4px 12px; max-width: 85%; word-break: break-all; box-shadow: 0 2px 4px rgba(128,0,32,0.1);">
+                                        ${m.message}
+                                        <div style="font-size: 9px; text-align: right; margin-top: 3px; opacity: 0.8;">${m.timestamp}</div>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            html += `
+                                <div class="d-flex gap-2 align-items-start">
+                                    <div style="background: #ffffff; color: #333; padding: 8px 12px; border-radius: 4px 12px 12px 12px; max-width: 85%; word-break: break-all; border: 1px solid #edf2f7; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                                        ${m.message}
+                                        <div style="font-size: 9px; margin-top: 3px; opacity: 0.5;">${m.timestamp}</div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    });
+
+                    const oldHtml = area.dataset.lastHtml || "";
+                    if (oldHtml !== html) {
+                        area.innerHTML = html;
+                        area.dataset.lastHtml = html;
+                        scrollChatToBottom();
+                    }
+                });
+        }
+
+        function sendChatMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('chatInputText');
+            const message = input.value.trim();
+            if (!message) return;
+
+            input.value = '';
+
+            fetch('/Chat/SendMessage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `message=${encodeURIComponent(message)}`
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    loadChatMessages();
+                } else {
+                    alert(data.message || 'Lỗi gửi tin nhắn.');
+                }
+            });
+        }
+
+        function scrollChatToBottom() {
+            const area = document.getElementById('chatMessagesArea');
+            if (area) {
+                area.scrollTop = area.scrollHeight;
+            }
+        }
+    </script>
 </body>
 </html>
   

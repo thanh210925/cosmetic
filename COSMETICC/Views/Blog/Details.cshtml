@@ -1,0 +1,162 @@
+@model COSMETICC.Models.BlogPost
+@{
+    ViewData["Title"] = Model.MetaTitle ?? Model.Title;
+    ViewData["MetaDescription"] = Model.MetaDescription ?? Model.Summary;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    
+    var recentPosts = (List<COSMETICC.Models.BlogPost>)ViewBag.RecentPosts;
+}
+
+<style>
+    body {
+        background-color: #f8fafc;
+    }
+    .article-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    .article-header {
+        margin-bottom: 30px;
+    }
+    .article-title {
+        font-size: 32px;
+        font-weight: 800;
+        color: #2c3e50;
+        line-height: 1.3;
+    }
+    .article-meta {
+        font-size: 13px;
+        color: #718096;
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 15px;
+        margin-bottom: 25px;
+    }
+    .article-body {
+        font-size: 16px;
+        line-height: 1.9;
+        color: #2d3748;
+    }
+    .article-body p {
+        margin-bottom: 20px;
+    }
+    .article-body img {
+        max-width: 100%;
+        border-radius: 8px;
+        margin: 20px 0;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+    .widget-title {
+        font-weight: 700;
+        color: #800020;
+        border-bottom: 2px solid #800020;
+        padding-bottom: 8px;
+        margin-bottom: 15px;
+    }
+</style>
+
+<div class="container py-5 text-start">
+    <div class="row justify-content-center">
+        
+        <!-- Left: Article Content Reader -->
+        <div class="col-lg-8">
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb small">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-secondary text-decoration-none">Trang chủ</a></li>
+                    <li class="breadcrumb-item"><a asp-controller="Blog" asp-action="Index" class="text-secondary text-decoration-none">Cẩm nang làm đẹp</a></li>
+                    <li class="breadcrumb-item active text-dark" aria-current="page">Chi tiết</li>
+                </ol>
+            </nav>
+
+            <article class="article-container">
+                <!-- Title Header -->
+                <div class="article-header">
+                    <h1 class="article-title mb-3">@Model.Title</h1>
+                    
+                    <div class="article-meta d-flex flex-wrap align-items-center gap-3">
+                        <span><i class="bi bi-calendar3 me-1"></i>Đăng ngày: @Model.CreatedAt.ToString("dd/MM/yyyy")</span>
+                        <span><i class="bi bi-person-fill me-1"></i>Bởi: MeiLing Beauty</span>
+                        @if (!string.IsNullOrEmpty(Model.Tags))
+                        {
+                            <div class="d-flex gap-1">
+                                <i class="bi bi-tags-fill me-1"></i>
+                                @foreach (var tag in Model.Tags.Split(','))
+                                {
+                                    <a href="@Url.Action("Index", "Blog", new { tag = tag.Trim() })" class="text-decoration-none text-danger small fw-bold">#@tag.Trim()</a>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Featured Image -->
+                @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                {
+                    <div class="mb-4 text-center">
+                        <img src="@Model.ImageUrl" class="img-fluid rounded shadow-sm" style="max-height: 450px; width: 100%; object-fit: cover;" alt="@Model.Title" />
+                    </div>
+                }
+
+                <!-- Summary Callout -->
+                <div class="p-3 bg-light rounded border-start border-4 border-danger mb-4 font-italic text-secondary" style="font-size: 1.05rem; line-height: 1.6; font-style: italic;">
+                    @Model.Summary
+                </div>
+
+                <!-- Main Body -->
+                <div class="article-body">
+                    @Html.Raw(Model.Content)
+                </div>
+            </article>
+
+            <!-- Social Share Bar (Mock) -->
+            <div class="border-top border-bottom py-3 my-5 d-flex align-items-center justify-content-between">
+                <span class="small fw-bold text-secondary text-uppercase"><i class="bi bi-share-fill me-1"></i>Chia sẻ bài viết</span>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-primary"><i class="bi bi-facebook"></i> Facebook</button>
+                    <button class="btn btn-sm btn-outline-info"><i class="bi bi-twitter"></i> Twitter</button>
+                    <button class="btn btn-sm btn-outline-success"><i class="bi bi-link-45deg"></i> Sao chép link</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Recent Posts widget -->
+        <div class="col-lg-4 ps-lg-4 text-start">
+            <div class="card border-0 shadow-sm p-4" style="border-radius:12px; background:white; position: sticky; top: 20px;">
+                <h5 class="widget-title">Bài viết khác</h5>
+                <div class="mt-3 d-flex flex-column gap-3">
+                    @if (recentPosts != null && recentPosts.Any())
+                    {
+                        foreach (var rp in recentPosts)
+                        {
+                            <div class="d-flex gap-3 align-items-center">
+                                <img src="@(string.IsNullOrEmpty(rp.ImageUrl) ? "https://placehold.co/80x80?text=skincare" : rp.ImageUrl)" class="rounded" style="width: 55px; height: 55px; object-fit: cover;" />
+                                <div>
+                                    <h6 class="fw-bold mb-1" style="font-size: 13px; line-height: 1.3;">
+                                        <a href="@Url.Action("Details", "Blog", new { slug = rp.Slug })" class="text-decoration-none text-dark hover-danger">@rp.Title</a>
+                                    </h6>
+                                    <small class="text-muted" style="font-size: 10.5px;">@rp.CreatedAt.ToString("dd/MM/yyyy")</small>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <span class="text-muted small">Không có bài viết khác.</span>
+                    }
+                </div>
+                
+                <div class="mt-4 pt-4 border-top text-center">
+                    <a asp-action="Index" class="btn btn-sm btn-outline-danger w-100 fw-bold" style="border-color:#800020; color:#800020;">
+                        Xem tất cả bài viết
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    .hover-danger:hover {
+        color: #800020 !important;
+    }
+</style>

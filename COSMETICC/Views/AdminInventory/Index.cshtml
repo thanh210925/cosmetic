@@ -21,15 +21,35 @@
         </div>
     }
 
+    <!-- Near Expiry Warning Alert -->
+    @if (ViewBag.ExpiringBatchesCount > 0)
+    {
+        <div class="alert alert-warning alert-dismissible fade show mb-4 d-flex align-items-center justify-content-between" role="alert">
+            <div>
+                <i class="bi bi-exclamation-octagon-fill text-warning fs-5 me-2"></i>
+                Cảnh báo hạn sử dụng: Hiện tại có <strong>@ViewBag.ExpiringBatchesCount</strong> lô sản phẩm sắp hết hạn sử dụng trong vòng 60 ngày!
+            </div>
+            <a asp-action="Batches" class="btn btn-sm btn-outline-warning text-dark fw-bold">
+                <i class="bi bi-calendar-range me-1"></i> Xem lô hết hạn
+            </a>
+        </div>
+    }
+
     <div class="admin-card m-0">
         <div class="admin-card-title">
             <span><i class="bi bi-boxes text-muted me-2"></i> Số lượng hàng tồn trong kho</span>
             <div class="d-flex gap-2">
+                <a asp-action="Batches" class="btn-action btn-action-outline text-success" style="border-color:#2ecc71;">
+                    <i class="bi bi-calendar3-range me-1"></i> Quản lý Lô & HSD
+                </a>
+                <button type="button" class="btn btn-warning btn-sm fw-bold px-3 text-white d-flex align-items-center gap-1" style="background:#f39c12; border:none; height:34px;" onclick="openAuditModal()">
+                    <i class="bi bi-qr-code-scan"></i> Kiểm kê QR/Barcode
+                </button>
                 <a asp-action="Logs" class="btn-action btn-action-outline">
                     <i class="bi bi-journal-text me-1"></i> Xem lịch sử Nhập/Xuất
                 </a>
-                <div style="width: 200px;">
-                    <input type="text" id="invSearch" class="form-control-admin" placeholder="Tìm kiếm sản phẩm..." onkeyup="filterInventory()" />
+                <div style="width: 170px;">
+                    <input type="text" id="invSearch" class="form-control-admin" placeholder="Tìm sản phẩm..." onkeyup="filterInventory()" />
                 </div>
             </div>
         </div>
@@ -261,5 +281,262 @@
                 printWindow.close();
             }, 500);
         }
+
+        // ================= BARCODE / QR SCAN WORKFLOW =================
+        let html5QrcodeScanner = null;
+        let selectedProductId = null;
+
+        function openAuditModal() {
+            const myModal = new bootstrap.Modal(document.getElementById('auditModal'));
+            myModal.show();
+            // Reset modal inputs
+            document.getElementById('scanInput').value = '';
+            document.getElementById('auditProductInfo').style.display = 'none';
+            document.getElementById('auditAlert').className = 'alert alert-secondary py-2 small';
+            document.getElementById('auditAlert').innerText = 'Vui lòng quét hoặc nhập mã để bắt đầu kiểm kê.';
+            document.getElementById('auditAlert').style.display = 'block';
+        }
+
+        function startCameraScan() {
+            if (html5QrcodeScanner) {
+                stopCameraScan();
+            }
+
+            html5QrcodeScanner = new Html5Qrcode("reader");
+            const config = { fps: 10, qrbox: { width: 180, height: 120 } };
+
+            html5QrcodeScanner.start(
+                { facingMode: "environment" },
+                config,
+                onScanSuccess,
+                onScanFailure
+            ).catch(err => {
+                alert("Không thể khởi động camera: " + err);
+            });
+        }
+
+        function stopCameraScan() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.stop().then(() => {
+                    html5QrcodeScanner = null;
+                    document.getElementById("reader").innerHTML = "";
+                }).catch(err => console.log("Lỗi tắt camera: " + err));
+            }
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            console.log(`Scan result: ${decodedText}`, decodedResult);
+            // Play success beep sound
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                osc.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.1);
+            } catch(e){}
+
+            document.getElementById('scanInput').value = decodedText;
+            searchBarcode(decodedText);
+            stopCameraScan();
+        }
+
+        function onScanFailure(error) {
+            // Quiet fail - normal scanning loop
+        }
+
+        function handleManualScan(e) {
+            if (e.key === 'Enter') {
+                triggerScanSearch();
+            }
+        }
+
+        function triggerScanSearch() {
+            const val = document.getElementById('scanInput').value.trim();
+            if (val) {
+                searchBarcode(val);
+            }
+        }
+
+        function searchBarcode(code) {
+            const alertBox = document.getElementById('auditAlert');
+            alertBox.className = 'alert alert-info py-2 small';
+            alertBox.innerText = 'Đang tìm kiếm sản phẩm...';
+            alertBox.style.display = 'block';
+            document.getElementById('auditProductInfo').style.display = 'none';
+
+            fetch(`/AdminInventory/GetProductByBarcode?barcode=${encodeURIComponent(code)}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        alertBox.style.display = 'none';
+                        selectedProductId = data.product.id;
+
+                        // Set info
+                        document.getElementById('auditProdName').innerText = data.product.name;
+                        document.getElementById('auditProdBrand').innerText = 'Hãng: ' + data.product.brandName;
+                        document.getElementById('auditProdCodes').innerText = `SKU: ${data.product.sku || 'N/A'} | Barcode: ${data.product.barcode || 'N/A'}`;
+                        document.getElementById('auditSystemQty').value = data.product.stock || 0;
+                        document.getElementById('auditActualQty').value = data.product.stock || 0;
+                        document.getElementById('auditNotes').value = '';
+
+                        if (data.product.imageUrl) {
+                            document.getElementById('auditProdImg').src = data.product.imageUrl;
+                            document.getElementById('auditProdImg').style.display = 'block';
+                        } else {
+                            document.getElementById('auditProdImg').style.display = 'none';
+                        }
+
+                        // Load active batches text
+                        let batchHtml = "";
+                        if (data.batches && data.batches.length > 0) {
+                            data.batches.forEach(b => {
+                                batchHtml += `<div class="d-flex justify-content-between border-bottom py-1">
+                                    <span>Lô: <strong>${b.batchNumber}</strong> (HSD: ${b.expiryDate})</span>
+                                    <span class="badge bg-secondary">${b.quantity} sản phẩm</span>
+                                </div>`;
+                            });
+                        } else {
+                            batchHtml = '<span class="text-danger">Không tìm thấy lô hàng nào còn tồn kho.</span>';
+                        }
+                        document.getElementById('auditBatchesArea').innerHTML = batchHtml;
+
+                        document.getElementById('auditProductInfo').style.display = 'block';
+                    } else {
+                        alertBox.className = 'alert alert-danger py-2 small';
+                        alertBox.innerText = data.message || 'Lỗi tìm kiếm sản phẩm.';
+                    }
+                })
+                .catch(() => {
+                    alertBox.className = 'alert alert-danger py-2 small';
+                    alertBox.innerText = 'Lỗi kết nối máy chủ.';
+                });
+        }
+
+        function submitStockAudit() {
+            if (!selectedProductId) return;
+
+            const actualQty = parseInt(document.getElementById('auditActualQty').value);
+            const note = document.getElementById('auditNotes').value.trim();
+
+            if (isNaN(actualQty) || actualQty < 0) {
+                alert('Số lượng thực tế không hợp lệ!');
+                return;
+            }
+
+            fetch('/AdminInventory/AuditStock', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `productId=${selectedProductId}&actualQty=${actualQty}&note=${encodeURIComponent(note)}`
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    // Reload page to refresh quantities in main table
+                    window.location.reload();
+                } else {
+                    alert(data.message || 'Có lỗi xảy ra.');
+                }
+            })
+            .catch(() => alert('Lỗi kết nối máy chủ.'));
+        }
     </script>
+
+    <!-- Barcode / QR Audit Modal -->
+    <div class="modal fade" id="auditModal" tabindex="-1" aria-labelledby="auditModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 12px; border: none; overflow: hidden;">
+                <!-- Header -->
+                <div style="background: #800020; color: white; padding: 16px 20px;" class="d-flex align-items-center justify-content-between">
+                    <h5 class="modal-title fw-bold m-0" id="auditModalLabel"><i class="bi bi-qr-code-scan me-2"></i>Kiểm kê & Điều chỉnh kho nhanh bằng QR/Barcode</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="stopCameraScan()"></button>
+                </div>
+                
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        
+                        <!-- Left: Camera scan scanner & Manual barcode inputs -->
+                        <div class="col-md-5 border-end pe-3">
+                            <div class="fw-bold mb-2 text-dark">Bước 1: Quét mã hoặc Nhập mã</div>
+                            
+                            <!-- Manual Entry -->
+                            <div class="mb-3">
+                                <label class="form-label small text-muted">Nhập mã Barcode hoặc SKU sản phẩm:</label>
+                                <div class="input-group">
+                                    <input type="text" id="scanInput" class="form-control" placeholder="Ví dụ: SP001, 893..." onkeyup="handleManualScan(event)" />
+                                    <button class="btn btn-outline-secondary" type="button" onclick="triggerScanSearch()">Tìm</button>
+                                </div>
+                            </div>
+
+                            <!-- Camera Scan Frame -->
+                            <div class="p-2 border rounded text-center bg-light" style="position: relative;">
+                                <div class="small fw-bold text-secondary mb-2"><i class="bi bi-camera-fill me-1"></i>Camera quét trực tiếp</div>
+                                <div id="reader" style="width: 100%; min-height: 180px; background: #000; border-radius: 6px; overflow: hidden;"></div>
+                                
+                                <div class="d-flex gap-2 justify-content-center mt-2">
+                                    <button type="button" class="btn btn-sm btn-success px-3 fw-bold" onclick="startCameraScan()">Bật Cam</button>
+                                    <button type="button" class="btn btn-sm btn-danger px-3 fw-bold" onclick="stopCameraScan()">Tắt Cam</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Product Audit Detail and Form Adjustment -->
+                        <div class="col-md-7 ps-3">
+                            <div class="fw-bold mb-2 text-dark">Bước 2: Xác nhận và Điều chỉnh tồn thực tế</div>
+                            
+                            <!-- Alert message container -->
+                            <div id="auditAlert" class="alert alert-secondary py-2 small" style="display: block;">
+                                Vui lòng quét hoặc nhập mã để bắt đầu kiểm kê.
+                            </div>
+
+                            <!-- Product detail box (hidden initially) -->
+                            <div id="auditProductInfo" style="display: none;">
+                                <div class="p-3 border rounded bg-light mb-3 d-flex align-items-center gap-3">
+                                    <img id="auditProdImg" src="" style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd;" />
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-1" id="auditProdName">Tên sản phẩm</h6>
+                                        <div class="small text-muted" id="auditProdBrand">Thương hiệu</div>
+                                        <div class="small text-secondary font-monospace" id="auditProdCodes">SKU / Barcode</div>
+                                    </div>
+                                </div>
+
+                                <!-- List of active batches -->
+                                <div class="mb-3">
+                                    <div class="small fw-bold text-dark mb-1">Các lô hàng hiện tại:</div>
+                                    <div id="auditBatchesArea" class="small text-muted">Không có lô hàng nào.</div>
+                                </div>
+
+                                <!-- Adjustment Form -->
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label class="form-label small fw-bold text-dark">Số lượng hệ thống:</label>
+                                        <input type="text" id="auditSystemQty" class="form-control" disabled style="background:#e9ecef; font-weight:bold;" />
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small fw-bold text-dark">Số lượng đếm thực tế:</label>
+                                        <input type="number" id="auditActualQty" class="form-control" style="font-weight:bold; border-color:#f39c12;" min="0" required />
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <label class="form-label small fw-bold text-dark">Ghi chú kiểm kê:</label>
+                                    <textarea id="auditNotes" class="form-control" rows="2" placeholder="Ví dụ: Thừa/thiếu do thất thoát, hàng lỗi..."></textarea>
+                                </div>
+
+                                <button type="button" class="btn btn-warning w-100 mt-3 text-white fw-bold" style="background:#800020; border:none; height:40px;" onclick="submitStockAudit()">
+                                    <i class="bi bi-check-lg me-1"></i> Xác nhận & Cập nhật số lượng
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Html5Qrcode Library -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 }

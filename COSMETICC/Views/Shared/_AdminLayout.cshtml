@@ -23,13 +23,14 @@
             
             <div class="admin-info">
                 <div>👤 @Context.Session.GetString("AdminName")</div>
-                <small>Administrator</small>
+                <small>@(Context.Session.GetString("AdminRole") == "STAFF" ? "Staff / Nhân viên" : "Administrator")</small>
             </div>
             
             <ul>
                 @{
                     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
                     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+                    var isStaff = (Context.Session.GetString("AdminRole") ?? "ADMIN") == "STAFF";
                 }
 
                 <li class="@(currentController == "Admin" && currentAction == "Dashboard" ? "active" : "")">
@@ -38,36 +39,48 @@
                         <span>Dashboard</span>
                     </a>
                 </li>
-                <li class="@(currentController == "AdminProducts" ? "active" : "")">
-                    <a asp-controller="AdminProducts" asp-action="Index">
-                        <i class="bi bi-box-seam"></i>
-                        <span>Quản lý sản phẩm</span>
-                    </a>
-                </li>
-                <li class="@(currentController == "AdminCategories" ? "active" : "")">
-                    <a asp-controller="AdminCategories" asp-action="Index">
-                        <i class="bi bi-tags"></i>
-                        <span>Quản lý Danh mục</span>
-                    </a>
-                </li>
-                <li class="@(currentController == "AdminBrand" ? "active" : "")">
-                    <a asp-controller="AdminBrand" asp-action="Index">
-                        <i class="bi bi-award-fill"></i>
-                        <span>Quản lý Thương hiệu</span>
-                    </a>
-                </li>
+                @if (!isStaff)
+                {
+                    <li class="@(currentController == "AdminProducts" ? "active" : "")">
+                        <a asp-controller="AdminProducts" asp-action="Index">
+                            <i class="bi bi-box-seam"></i>
+                            <span>Quản lý sản phẩm</span>
+                        </a>
+                    </li>
+                    <li class="@(currentController == "AdminCategories" ? "active" : "")">
+                        <a asp-controller="AdminCategories" asp-action="Index">
+                            <i class="bi bi-tags"></i>
+                            <span>Quản lý Danh mục</span>
+                        </a>
+                    </li>
+                    <li class="@(currentController == "AdminBrand" ? "active" : "")">
+                        <a asp-controller="AdminBrand" asp-action="Index">
+                            <i class="bi bi-award-fill"></i>
+                            <span>Quản lý Thương hiệu</span>
+                        </a>
+                    </li>
+                }
                 <li class="@(currentController == "AdminInventory" ? "active" : "")">
                     <a asp-controller="AdminInventory" asp-action="Index">
                         <i class="bi bi-boxes"></i>
                         <span>Quản lý Tồn kho</span>
                     </a>
                 </li>
-                <li class="@(currentController == "AdminSupplier" ? "active" : "")">
-                    <a asp-controller="AdminSupplier" asp-action="Index">
-                        <i class="bi bi-truck"></i>
-                        <span>Nhà cung cấp</span>
+                <li class="@(currentController == "AdminImport" ? "active" : "")">
+                    <a asp-controller="AdminImport" asp-action="Index">
+                        <i class="bi bi-file-earmark-plus"></i>
+                        <span>Phiếu Nhập Kho</span>
                     </a>
                 </li>
+                @if (!isStaff)
+                {
+                    <li class="@(currentController == "AdminSupplier" ? "active" : "")">
+                        <a asp-controller="AdminSupplier" asp-action="Index">
+                            <i class="bi bi-truck"></i>
+                            <span>Nhà cung cấp</span>
+                        </a>
+                    </li>
+                }
                 <li class="@(currentController == "AdminOrder" ? "active" : "")">
                     <a asp-controller="AdminOrder" asp-action="Index">
                         <i class="bi bi-cart-check"></i>
@@ -86,22 +99,37 @@
                         <span>Đánh giá</span>
                     </a>
                 </li>
-                <li class="@(currentController == "AdminBanner" ? "active" : "")">
-                    <a asp-controller="AdminBanner" asp-action="Index">
-                        <i class="bi bi-image"></i>
-                        <span>Quản lý Banner</span>
-                    </a>
-                </li>
-                <li class="@(currentController == "AdminVoucher" ? "active" : "")">
-                    <a asp-controller="AdminVoucher" asp-action="Index">
-                        <i class="bi bi-ticket-perforated"></i>
-                        <span>Voucher</span>
-                    </a>
-                </li>
+                @if (!isStaff)
+                {
+                    <li class="@(currentController == "AdminBanner" ? "active" : "")">
+                        <a asp-controller="AdminBanner" asp-action="Index">
+                            <i class="bi bi-image"></i>
+                            <span>Quản lý Banner</span>
+                        </a>
+                    </li>
+                    <li class="@(currentController == "AdminVoucher" ? "active" : "")">
+                        <a asp-controller="AdminVoucher" asp-action="Index">
+                            <i class="bi bi-ticket-perforated"></i>
+                            <span>Voucher</span>
+                        </a>
+                    </li>
+                    <li class="@(currentController == "AdminBlog" ? "active" : "")">
+                        <a asp-controller="AdminBlog" asp-action="Index">
+                            <i class="bi bi-journal-richtext text-info"></i>
+                            <span>Quản lý Bài viết</span>
+                        </a>
+                    </li>
+                }
                 <li class="@(currentController == "AdminShippingFee" ? "active" : "")">
                     <a asp-controller="AdminShippingFee" asp-action="Index">
                         <i class="bi bi-truck"></i>
                         <span>Phí vận chuyển</span>
+                    </a>
+                </li>
+                <li class="@(currentController == "Chat" && currentAction == "AdminIndex" ? "active" : "")">
+                    <a asp-controller="Chat" asp-action="AdminIndex">
+                        <i class="bi bi-chat-dots-fill text-warning"></i>
+                        <span>Chat hỗ trợ</span>
                     </a>
                 </li>
                 <li>

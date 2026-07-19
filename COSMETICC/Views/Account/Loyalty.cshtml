@@ -1,0 +1,400 @@
+@model COSMETICC.Models.User
+@{
+    ViewData["Title"] = "Thành viên & Voucher";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // Dynamic membership values
+    string cardClass = "card-bronze";
+    string tierName = "Thành viên Đồng (Bronze)";
+    int nextTierPoints = 1000;
+    string benefitsText = "Tích lũy thêm điểm để thăng hạng Silver nhận nhiều ưu đãi giảm giá!";
+    
+    if (Model.MembershipTier == "Silver")
+    {
+        cardClass = "card-silver";
+        tierName = "Thành viên Bạc (Silver)";
+        nextTierPoints = 5000;
+        benefitsText = "Giảm giá 5% cho mọi hóa đơn, nhận sample miễn phí khi mua hàng!";
+    }
+    else if (Model.MembershipTier == "Gold")
+    {
+        cardClass = "card-gold";
+        tierName = "Thành viên Vàng (Gold)";
+        nextTierPoints = 10000;
+        benefitsText = "Giảm giá 10% cho mọi hóa đơn, ưu tiên thử nghiệm sản phẩm mới và quà tặng sinh nhật đặc biệt!";
+    }
+    else if (Model.MembershipTier == "Platinum")
+    {
+        cardClass = "card-platinum";
+        tierName = "Thành viên Bạch Kim (Platinum)";
+        nextTierPoints = 999999;
+        benefitsText = "Giảm giá 15% cho mọi hóa đơn, miễn phí vận chuyển trọn đời, quà tặng VIP quý và hộp quà sinh nhật cao cấp!";
+    }
+
+    int pointsToNext = nextTierPoints - Model.Points;
+    double progressPercent = Math.Min(100.0, ((double)Model.Points / nextTierPoints) * 100.0);
+    if (Model.MembershipTier == "Platinum") { progressPercent = 100.0; }
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
+    body {
+        background-color: #f8fafc;
+    }
+    .loyalty-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    /* Membership Card styling */
+    .member-card {
+        border-radius: 16px;
+        padding: 30px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+        min-height: 200px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .card-bronze {
+        background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+    }
+    .card-silver {
+        background: linear-gradient(135deg, #bdc3c7 0%, #2c3e50 100%);
+    }
+    .card-gold {
+        background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
+    }
+    .card-platinum {
+        background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+    }
+    
+    .member-card::after {
+        content: "";
+        position: absolute;
+        width: 150px;
+        height: 150px;
+        background: rgba(255,255,255,0.08);
+        border-radius: 50%;
+        top: -30px;
+        right: -30px;
+    }
+    
+    .card-header-logo {
+        font-size: 24px;
+        font-weight: 800;
+        letter-spacing: 1px;
+    }
+    
+    .card-tier-title {
+        font-size: 20px;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-top: 15px;
+    }
+    
+    /* Shopee Voucher Card styling */
+    .voucher-card {
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        display: flex;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        margin-bottom: 20px;
+        min-height: 110px;
+    }
+    
+    /* Cut-outs for Shopee look */
+    .voucher-card::before, .voucher-card::after {
+        content: "";
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        background: #f8fafc;
+        border-radius: 50%;
+        left: 90px;
+        z-index: 10;
+        border: 1px solid #e2e8f0;
+    }
+    .voucher-card::before {
+        top: -8px;
+    }
+    .voucher-card::after {
+        bottom: -8px;
+    }
+    
+    .voucher-left {
+        width: 97px;
+        background: #800020;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 10px;
+        font-weight: bold;
+        border-right: 1px dashed #cbd5e1;
+    }
+    
+    .voucher-left.used {
+        background: #94a3b8;
+    }
+    
+    .voucher-right {
+        flex-grow: 1;
+        padding: 15px 15px 15px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .btn-collect {
+        background-color: #800020;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 6px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    
+    .btn-collect:hover {
+        background-color: #5d0017;
+    }
+    
+    .btn-collect:disabled {
+        background-color: #cbd5e1;
+        color: #64748b;
+        cursor: not-allowed;
+    }
+</style>
+
+<div class="container py-5 loyalty-container">
+    
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- SECTION: Member Header Card -->
+    <div class="member-card @cardClass">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <div class="card-header-logo">MEILING VIP CARD</div>
+                <div class="card-tier-title">@tierName</div>
+            </div>
+            <div style="font-size: 32px; opacity: 0.8;"><i class="bi bi-gem"></i></div>
+        </div>
+        
+        <div class="mt-4">
+            <div class="d-flex justify-content-between align-items-end mb-1">
+                <span>Số điểm tích lũy: <strong>@Model.Points.ToString("N0")</strong> điểm</span>
+                @if (Model.MembershipTier != "Platinum")
+                {
+                    <span class="small opacity-75">Còn @pointsToNext.ToString("N0") điểm để thăng hạng tiếp theo</span>
+                }
+            </div>
+            <div class="progress" style="height: 8px; background: rgba(255,255,255,0.2); border-radius: 4px;">
+                <div class="progress-bar bg-white" style="width: @progressPercent%"></div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3 pt-3" style="border-top: 1px solid rgba(255,255,255,0.15);">
+            <div class="small"><i class="bi bi-gift-fill me-1"></i> Ưu đãi của bạn: @benefitsText</div>
+            <div class="fw-bold">@Model.FullName</div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left: Birthday and Collect Vouchers (Shopee) -->
+        <div class="col-lg-7">
+            
+            <!-- Card 1: Birthday Profile Update & Gift -->
+            <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 12px;">
+                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-cake2-fill text-danger me-2"></i>Quà tặng sinh nhật thành viên</h5>
+                <p class="text-muted small">
+                    Cập nhật chính xác ngày sinh nhật của bạn. Hệ thống sẽ tự động gửi tặng ngay <strong>Voucher giảm giá 20%</strong> vào ví của bạn nhân ngày sinh nhật! (Chỉ được thiết lập 1 lần duy nhất để bảo mật).
+                </p>
+                
+                @if (Model.BirthDate.HasValue)
+                {
+                    <div class="p-3 bg-light rounded d-flex align-items-center justify-content-between">
+                        <div>
+                            <span class="text-secondary small d-block">Ngày sinh của bạn:</span>
+                            <strong class="text-dark fs-5">@Model.BirthDate.Value.ToString("dd/MM/yyyy")</strong>
+                        </div>
+                        <span class="badge bg-success-subtle text-success py-2 px-3 rounded-pill"><i class="bi bi-shield-check me-1"></i> Đã thiết lập</span>
+                    </div>
+                }
+                else
+                {
+                    <form asp-action="UpdateBirthday" method="post" class="mt-3">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-7">
+                                <input type="date" name="birthDate" class="form-control" required max="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                            </div>
+                            <div class="col-md-5">
+                                <button type="submit" class="btn btn-danger w-100 fw-bold" style="background-color:#800020; border:none; height:38px;">
+                                    Xác nhận & Nhận quà
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                }
+            </div>
+
+            <!-- Card 2: Collect Vouchers "Shopee style" -->
+            <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 12px;">
+                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-ticket-perforated-fill text-warning me-2"></i>Thu thập Voucher giảm giá</h5>
+                <p class="text-muted small">Click "Thu thập" để lưu mã giảm giá trực tiếp vào tài khoản của bạn và áp dụng khi thanh toán đơn hàng.</p>
+                
+                <div class="mt-4">
+                    @if (ViewBag.AvailableVouchers != null && ((List<COSMETICC.Models.Discount>)ViewBag.AvailableVouchers).Any())
+                    {
+                        foreach (var v in (List<COSMETICC.Models.Discount>)ViewBag.AvailableVouchers)
+                        {
+                            <div class="voucher-card" id="avail-voucher-@v.Id">
+                                <div class="voucher-left">
+                                    <span style="font-size: 20px;">@v.Percentage%</span>
+                                    <span style="font-size: 10px; font-weight: 500;">GIẢM GIÁ</span>
+                                </div>
+                                <div class="voucher-right">
+                                    <div>
+                                        <div class="fw-bold text-dark mb-1">Mã: @v.Code</div>
+                                        <div class="text-muted small" style="font-size: 11.5px;">Hạn dùng: @v.ExpiryDate?.ToString("dd/MM/yyyy")</div>
+                                        <div class="text-muted small" style="font-size: 11px;">Lượt dùng còn lại: @(v.UsageLimit - v.UsedCount)</div>
+                                    </div>
+                                    <button class="btn-collect" onclick="collectVoucher(this, @v.Id)">Thu thập</button>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-4 small">
+                            <i class="bi bi-ticket-x fs-2 d-block mb-2 text-slate-300"></i>
+                            Hiện tại không có mã voucher khuyến mãi nào mới để thu thập.
+                        </div>
+                    }
+                </div>
+            </div>
+            
+        </div>
+
+        <!-- Right: My Vouchers (Ví Voucher) -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm p-4 h-100" style="border-radius: 12px;">
+                <h5 class="fw-bold text-dark mb-4"><i class="bi bi-wallet2 text-success me-2"></i>Ví Voucher của tôi</h5>
+                
+                <div>
+                    @if (ViewBag.CollectedVouchers != null && ((List<COSMETICC.Models.CollectedVoucher>)ViewBag.CollectedVouchers).Any())
+                    {
+                        foreach (var cv in (List<COSMETICC.Models.CollectedVoucher>)ViewBag.CollectedVouchers)
+                        {
+                            <div class="voucher-card">
+                                <div class="voucher-left @(cv.IsUsed ? "used" : "")">
+                                    <span style="font-size: 20px;">@cv.Discount.Percentage%</span>
+                                    <span style="font-size: 10px; font-weight: 500;">GIẢM GIÁ</span>
+                                </div>
+                                <div class="voucher-right">
+                                    <div>
+                                        <div class="fw-bold text-dark mb-1">Mã: @cv.Discount.Code</div>
+                                        <div class="text-muted small" style="font-size: 11.5px;">Thu thập lúc: @cv.CollectedAt.ToString("dd/MM HH:mm")</div>
+                                        
+                                        @if (cv.IsUsed)
+                                        {
+                                            <span class="badge bg-secondary-subtle text-secondary mt-1">Đã sử dụng</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success-subtle text-success mt-1">Sẵn sàng dùng</span>
+                                        }
+                                    </div>
+                                    @if (!cv.IsUsed)
+                                    {
+                                        <button class="btn btn-sm btn-outline-danger px-3" onclick="copyVoucherCode('@cv.Discount.Code')" style="border-color: #800020; color: #800020; font-size:12px; font-weight:600;">Sao chép</button>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-5 my-auto small">
+                            <i class="bi bi-folder2-open fs-2 d-block mb-2" style="color: #cbd5e1;"></i>
+                            Ví của bạn chưa lưu trữ voucher nào. Hãy thu thập voucher ở bên trái!
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function collectVoucher(btn, discountId) {
+        // Disable button immediately
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i>...';
+
+        fetch('/Account/CollectVoucher', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `discountId=${discountId}`
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                btn.innerHTML = '<i class="bi bi-check2"></i> Đã thu thập';
+                btn.classList.replace('btn-collect', 'btn-secondary');
+                
+                if (typeof showCartToast === 'function') {
+                    showCartToast(data.message);
+                } else {
+                    alert(data.message);
+                }
+                
+                // Reload after 1.5 seconds to refresh the collected wallet sidebar
+                setTimeout(() => { window.location.reload(); }, 1200);
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = 'Thu thập';
+                alert(data.message || 'Lỗi khi thu thập voucher.');
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btn.innerHTML = 'Thu thập';
+            alert('Lỗi kết nối máy chủ.');
+        });
+    }
+
+    function copyVoucherCode(code) {
+        navigator.clipboard.writeText(code).then(() => {
+            if (typeof showCartToast === 'function') {
+                showCartToast(`Đã copy mã: ${code}`);
+            } else {
+                alert(`Đã copy mã: ${code}`);
+            }
+        });
+    }
+</script>

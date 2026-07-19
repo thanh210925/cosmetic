@@ -25,6 +25,9 @@ namespace COSMETICC.Models
         [StringLength(500)]
         public string? Address { get; set; }
 
+        [StringLength(50)]
+        public string? TaxCode { get; set; }
+
         public string? ContractDetails { get; set; }
 
         [Column(TypeName = "datetime")]

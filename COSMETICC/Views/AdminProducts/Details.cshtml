@@ -173,13 +173,13 @@
                                 <tr>
                                     <th>Thành phần</th>
                                     <td>
-                                        <div class="text-wrap">@(Model.Ingredient ?? "Chưa có thông tin")</div>
+                                        <div class="text-wrap">@Html.Raw(Model.Ingredient ?? "Chưa có thông tin")</div>
                                     </td>
                                 </tr>
                                 <tr>
                                     <th>Mô tả chi tiết</th>
                                     <td>
-                                        <div class="text-wrap" style="white-space: pre-line;">@(Model.Description ?? "Chưa có mô tả")</div>
+                                        <div class="text-wrap">@Html.Raw(Model.Description ?? "Chưa có mô tả")</div>
                                     </td>
                                 </tr>
                             </tbody>

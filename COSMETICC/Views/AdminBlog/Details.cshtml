@@ -1,0 +1,97 @@
+@model COSMETICC.Models.BlogPost
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Chi tiết bài viết";
+}
+
+<div class="container-fluid px-4 max-width-800">
+    <div class="mb-4 d-flex justify-content-between align-items-center">
+        <div>
+            <h4 class="fw-bold text-dark mb-1"><i class="bi bi-journal-text text-muted me-2"></i>Xem chi tiết bài viết</h4>
+            <small class="text-muted">Xem trước hiển thị của bài viết và thông tin cấu hình SEO</small>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Index" class="btn btn-outline-secondary btn-sm fw-bold">
+                <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+            </a>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary btn-sm fw-bold px-3" style="background:#800020; border:none;">
+                <i class="bi bi-pencil me-1"></i> Chỉnh sửa bài viết
+            </a>
+        </div>
+    </div>
+
+    <!-- Main article container -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius:12px; overflow:hidden;">
+        <!-- Featured Image Banner -->
+        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+        {
+            <div style="height:320px; overflow:hidden; position:relative;">
+                <img src="@Model.ImageUrl" style="width:100%; height:100%; object-fit:cover;" alt="" />
+            </div>
+        }
+
+        <div class="card-body p-4 text-dark text-start">
+            <h2 class="fw-bold text-dark mb-2">@Model.Title</h2>
+            
+            <div class="d-flex flex-wrap align-items-center gap-3 text-muted small border-bottom pb-3 mb-4">
+                <span><i class="bi bi-calendar-event me-1"></i>Ngày đăng: @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                <span>
+                    Trạng thái: 
+                    @if (Model.IsPublished)
+                    {
+                        <span class="badge bg-success">Đã xuất bản</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning text-dark">Bản nháp</span>
+                    }
+                </span>
+                
+                @if (!string.IsNullOrEmpty(Model.Tags))
+                {
+                    <div class="d-flex gap-1 align-items-center">
+                        <i class="bi bi-tags me-1"></i>
+                        @foreach (var tag in Model.Tags.Split(','))
+                        {
+                            <span class="badge bg-secondary-subtle text-secondary">@tag.Trim()</span>
+                        }
+                    </div>
+                }
+            </div>
+
+            <!-- Summary Intro -->
+            <div class="p-3 bg-light rounded border-start border-4 border-danger mb-4" style="font-size: 1.05rem; line-height: 1.6; color:#555; font-style:italic;">
+                @Model.Summary
+            </div>
+
+            <!-- Content HTML formatted -->
+            <div class="article-body-content" style="line-height:1.8; font-size:15px; color:#333;">
+                @Html.Raw(Model.Content)
+            </div>
+
+        </div>
+    </div>
+
+    <!-- SEO Config Metadata panel -->
+    <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius:12px;">
+        <h5 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="bi bi-search text-success me-2"></i>Thẻ cấu hình SEO & Metadata</h5>
+        
+        <table class="table table-bordered mb-0">
+            <tbody>
+                <tr>
+                    <th style="width: 30%; background:#f8fafc;" class="small fw-bold">SEO URL (Slug)</th>
+                    <td class="font-monospace small">@Model.Slug</td>
+                </tr>
+                <tr>
+                    <th style="background:#f8fafc;" class="small fw-bold">SEO Title (Meta Title)</th>
+                    <td>@(Model.MetaTitle ?? "Sử dụng tiêu đề gốc")</td>
+                </tr>
+                <tr>
+                    <th style="background:#f8fafc;" class="small fw-bold">SEO Description (Meta Description)</th>
+                    <td class="small text-muted">@(Model.MetaDescription ?? "Chưa thiết lập")</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>

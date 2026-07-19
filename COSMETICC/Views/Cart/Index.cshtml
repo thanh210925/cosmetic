@@ -222,39 +222,55 @@
                 @if (Model.CartItems != null && Model.CartItems.Any())
                 {
                     <div id="cartItemsList">
-                        @foreach (var item in Model.CartItems)
+                        @{
+                            var groupedCartItems = Model.CartItems
+                                .GroupBy(ci => ci.Product.Brand != null ? ci.Product.Brand.Name : "Thương hiệu khác")
+                                .ToList();
+                        }
+                        @foreach (var group in groupedCartItems)
                         {
-                            var price = item.Product.PromoPrice ?? item.Product.Price;
-                            var subtotal = price * (item.Quantity ?? 1);
-                            totalCartAmount += subtotal;
+                            <div class="brand-group-wrapper mb-4 p-3 bg-light rounded border border-light-subtle" id="brand-group-@group.Key.Replace(" ", "-")">
+                                <h6 class="fw-bold mb-3 pb-2 border-bottom d-flex align-items-center text-dark" style="border-bottom: 2px solid var(--cart-green) !important;">
+                                    <i class="bi bi-shop me-2 text-danger"></i>
+                                    Hãng: @group.Key
+                                </h6>
+                                <div class="brand-items">
+                                    @foreach (var item in group)
+                                    {
+                                        var price = item.Product.PromoPrice ?? item.Product.Price;
+                                        var subtotal = price * (item.Quantity ?? 1);
+                                        totalCartAmount += subtotal;
 
-                            <div class="cart-item-row" id="cart-item-row-@item.Id">
-                                <!-- Image -->
-                                <img src="@(string.IsNullOrEmpty(item.Product.ImageUrl) ? "https://placehold.co/100x100?text=No+Image" : item.Product.ImageUrl)" class="cart-item-img" alt="" />
+                                        <div class="cart-item-row" id="cart-item-row-@item.Id">
+                                            <!-- Image -->
+                                            <img src="@(string.IsNullOrEmpty(item.Product.ImageUrl) ? "https://placehold.co/100x100?text=No+Image" : item.Product.ImageUrl)" class="cart-item-img" alt="" />
 
-                                <!-- Details -->
-                                <div class="cart-item-details">
-                                    <div class="cart-item-brand">@(item.Product.Brand?.Name ?? "COSMETIC")</div>
-                                    <a href="@Url.Action("Details", "Product", new { id = item.ProductId })" class="cart-item-name">@item.Product.Name</a>
-                                    <div class="cart-item-price-info">
-                                        <span class="cart-item-price" id="unit-price-@item.Id" data-price="@price">@String.Format("{0:N0} đ", price)</span>
-                                    </div>
+                                            <!-- Details -->
+                                            <div class="cart-item-details">
+                                                <a href="@Url.Action("Details", "Product", new { id = item.ProductId })" class="cart-item-name">@item.Product.Name</a>
+                                                <div class="text-muted small mb-2"><i class="bi bi-calendar3 me-1"></i>Ngày thêm: @item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                                                <div class="cart-item-price-info">
+                                                    <span class="cart-item-price" id="unit-price-@item.Id" data-price="@price">@String.Format("{0:N0} đ", price)</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Quantity Controls -->
+                                            <div class="qty-control">
+                                                <button class="qty-btn" onclick="adjustQty(@item.Id, -1)">-</button>
+                                                <input type="text" class="qty-input" id="qty-input-@item.Id" value="@item.Quantity" readonly />
+                                                <button class="qty-btn" onclick="adjustQty(@item.Id, 1)">+</button>
+                                            </div>
+
+                                            <!-- Subtotal Price -->
+                                            <div class="item-subtotal-price" id="subtotal-@item.Id">@String.Format("{0:N0} đ", subtotal)</div>
+
+                                            <!-- Remove Button -->
+                                            <button class="btn-remove-item" onclick="removeItem(@item.Id)" title="Xóa mặt hàng">
+                                                <i class="bi bi-trash-fill"></i>
+                                            </button>
+                                        </div>
+                                    }
                                 </div>
-
-                                <!-- Quantity Controls -->
-                                <div class="qty-control">
-                                    <button class="qty-btn" onclick="adjustQty(@item.Id, -1)">-</button>
-                                    <input type="text" class="qty-input" id="qty-input-@item.Id" value="@item.Quantity" readonly />
-                                    <button class="qty-btn" onclick="adjustQty(@item.Id, 1)">+</button>
-                                </div>
-
-                                <!-- Subtotal Price -->
-                                <div class="item-subtotal-price" id="subtotal-@item.Id">@String.Format("{0:N0} đ", subtotal)</div>
-
-                                <!-- Remove Button -->
-                                <button class="btn-remove-item" onclick="removeItem(@item.Id)" title="Xóa mặt hàng">
-                                    <i class="bi bi-trash-fill"></i>
-                                </button>
                             </div>
                         }
                     </div>
@@ -399,7 +415,11 @@
                         row.style.opacity = "0";
                         row.style.transition = "all 0.3s ease";
                         setTimeout(() => {
+                            const brandGroup = row.closest('.brand-group-wrapper');
                             row.remove();
+                            if (brandGroup && brandGroup.querySelectorAll('.cart-item-row').length === 0) {
+                                brandGroup.remove();
+                            }
                             recalculateCart();
                         }, 300);
                     }

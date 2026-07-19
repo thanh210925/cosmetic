@@ -13,11 +13,14 @@ public partial class Review
 
     public int ProductId { get; set; }
 
-    public int UserId { get; set; }
+    public int? UserId { get; set; }
 
     public int? Rating { get; set; }
 
     public string? Comment { get; set; }
+
+    [StringLength(255)]
+    public string? GuestName { get; set; }
 
     [Column(TypeName = "datetime")]
     public DateTime? CreatedAt { get; set; }
@@ -34,5 +37,5 @@ public partial class Review
 
     [ForeignKey("UserId")]
     [InverseProperty("Reviews")]
-    public virtual User User { get; set; } = null!;
+    public virtual User? User { get; set; }
 }

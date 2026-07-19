@@ -16,6 +16,12 @@ public partial class InventoryLog
 
     public int Quantity { get; set; }
 
+    [StringLength(100)]
+    public string? BatchNumber { get; set; }
+
+    [StringLength(100)]
+    public string? ReferenceCode { get; set; }
+
     [StringLength(500)]
     public string? Note { get; set; }
 

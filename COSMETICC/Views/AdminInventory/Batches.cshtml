@@ -1,0 +1,176 @@
+@model IEnumerable<COSMETICC.Models.ProductBatch>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Quản lý Lô & Hạn sử dụng";
+    
+    var now = (DateTime)ViewBag.Now;
+    var warningDate = (DateTime)ViewBag.WarningDate;
+    var productsList = (List<COSMETICC.Models.Product>)ViewBag.ProductsList;
+}
+
+<div class="container-fluid px-4">
+    
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Navigation Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold text-dark mb-1"><i class="bi bi-calendar3-range text-muted me-2"></i>Quản lý Lô & Hạn sử dụng</h4>
+            <small class="text-muted">Theo dõi và cảnh báo hạn sử dụng sản phẩm mỹ phẩm theo lô hàng</small>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Index" class="btn btn-outline-secondary btn-sm fw-bold">
+                <i class="bi bi-arrow-left me-1"></i> Quay lại Tồn kho
+            </a>
+            <button type="button" class="btn btn-primary btn-sm fw-bold px-3" style="background:#800020; border:none;" data-bs-toggle="modal" data-bs-target="#addBatchModal">
+                <i class="bi bi-plus-lg me-1"></i> Nhập lô hàng mới
+            </button>
+        </div>
+    </div>
+
+    <!-- Inventory Batches Table -->
+    <div class="admin-card m-0">
+        <div class="admin-table-container">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Sản phẩm</th>
+                        <th>Số lô (Batch No.)</th>
+                        <th>Ngày nhập</th>
+                        <th>Hạn sử dụng</th>
+                        <th>Lượng nhập</th>
+                        <th>Tồn của lô</th>
+                        <th>Trạng thái</th>
+                        <th>Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var b in Model)
+                        {
+                            var isExpired = b.ExpiryDate <= now;
+                            var isNearExpiry = !isExpired && b.ExpiryDate <= warningDate;
+                            
+                            string statusClass = "bg-success text-white";
+                            string statusText = "An toàn";
+                            
+                            if (isExpired)
+                            {
+                                statusClass = "bg-danger text-white";
+                                statusText = "Đã hết hạn";
+                            }
+                            else if (isNearExpiry)
+                            {
+                                statusClass = "bg-warning text-dark";
+                                statusText = "Sắp hết hạn";
+                            }
+
+                            <tr>
+                                <td class="fw-bold text-dark">@b.Product.Name</td>
+                                <td class="font-monospace text-primary fw-bold">@b.BatchNumber</td>
+                                <td>@b.ImportDate.ToString("dd/MM/yyyy")</td>
+                                <td class="fw-bold">@b.ExpiryDate.ToString("dd/MM/yyyy")</td>
+                                <td>@b.ImportQuantity.ToString("N0")</td>
+                                <td class="fw-bold">@b.Quantity.ToString("N0")</td>
+                                <td>
+                                    @if (b.Quantity == 0)
+                                    {
+                                        <span class="badge bg-secondary text-white">Đã bán hết</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge @statusClass">@statusText</span>
+                                    }
+                                </td>
+                                <td class="small text-muted">@b.Notes</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-5">
+                                <i class="bi bi-calendar-x fs-1 d-block mb-3" style="color: #cbd5e1;"></i>
+                                Chưa có lô hàng nào được thiết lập. Hãy bấm "Nhập lô hàng mới" để tạo lô hàng đầu tiên!
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Nhập lô hàng mới -->
+<div class="modal fade" id="addBatchModal" tabindex="-1" aria-labelledby="addBatchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:12px; border:none; overflow:hidden;">
+            <div style="background:#800020; color:white; padding: 15px 20px;" class="d-flex align-items-center justify-content-between">
+                <h5 class="modal-title fw-bold m-0" id="addBatchModalLabel"><i class="bi bi-box-arrow-in-down me-2"></i>Nhập lô hàng mới</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="AddBatch" method="post" class="p-4">
+                @Html.AntiForgeryToken()
+                
+                <!-- Product select -->
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-dark">Chọn sản phẩm:</label>
+                    <select name="productId" class="form-select" required>
+                        <option value="">-- Chọn sản phẩm mỹ phẩm --</option>
+                        @if (productsList != null)
+                        {
+                            foreach (var p in productsList)
+                            {
+                                <option value="@p.Id">@p.Name (Tồn: @(p.Stock ?? 0))</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <!-- Batch Number -->
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-dark">Số lô hàng (Batch Number):</label>
+                    <input type="text" name="batchNumber" class="form-control" placeholder="Ví dụ: LOMYPHAM-2026-01" required autocomplete="off" />
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <!-- Import Quantity -->
+                    <div class="col-6">
+                        <label class="form-label small fw-bold text-dark">Số lượng nhập:</label>
+                        <input type="number" name="importQuantity" class="form-control" min="1" required />
+                    </div>
+                    <!-- Expiry Date -->
+                    <div class="col-6">
+                        <label class="form-label small fw-bold text-dark">Hạn sử dụng (Expiry Date):</label>
+                        <input type="date" name="expiryDate" class="form-control" required min="@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")" />
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-dark">Ghi chú nhập kho:</label>
+                    <textarea name="notes" class="form-control" rows="2" placeholder="Ví dụ: Nhập hàng container tháng 7..."></textarea>
+                </div>
+
+                <!-- Action Button -->
+                <button type="submit" class="btn btn-primary w-100 fw-bold" style="background:#800020; border:none; height:40px;">
+                    <i class="bi bi-save me-1"></i> Xác nhận Nhập lô hàng
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

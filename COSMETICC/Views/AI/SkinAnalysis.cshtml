@@ -1,0 +1,407 @@
+@{
+    ViewData["Title"] = "Phân tích Loại da — AI Quiz";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    body { background: #0f0f1a; }
+    .quiz-wrap {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #0f0f1a 0%, #1a0a2e 50%, #0f0f1a 100%);
+        padding: 60px 0;
+    }
+    .quiz-card {
+        background: linear-gradient(145deg, #1e1b4b, #1e293b);
+        border: 1px solid rgba(139,92,246,0.25);
+        border-radius: 24px;
+        padding: 48px;
+        max-width: 680px;
+        margin: 0 auto;
+        box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+    }
+    .quiz-header {
+        text-align: center; margin-bottom: 40px;
+    }
+    .quiz-header h1 {
+        font-size: 2rem; font-weight: 900;
+        background: linear-gradient(90deg, #f9a8d4, #c084fc, #60a5fa);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        margin-bottom: 8px;
+    }
+    .quiz-header p { color: #64748b; font-size: 15px; }
+    .quiz-progress-bar {
+        background: rgba(255,255,255,0.1);
+        border-radius: 4px; height: 6px;
+        margin-bottom: 40px; overflow: hidden;
+    }
+    .quiz-progress-fill {
+        background: linear-gradient(90deg, #7c3aed, #db2777);
+        height: 100%; border-radius: 4px;
+        transition: width 0.5s ease;
+        width: 0%;
+    }
+
+    /* Question Styling */
+    .question-block { display: none; }
+    .question-block.active { display: block; animation: fadeSlide 0.4s ease; }
+    @@keyframes fadeSlide {
+        from { opacity: 0; transform: translateX(20px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    .question-num {
+        font-size: 11px; font-weight: 700; color: #7c3aed;
+        letter-spacing: 1px; margin-bottom: 8px;
+    }
+    .question-text {
+        font-size: 1.15rem; font-weight: 700; color: #e2e8f0;
+        margin-bottom: 24px; line-height: 1.5;
+    }
+    .answer-option {
+        display: flex; align-items: center; gap: 14px;
+        padding: 14px 18px;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 12px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: #94a3b8;
+        background: rgba(255,255,255,0.02);
+    }
+    .answer-option:hover {
+        border-color: rgba(124,58,237,0.5);
+        background: rgba(124,58,237,0.08);
+        color: #e2e8f0;
+        transform: translateX(4px);
+    }
+    .answer-option input[type="radio"] { display: none; }
+    .answer-option .radio-dot {
+        width: 20px; height: 20px; border-radius: 50%;
+        border: 2px solid rgba(124,58,237,0.4);
+        flex-shrink: 0; transition: all 0.2s;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .answer-option.selected {
+        border-color: #7c3aed;
+        background: rgba(124,58,237,0.15);
+        color: #e2e8f0;
+    }
+    .answer-option.selected .radio-dot {
+        background: #7c3aed; border-color: #7c3aed;
+    }
+    .answer-option.selected .radio-dot::after {
+        content: '✓'; color: white; font-size: 11px; font-weight: 700;
+    }
+    .answer-emoji { font-size: 22px; flex-shrink: 0; }
+    .answer-label { font-weight: 500; font-size: 14px; }
+
+    .quiz-btn {
+        background: linear-gradient(135deg, #7c3aed, #db2777);
+        color: white; border: none;
+        padding: 14px 36px; border-radius: 12px;
+        font-weight: 700; font-size: 15px;
+        cursor: pointer; transition: all 0.2s;
+        width: 100%; margin-top: 16px;
+    }
+    .quiz-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,58,237,0.35); }
+    .quiz-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    .quiz-skin-icons { font-size: 48px; margin-bottom: 12px; }
+</style>
+
+<div class="quiz-wrap">
+    <div class="container">
+        <div class="quiz-card">
+            <!-- Header -->
+            <div class="quiz-header">
+                <div class="quiz-skin-icons">🔬✨</div>
+                <h1>Phân tích Loại da</h1>
+                <p>Trả lời 6 câu hỏi ngắn — AI sẽ xác định chính xác loại da và đề xuất routine phù hợp nhất!</p>
+            </div>
+
+            <!-- Progress -->
+            <div class="quiz-progress-bar">
+                <div class="quiz-progress-fill" id="progressFill"></div>
+            </div>
+            <div class="text-center mb-3" style="color:#64748b; font-size:13px;">
+                Câu <span id="currentQ">1</span> / 6
+            </div>
+
+            <!-- Form -->
+            <form action="@Url.Action("AnalyzeSkin", "AI")" method="post" id="quizForm">
+                @Html.AntiForgeryToken()
+
+                <!-- Q1 -->
+                <div class="question-block active" data-q="1">
+                    <div class="question-num">CÂU HỎI 1 / 6</div>
+                    <div class="question-text">☀️ Vào buổi chiều (sau ~4 giờ từ lúc rửa mặt), mặt bạn cảm giác như thế nào?</div>
+                    <label class="answer-option" onclick="selectOption(this)">
+                        <input type="radio" name="q1" value="very_oily" />
+                        <span class="radio-dot"></span>
+                        <span class="answer-emoji">💦</span>
+                        <span class="answer-label">Mặt bóng dầu nhiều, nhờn rít khắp nơi</span>
+                    </label>
+                    <label class="answer-option" onclick="selectOption(this)">
+                        <input type="radio" name="q1" value="t_zone_oily" />
+                        <span class="radio-dot"></span>
+                        <span class="answer-emoji">🙂</span>
+                        <span class="answer-label">Chỉ vùng T (trán, mũi, cằm) hơi bóng dầu</span>
+                    </label>
+                    <label class="answer-option" onclick="selectOption(this)">
+                        <input type="radio" name="q1" value="normal" />
+                        <span class="radio-dot"></span>
+                        <span class="answer-emoji">😌</span>
+                        <span class="answer-label">Bình thường, không có gì đặc biệt</span>
+                    </label>
+                    <label class="answer-option" onclick="selectOption(this)">
+                        <input type="radio" name="q1" value="tight_dry" />
+                        <span class="radio-dot"></span>
+                        <span class="answer-emoji">😬</span>
+                        <span class="answer-label">Cảm giác căng, khô và bong tróc</span>
+                    </label>
+                </div>
+
+                <!-- Q2 -->
+                <div class="question-block" data-q="2">
+                    <div class="question-num">CÂU HỎI 2 / 6</div>
+                    <div class="question-text">💧 Sau khi rửa mặt và chờ 30 phút (không dùng gì), da bạn như thế nào?</div>
+                    <label class="answer-option" onclick="selectOption(this)">
+                        <input type="radio" name="q2" value="oily_fast" />
+                        <span class="radio-dot"></span>
+                        <span class="answer-emoji">🫧</span>
+                        <span class="answer-label">Tiết dầu trở lại rất nhanh</span>
+                    </label>
+                    <label class="answer-option" onclick="selectOption(this)">
+                        <input type="radio" name="q2" value="comfortable" />
+                        <span class="radio-dot"></span>
+                        <span class="answer-emoji">😊</span>
+                        <span class="answer-label">Thoải mái, cân bằng, không có gì đặc biệt</span>
+                    </label>
+                    <label class="answer-option" onclick="selectOption(this)">
+                        <input type="radio" name="q2" value="tight" />
+                        <span class="radio-dot"></span>
+                        <span class="answer-emoji">😣</span>
+                        <span class="answer-label">Căng, khô, muốn thoa kem ngay</span>
+                    </label>
+                    <label class="answer-option" onclick="selectOption(this)">
+                        <input type="radio" name="q2" value="red_irritated" />
+                        <span class="radio-dot"></span>
+                        <span class="answer-emoji">😳</span>
+                        <span class="answer-label">Đỏ, ngứa, hoặc bị kích ứng</span>
+                    </label>
+                </div>
+
+                <!-- Q3 -->
+                <div class="question-block" data-q="3">
+                    <div class="question-num">CÂU HỎI 3 / 6</div>
+                    <div class="question-text">🔴 Tình trạng mụn của bạn thường xuyên như thế nào?</div>
+                    <label class="answer-option" onclick="selectOption(this)">
+                        <input type="radio" name="q3" value="frequently" />
+                        <span class="radio-dot"></span>
+                        <span class="answer-emoji">😰</span>
+                        <span class="answer-label">Thường xuyên nổi mụn (mụn đầu đen, mụn viêm)</span>
+                    </label>
+                    <label class="answer-option" onclick="selectOption(this)">
+                        <input type="radio" name="q3" value="sometimes" />
+                        <span class="radio-dot"></span>
+                        <span class="answer-emoji">😕</span>
+                        <span class="answer-label">Thỉnh thoảng, đặc biệt khi stress hoặc thay đổi thời tiết</span>
+                    </label>
+                    <label class="answer-option" onclick="selectOption(this)">
+                        <input type="radio" name="q3" value="rarely" />
+                        <span class="radio-dot"></span>
+                        <span class="answer-emoji">🙂</span>
+                        <span class="answer-label">Hiếm khi</span>
+                    </label>
+                    <label class="answer-option" onclick="selectOption(this)">
+                        <input type="radio" name="q3" value="never" />
+                        <span class="radio-dot"></span>
+                        <span class="answer-emoji">😁</span>
+                        <span class="answer-label">Hầu như không bao giờ</span>
+                    </label>
+                </div>
+
+                <!-- Q4 -->
+                <div class="question-block" data-q="4">
+                    <div class="question-num">CÂU HỎI 4 / 6</div>
+                    <div class="question-text">🧴 Khi thử sản phẩm mới, da bạn có phản ứng không?</div>
+                    <label class="answer-option" onclick="selectOption(this)">
+                        <input type="radio" name="q4" value="often_react" />
+                        <span class="radio-dot"></span>
+                        <span class="answer-emoji">😱</span>
+                        <span class="answer-label">Hay bị đỏ, ngứa, rát hoặc nổi mẩn</span>
+                    </label>
+                    <label class="answer-option" onclick="selectOption(this)">
+                        <input type="radio" name="q4" value="sometimes" />
+                        <span class="radio-dot"></span>
+                        <span class="answer-emoji">😬</span>
+                        <span class="answer-label">Đôi khi có phản ứng nhẹ</span>
+                    </label>
+                    <label class="answer-option" onclick="selectOption(this)">
+                        <input type="radio" name="q4" value="rarely" />
+                        <span class="radio-dot"></span>
+                        <span class="answer-emoji">🙂</span>
+                        <span class="answer-label">Rất hiếm khi</span>
+                    </label>
+                    <label class="answer-option" onclick="selectOption(this)">
+                        <input type="radio" name="q4" value="never" />
+                        <span class="radio-dot"></span>
+                        <span class="answer-emoji">💪</span>
+                        <span class="answer-label">Da tôi dùng được hầu hết mọi thứ</span>
+                    </label>
+                </div>
+
+                <!-- Q5 -->
+                <div class="question-block" data-q="5">
+                    <div class="question-num">CÂU HỎI 5 / 6</div>
+                    <div class="question-text">🔍 Nhìn gần gương, lỗ chân lông của bạn như thế nào?</div>
+                    <label class="answer-option" onclick="selectOption(this)">
+                        <input type="radio" name="q5" value="very_visible" />
+                        <span class="radio-dot"></span>
+                        <span class="answer-emoji">😵</span>
+                        <span class="answer-label">Rất to, nhìn rõ khắp mặt</span>
+                    </label>
+                    <label class="answer-option" onclick="selectOption(this)">
+                        <input type="radio" name="q5" value="visible_t" />
+                        <span class="radio-dot"></span>
+                        <span class="answer-emoji">😐</span>
+                        <span class="answer-label">To ở vùng T, nhỏ hơn ở vùng má</span>
+                    </label>
+                    <label class="answer-option" onclick="selectOption(this)">
+                        <input type="radio" name="q5" value="small" />
+                        <span class="radio-dot"></span>
+                        <span class="answer-emoji">😊</span>
+                        <span class="answer-label">Khá nhỏ, chỉ thấy khi nhìn kỹ</span>
+                    </label>
+                    <label class="answer-option" onclick="selectOption(this)">
+                        <input type="radio" name="q5" value="invisible" />
+                        <span class="radio-dot"></span>
+                        <span class="answer-emoji">🌟</span>
+                        <span class="answer-label">Hầu như không nhìn thấy</span>
+                    </label>
+                </div>
+
+                <!-- Q6 -->
+                <div class="question-block" data-q="6">
+                    <div class="question-num">CÂU HỎI 6 / 6</div>
+                    <div class="question-text">🪞 Vấn đề da bạn thường gặp phải là gì?</div>
+                    <label class="answer-option" onclick="selectOption(this)">
+                        <input type="radio" name="q6" value="oily_acne" />
+                        <span class="radio-dot"></span>
+                        <span class="answer-emoji">🌊</span>
+                        <span class="answer-label">Bóng dầu, lỗ chân lông to, hay có mụn</span>
+                    </label>
+                    <label class="answer-option" onclick="selectOption(this)">
+                        <input type="radio" name="q6" value="red_react" />
+                        <span class="radio-dot"></span>
+                        <span class="answer-emoji">🔴</span>
+                        <span class="answer-label">Đỏ da, dễ kích ứng, ngứa ngáy</span>
+                    </label>
+                    <label class="answer-option" onclick="selectOption(this)">
+                        <input type="radio" name="q6" value="dry_flaky" />
+                        <span class="radio-dot"></span>
+                        <span class="answer-emoji">🍂</span>
+                        <span class="answer-label">Khô, bong tróc, thiếu ẩm</span>
+                    </label>
+                    <label class="answer-option" onclick="selectOption(this)">
+                        <input type="radio" name="q6" value="balanced" />
+                        <span class="radio-dot"></span>
+                        <span class="answer-emoji">✨</span>
+                        <span class="answer-label">Da khá ổn định, ít vấn đề</span>
+                    </label>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="d-flex gap-3 mt-2">
+                    <button type="button" id="prevBtn" class="quiz-btn" style="background:#1e293b; display:none;" onclick="prevQuestion()">
+                        ← Quay lại
+                    </button>
+                    <button type="button" id="nextBtn" class="quiz-btn" onclick="nextQuestion()" disabled>
+                        Tiếp theo →
+                    </button>
+                    <button type="submit" id="submitBtn" class="quiz-btn" style="display:none;">
+                        🔬 Phân tích loại da của tôi!
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentQuestion = 1;
+const totalQuestions = 6;
+const answers = {};
+
+function updateProgress() {
+    const pct = ((currentQuestion - 1) / totalQuestions) * 100;
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('currentQ').textContent = currentQuestion;
+}
+
+function selectOption(label) {
+    const block = label.closest('.question-block');
+    block.querySelectorAll('.answer-option').forEach(el => el.classList.remove('selected'));
+    label.classList.add('selected');
+
+    const radio = label.querySelector('input[type="radio"]');
+    radio.checked = true;
+    answers[currentQuestion] = radio.value;
+
+    const nextBtn = document.getElementById('nextBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    if (currentQuestion < totalQuestions) {
+        nextBtn.disabled = false;
+    } else {
+        submitBtn.disabled = false;
+    }
+}
+
+function nextQuestion() {
+    if (!answers[currentQuestion]) return;
+
+    document.querySelector(`[data-q="${currentQuestion}"]`).classList.remove('active');
+    currentQuestion++;
+    document.querySelector(`[data-q="${currentQuestion}"]`).classList.add('active');
+    updateProgress();
+
+    document.getElementById('prevBtn').style.display = 'block';
+    document.getElementById('nextBtn').disabled = true;
+
+    if (currentQuestion === totalQuestions) {
+        document.getElementById('nextBtn').style.display = 'none';
+        document.getElementById('submitBtn').style.display = 'block';
+        document.getElementById('submitBtn').disabled = !answers[currentQuestion];
+    }
+
+    // Re-check if already answered
+    if (answers[currentQuestion]) {
+        const block = document.querySelector(`[data-q="${currentQuestion}"]`);
+        const input = block.querySelector(`input[value="${answers[currentQuestion]}"]`);
+        if (input) {
+            input.closest('.answer-option').classList.add('selected');
+            if (currentQuestion === totalQuestions) {
+                document.getElementById('submitBtn').disabled = false;
+            } else {
+                document.getElementById('nextBtn').disabled = false;
+            }
+        }
+    }
+}
+
+function prevQuestion() {
+    document.querySelector(`[data-q="${currentQuestion}"]`).classList.remove('active');
+    currentQuestion--;
+    document.querySelector(`[data-q="${currentQuestion}"]`).classList.add('active');
+    updateProgress();
+
+    document.getElementById('nextBtn').disabled = false;
+    document.getElementById('nextBtn').style.display = 'block';
+    document.getElementById('submitBtn').style.display = 'none';
+
+    if (currentQuestion === 1) {
+        document.getElementById('prevBtn').style.display = 'none';
+    }
+}
+
+updateProgress();
+</script>

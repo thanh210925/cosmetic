@@ -1,4 +1,4 @@
-﻿using COSMETICC.Models;
+using COSMETICC.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication;
@@ -130,16 +130,26 @@ namespace Cosmetic.Controllers
         }
         // ================= PROFILE =================
 
+        [HttpGet]
         public async Task<IActionResult> Profile()
         {
-            var userId = HttpContext.Session.GetString("UserId");
-
-            if (userId == null)
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
             {
                 return RedirectToAction("Login");
             }
 
-            var user = await _context.Users.FindAsync(int.Parse(userId));
+            var user = await _context.Users
+                .Include(u => u.UserAddresses)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+            {
+                return RedirectToAction("Login");
+            }
+
+            // Ensure address list is ordered by IsDefault descending
+            user.UserAddresses = user.UserAddresses.OrderByDescending(a => a.IsDefault).ToList();
 
             return View(user);
         }
@@ -149,6 +159,388 @@ namespace Cosmetic.Controllers
         {
             HttpContext.Session.Clear();
             return RedirectToAction("Login");
+        }
+
+        // ================= LOYALTY & VOUCHERS =================
+
+        [HttpGet]
+        public async Task<IActionResult> Loyalty()
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+            {
+                return RedirectToAction("Login");
+            }
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return RedirectToAction("Login");
+            }
+
+            // Fetch active vouchers
+            var now = DateTime.Now;
+            var activeDiscounts = await _context.Discounts
+                .Where(d => d.StartDate <= now && d.ExpiryDate >= now && d.UsageLimit > d.UsedCount)
+                .ToListAsync();
+
+            // Fetch collected vouchers for this user
+            var collectedVouchers = await _context.CollectedVouchers
+                .Include(cv => cv.Discount)
+                .Where(cv => cv.UserId == userId)
+                .ToListAsync();
+
+            // Distinguish available vs collected
+            var collectedDiscountIds = collectedVouchers.Select(cv => cv.DiscountId).ToList();
+            var availableVouchers = activeDiscounts
+                .Where(d => !collectedDiscountIds.Contains(d.Id))
+                .ToList();
+
+            ViewBag.AvailableVouchers = availableVouchers;
+            ViewBag.CollectedVouchers = collectedVouchers;
+
+            return View(user);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CollectVoucher(int discountId)
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+            {
+                return Json(new { success = false, message = "Vui lòng đăng nhập để thu thập voucher!" });
+            }
+
+            var discount = await _context.Discounts.FindAsync(discountId);
+            if (discount == null)
+            {
+                return Json(new { success = false, message = "Voucher không tồn tại!" });
+            }
+
+            var now = DateTime.Now;
+            if (discount.StartDate > now || discount.ExpiryDate < now || discount.UsedCount >= discount.UsageLimit)
+            {
+                return Json(new { success = false, message = "Voucher này đã hết hạn hoặc hết lượt sử dụng!" });
+            }
+
+            // Check if already collected
+            var alreadyCollected = await _context.CollectedVouchers
+                .AnyAsync(cv => cv.UserId == userId && cv.DiscountId == discountId);
+
+            if (alreadyCollected)
+            {
+                return Json(new { success = false, message = "Bạn đã thu thập voucher này rồi!" });
+            }
+
+            var collected = new CollectedVoucher
+            {
+                UserId = userId,
+                DiscountId = discountId,
+                CollectedAt = DateTime.Now,
+                IsUsed = false
+            };
+
+            _context.CollectedVouchers.Add(collected);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Thu thập voucher thành công! Đã lưu vào ví voucher của bạn." });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateBirthday(DateTime birthDate)
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+            {
+                return RedirectToAction("Login");
+            }
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return RedirectToAction("Login");
+            }
+
+            // Optional: check if birthday was already set to prevent users changing it multiple times for multiple vouchers
+            if (user.BirthDate.HasValue)
+            {
+                TempData["ErrorMessage"] = "Bạn chỉ được thiết lập ngày sinh một lần duy nhất!";
+                return RedirectToAction("Loyalty");
+            }
+
+            user.BirthDate = birthDate;
+            _context.Update(user);
+            await _context.SaveChangesAsync();
+
+            // Give a special birthday voucher immediately if birthday month matches current month!
+            // Let's create a birthday discount programmatically if it doesn't exist
+            var bdayCode = $"BDAY-{user.Id}-{DateTime.Now.Year}";
+            var existingBdayVoucher = await _context.Discounts.FirstOrDefaultAsync(d => d.Code == bdayCode);
+
+            if (existingBdayVoucher == null)
+            {
+                var discount = new Discount
+                {
+                    Code = bdayCode,
+                    Percentage = 20, // 20% off
+                    StartDate = DateTime.Now.AddDays(-1),
+                    ExpiryDate = DateTime.Now.AddDays(30), // Valid for 30 days
+                    UsageLimit = 1,
+                    UsedCount = 0
+                };
+                _context.Discounts.Add(discount);
+                await _context.SaveChangesAsync();
+
+                var collected = new CollectedVoucher
+                {
+                    UserId = userId,
+                    DiscountId = discount.Id,
+                    CollectedAt = DateTime.Now,
+                    IsUsed = false
+                };
+                _context.CollectedVouchers.Add(collected);
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = "Cập nhật ngày sinh thành công! Hệ thống đã tặng bạn 1 Voucher Sinh Nhật giảm giá 20% trong ví!";
+            }
+            else
+            {
+                TempData["SuccessMessage"] = "Cập nhật ngày sinh thành công!";
+            }
+
+            return RedirectToAction("Loyalty");
+        }
+
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateProfile(User model)
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+            {
+                return RedirectToAction("Login");
+            }
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return NotFound();
+
+            // Validate duplicate email if email is changed
+            if (!string.Equals(user.Email, model.Email, StringComparison.OrdinalIgnoreCase))
+            {
+                var emailExist = await _context.Users.AnyAsync(u => u.Email == model.Email && u.Id != userId);
+                if (emailExist)
+                {
+                    TempData["ErrorMessage"] = "Email này đã được sử dụng bởi tài khoản khác!";
+                    return RedirectToAction("Profile");
+                }
+            }
+
+            // Update allowed fields
+            user.FullName = model.FullName;
+            user.Email = model.Email;
+            user.Phone = model.Phone;
+            user.Address = model.Address;
+            user.Gender = model.Gender;
+            user.BirthDate = model.BirthDate;
+            user.Avatar = model.Avatar;
+
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+            // Update session values
+            HttpContext.Session.SetString("FullName", user.FullName ?? "");
+            HttpContext.Session.SetString("Email", user.Email ?? "");
+
+            TempData["SuccessMessage"] = "Cập nhật hồ sơ cá nhân thành công!";
+            return RedirectToAction("Profile");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(string oldPassword, string newPassword, string confirmNewPassword)
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+            {
+                return RedirectToAction("Login");
+            }
+
+            if (string.IsNullOrEmpty(newPassword) || newPassword != confirmNewPassword)
+            {
+                TempData["ErrorMessage"] = "Mật khẩu mới và xác nhận mật khẩu không khớp!";
+                return RedirectToAction("Profile");
+            }
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return NotFound();
+
+            if (user.Password != oldPassword)
+            {
+                TempData["ErrorMessage"] = "Mật khẩu hiện tại không chính xác!";
+                return RedirectToAction("Profile");
+            }
+
+            user.Password = newPassword;
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Đổi mật khẩu thành công!";
+            return RedirectToAction("Profile");
+        }
+
+        // ================= ADDRESS MANAGEMENT =================
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddAddress(UserAddress address)
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+            {
+                return RedirectToAction("Login");
+            }
+
+            address.UserId = userId;
+
+            if (address.IsDefault)
+            {
+                // Unset other default addresses
+                var currentDefaults = await _context.UserAddresses
+                    .Where(a => a.UserId == userId && a.IsDefault)
+                    .ToListAsync();
+                foreach (var cur in currentDefaults)
+                {
+                    cur.IsDefault = false;
+                }
+            }
+            else
+            {
+                // If this is the only address, set it as default
+                var hasAnyAddress = await _context.UserAddresses.AnyAsync(a => a.UserId == userId);
+                if (!hasAnyAddress)
+                {
+                    address.IsDefault = true;
+                }
+            }
+
+            _context.UserAddresses.Add(address);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Thêm địa chỉ giao hàng mới thành công!";
+            return RedirectToAction("Profile");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditAddress(int id, UserAddress model)
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+            {
+                return RedirectToAction("Login");
+            }
+
+            var address = await _context.UserAddresses
+                .FirstOrDefaultAsync(a => a.Id == id && a.UserId == userId);
+
+            if (address == null) return NotFound();
+
+            address.ReceiverName = model.ReceiverName;
+            address.ReceiverPhone = model.ReceiverPhone;
+            address.SpecificAddress = model.SpecificAddress;
+            address.City = model.City;
+
+            if (model.IsDefault && !address.IsDefault)
+            {
+                // Set default and unset others
+                var currentDefaults = await _context.UserAddresses
+                    .Where(a => a.UserId == userId && a.IsDefault)
+                    .ToListAsync();
+                foreach (var cur in currentDefaults)
+                {
+                    cur.IsDefault = false;
+                }
+                address.IsDefault = true;
+            }
+
+            _context.UserAddresses.Update(address);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Cập nhật địa chỉ thành công!";
+            return RedirectToAction("Profile");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteAddress(int id)
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+            {
+                return RedirectToAction("Login");
+            }
+
+            var address = await _context.UserAddresses
+                .FirstOrDefaultAsync(a => a.Id == id && a.UserId == userId);
+
+            if (address == null) return NotFound();
+
+            bool wasDefault = address.IsDefault;
+
+            _context.UserAddresses.Remove(address);
+            await _context.SaveChangesAsync();
+
+            // If deleted address was default, set another one as default if exists
+            if (wasDefault)
+            {
+                var another = await _context.UserAddresses
+                    .FirstOrDefaultAsync(a => a.UserId == userId);
+                if (another != null)
+                {
+                    another.IsDefault = true;
+                    _context.UserAddresses.Update(another);
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            TempData["SuccessMessage"] = "Đã xóa địa chỉ giao hàng thành công.";
+            return RedirectToAction("Profile");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SetDefaultAddress(int id)
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+            {
+                return RedirectToAction("Login");
+            }
+
+            var address = await _context.UserAddresses
+                .FirstOrDefaultAsync(a => a.Id == id && a.UserId == userId);
+
+            if (address == null) return NotFound();
+
+            // Unset all other defaults
+            var currentDefaults = await _context.UserAddresses
+                .Where(a => a.UserId == userId && a.IsDefault && a.Id != id)
+                .ToListAsync();
+
+            foreach (var cur in currentDefaults)
+            {
+                cur.IsDefault = false;
+                _context.UserAddresses.Update(cur);
+            }
+
+            address.IsDefault = true;
+            _context.UserAddresses.Update(address);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Đã đặt địa chỉ làm mặc định.";
+            return RedirectToAction("Profile");
         }
     }
 }

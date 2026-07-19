@@ -1,0 +1,125 @@
+@model COSMETICC.Models.BlogPost
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Tạo bài viết mới";
+}
+
+<div class="container-fluid px-4 max-width-1000">
+    
+    <div class="mb-4">
+        <h4 class="fw-bold text-dark mb-1"><i class="bi bi-journal-plus text-muted me-2"></i>Tạo bài viết mới</h4>
+        <small class="text-muted">Đăng tin tức mới cho trang tin tức mỹ phẩm MeiLing</small>
+    </div>
+
+    <div class="admin-card m-0 p-4">
+        <form asp-action="Create" method="post" autocomplete="off">
+            @Html.AntiForgeryToken()
+            
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">
+                    Vui lòng kiểm tra lại thông tin nhập liệu!
+                </div>
+            }
+
+            <div class="row">
+                <!-- Main Content Column -->
+                <div class="col-md-8 border-end pe-4">
+                    
+                    <!-- Title -->
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label small fw-bold text-dark">Tiêu đề bài viết:</label>
+                        <input asp-for="Title" class="form-control-admin" placeholder="Nhập tiêu đề hấp dẫn..." required />
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Summary -->
+                    <div class="mb-3">
+                        <label asp-for="Summary" class="form-label small fw-bold text-dark">Tóm tắt ngắn (Summary):</label>
+                        <textarea asp-for="Summary" class="form-control-admin" rows="2" placeholder="Tóm tắt ngắn gọn nội dung bài viết hiển thị ở trang danh sách..." required></textarea>
+                    </div>
+
+                    <!-- Content -->
+                    <div class="mb-3">
+                        <label asp-for="Content" class="form-label small fw-bold text-dark">Nội dung bài viết (Hỗ trợ mã HTML):</label>
+                        <textarea asp-for="Content" class="form-control-admin" rows="12" placeholder="Nội dung bài viết chi tiết..." required style="font-family: monospace; font-size: 13.5px;"></textarea>
+                    </div>
+
+                </div>
+
+                <!-- Settings & SEO Column -->
+                <div class="col-md-4 ps-4">
+                    
+                    <!-- ImageUrl -->
+                    <div class="mb-3">
+                        <label asp-for="ImageUrl" class="form-label small fw-bold text-dark">Ảnh đại diện bài viết (Featured Image URL):</label>
+                        <input asp-for="ImageUrl" id="blogImgUrl" class="form-control-admin" placeholder="Nhập URL ảnh bài viết..." oninput="previewImage(this.value)" />
+                        
+                        <div class="mt-2 border rounded text-center bg-light p-2" style="height: 120px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                            <img id="blogImgPreview" src="https://placehold.co/300x150?text=No+Image" style="max-height: 100%; max-width: 100%; object-fit: contain;" />
+                        </div>
+                    </div>
+
+                    <!-- Tags -->
+                    <div class="mb-3">
+                        <label asp-for="Tags" class="form-label small fw-bold text-dark">Thẻ bài viết (Tags - cách nhau bởi dấu phẩy):</label>
+                        <input asp-for="Tags" class="form-control-admin" placeholder="Ví dụ: skincare, review, sonmoi..." />
+                        <small class="text-muted" style="font-size:10.5px;">Ví dụ: skincare, trimun, duongam</small>
+                    </div>
+
+                    <!-- IsPublished -->
+                    <div class="form-check form-switch mb-4">
+                        <input asp-for="IsPublished" class="form-check-input" type="checkbox" id="flexSwitchCheckDefault" checked>
+                        <label class="form-check-label small fw-bold text-dark" for="flexSwitchCheckDefault">Xuất bản ngay (Published)</label>
+                    </div>
+
+                    <!-- SEO BLOCK -->
+                    <div class="p-3 bg-light rounded border">
+                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="bi bi-search text-success me-1"></i>Tối ưu hóa SEO</h6>
+                        
+                        <!-- Slug -->
+                        <div class="mb-2">
+                            <label asp-for="Slug" class="form-label small fw-bold text-dark" style="font-size: 11.5px;">Đường dẫn tĩnh (Slug - tự sinh nếu trống):</label>
+                            <input asp-for="Slug" class="form-control-admin" placeholder="vi-du-duong-dan-seo" style="font-size: 12px;" />
+                        </div>
+
+                        <!-- MetaTitle -->
+                        <div class="mb-2">
+                            <label asp-for="MetaTitle" class="form-label small fw-bold text-dark" style="font-size: 11.5px;">SEO Tiêu đề (Meta Title):</label>
+                            <input asp-for="MetaTitle" class="form-control-admin" placeholder="Tiêu đề hiển thị Google..." style="font-size: 12px;" />
+                        </div>
+
+                        <!-- MetaDescription -->
+                        <div class="mb-0">
+                            <label asp-for="MetaDescription" class="form-label small fw-bold text-dark" style="font-size: 11.5px;">SEO Mô tả (Meta Description):</label>
+                            <textarea asp-for="MetaDescription" class="form-control-admin" rows="3" placeholder="Đoạn mô tả ngắn hiển thị dưới link Google..." style="font-size: 12px;"></textarea>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="border-top pt-3 mt-4 d-flex justify-content-end gap-2">
+                <a asp-action="Index" class="btn btn-outline-secondary px-4 fw-bold" style="height:38px;">Hủy</a>
+                <button type="submit" class="btn btn-primary px-4 fw-bold" style="background:#800020; border:none; height:38px;">
+                    <i class="bi bi-save me-1"></i> Lưu bài viết
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function previewImage(url) {
+            const preview = document.getElementById('blogImgPreview');
+            if (url) {
+                preview.src = url;
+            } else {
+                preview.src = "https://placehold.co/300x150?text=No+Image";
+            }
+        }
+    </script>
+}
