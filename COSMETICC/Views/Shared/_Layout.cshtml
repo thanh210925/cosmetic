@@ -1,3 +1,22 @@
+@{
+    var _ctrl = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var _action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    var _sort = Context.Request.Query["sort"].ToString();
+    var _hasPromo = Context.Request.Query["hasPromo"].ToString();
+    // Helper: returns "active-menu-item" when conditions match
+    string MenuActive(string ctrl, string action, string sort = "", string promo = "")
+    {
+        if (_ctrl != ctrl || _action != action) return "";
+        if (!string.IsNullOrEmpty(sort) && _sort != sort) return "";
+        if (!string.IsNullOrEmpty(promo) && _hasPromo != promo) return "";
+        if (string.IsNullOrEmpty(sort) && string.IsNullOrEmpty(promo))
+        {
+            // General link: only match if current URL has no filter params
+            if (!string.IsNullOrEmpty(_sort) || !string.IsNullOrEmpty(_hasPromo)) return "";
+        }
+        return "active-menu-item";
+    }
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -121,40 +140,47 @@
 
             <div class="offcanvas-header">
                 <h5 class="offcanvas-title">MEILING</h5>
-
                 <button type="button"
                         class="btn-close"
                         data-bs-dismiss="offcanvas">
                 </button>
             </div>
 
-            <div class="offcanvas-body">
-
+            <div class="offcanvas-body d-flex flex-column justify-content-between">
                 <div class="mobile-menu">
-
-                    <a asp-controller="Product" asp-action="List">Danh mục nổi bật</a>
-                    <a asp-controller="Product" asp-action="List" asp-route-sort="bestseller">Sản phẩm bán chạy</a>
-                    <a asp-controller="Blog" asp-action="Index">BLOG làm đẹp</a>
-                    <a asp-controller="Product" asp-action="List" asp-route-hasPromo="true">Sản phẩm giảm giá</a>
-                    <a asp-controller="Home" asp-action="About">Về chúng tôi</a>
-                    <a href="#">Media</a>
-                    <a asp-controller="Compare" asp-action="Index">So sánh sản phẩm</a>
-                    <a asp-controller="AI" asp-action="Index" style="color:#c084fc;">✨ AI Skincare</a>
-
+                    <a asp-controller="Product" asp-action="List" class="@MenuActive("Product","List")"><i class="bi bi-grid-fill me-2"></i> Danh mục nổi bật</a>
+                    <a asp-controller="Product" asp-action="List" asp-route-sort="bestseller" class="@MenuActive("Product","List",sort:"bestseller")"><i class="bi bi-fire me-2"></i> Sản phẩm bán chạy</a>
+                    <a asp-controller="Blog" asp-action="Index" class="@MenuActive("Blog","Index")"><i class="bi bi-journal-richtext me-2"></i> BLOG làm đẹp</a>
+                    <a asp-controller="Product" asp-action="List" asp-route-hasPromo="true" class="@MenuActive("Product","List",promo:"true")"><i class="bi bi-tags-fill me-2"></i> Sản phẩm giảm giá</a>
+                    <a asp-controller="Home" asp-action="About" class="@MenuActive("Home","About")"><i class="bi bi-info-circle-fill me-2"></i> Về chúng tôi</a>
+                    <a href="#"><i class="bi bi-play-circle-fill me-2"></i> Media</a>
+                    <a asp-controller="Compare" asp-action="Index" class="@MenuActive("Compare","Index")"><i class="bi bi-arrow-left-right me-2"></i> So sánh sản phẩm</a>
+                    <a asp-controller="AI" asp-action="Index" class="@MenuActive("AI","Index")"><i class="bi bi-stars me-2"></i> AI Skincare Advisor</a>
                 </div>
 
+                <div class="mobile-menu-footer mt-auto pt-4 border-top">
+                    <h6 class="text-uppercase fw-bold text-muted small mb-3">Hỗ trợ khách hàng</h6>
+                    <p class="mb-2 small"><i class="bi bi-telephone-fill me-2 text-danger"></i> Hotline: <strong>1900 6868</strong></p>
+                    <p class="mb-3 small"><i class="bi bi-envelope-fill me-2 text-danger"></i> Email: support@meiling.vn</p>
+                    <div class="d-flex gap-3 fs-5 mt-2">
+                        <a href="#" class="text-muted"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="text-muted"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="text-muted"><i class="bi bi-tiktok"></i></a>
+                        <a href="#" class="text-muted"><i class="bi bi-youtube"></i></a>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- MENU DESKTOP -->
         <div class="menu custom-container d-none d-lg-flex">
-            <a asp-controller="Product" asp-action="List">Danh mục nổi bật</a>
-            <a asp-controller="Product" asp-action="List" asp-route-sort="bestseller">Sản phẩm bán chạy</a>
-            <a asp-controller="Blog" asp-action="Index">BLOG làm đẹp</a>
-            <a asp-controller="Product" asp-action="List" asp-route-hasPromo="true">Sản phẩm giảm giá</a>
-            <a asp-controller="Home" asp-action="About">Về chúng tôi</a>
+            <a asp-controller="Product" asp-action="List" class="@MenuActive("Product","List")">Danh mục nổi bật</a>
+            <a asp-controller="Product" asp-action="List" asp-route-sort="bestseller" class="@MenuActive("Product","List",sort:"bestseller")">Sản phẩm bán chạy</a>
+            <a asp-controller="Blog" asp-action="Index" class="@MenuActive("Blog","Index")">BLOG làm đẹp</a>
+            <a asp-controller="Product" asp-action="List" asp-route-hasPromo="true" class="@MenuActive("Product","List",promo:"true")">Sản phẩm giảm giá</a>
+            <a asp-controller="Home" asp-action="About" class="@MenuActive("Home","About")">Về chúng tôi</a>
             <a href="#">Media</a>
-            <a asp-controller="Compare" asp-action="Index">So sánh sản phẩm</a>
+            <a asp-controller="Compare" asp-action="Index" class="@MenuActive("Compare","Index")">So sánh sản phẩm</a>
             <a asp-controller="AI" asp-action="Index"
                style="background:linear-gradient(135deg,#7c3aed,#db2777); color:white !important; padding:5px 14px; border-radius:20px; font-weight:700; font-size:13px; letter-spacing:0.3px; box-shadow:0 2px 10px rgba(124,58,237,0.35); transition:all 0.2s;"
                onmouseover="this.style.boxShadow='0 4px 18px rgba(124,58,237,0.6)'; this.style.transform='translateY(-1px)'"
@@ -631,6 +657,7 @@
                 area.scrollTop = area.scrollHeight;
             }
         }
+
     </script>
 </body>
 </html>

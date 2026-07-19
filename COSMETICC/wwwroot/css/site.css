@@ -39,9 +39,13 @@ body {
   text-align: start;
 }
 .header {
-    background-color: #800020;
+    background-color: #9b0022; /* solid premium ruby red */
     color: white;
-    border-bottom: 1px solid #66001a;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1000 !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
 .header a {
@@ -80,10 +84,14 @@ body {
         width: 100%;
         padding: 10px 40px 10px 15px;
         border-radius: 25px;
-        border: none;
-        background: #fdf2f4;
-        color: #333;
+        border: 1px solid rgba(199, 13, 58, 0.15);
+        background: #ffffff !important;
+        color: #2d1a1e !important;
         font-size: 14px;
+    }
+    
+    .search-box input::placeholder {
+        color: #887275 !important;
     }
 
     .search-box button.search-submit-btn {
@@ -95,7 +103,7 @@ body {
         border: none;
         cursor: pointer;
         padding: 8px 12px;
-        color: #666;
+        color: #c70d3a !important;
         font-size: 15px;
         display: flex;
         align-items: center;
@@ -106,7 +114,7 @@ body {
     }
 
     .search-box button.search-submit-btn:hover {
-        color: #800020;
+        color: #9b0022 !important;
     }
 
 /* DESKTOP MENU */
@@ -114,7 +122,7 @@ body {
     display: flex;
     justify-content: space-between;
     padding: 12px 0;
-    border-top: 1px solid #9e0c30;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
     .menu a {
@@ -122,26 +130,140 @@ body {
         color: white !important;
         font-size: 15px;
         font-weight: bold;
+        padding: 6px 14px;
+        border-radius: 20px;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+        display: inline-block;
     }
 
     .menu a:hover {
         color: #ffd6db !important;
+        background-color: rgba(255, 255, 255, 0.05);
     }
 
-/* MOBILE SIDEBAR */
+    /* Active Highlight and Zoom Effect */
+    .menu a.active-menu-item {
+        color: #dfba6b !important; /* Elegant Gold */
+        background-color: rgba(255, 255, 255, 0.15) !important;
+        transform: scale(1.15) !important; /* Zoom-in bigger */
+        font-weight: 800 !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .mobile-menu a.active-menu-item {
+        color: #dfba6b !important;
+        background-color: rgba(255, 255, 255, 0.08) !important;
+        border-left: 4px solid #dfba6b !important;
+        padding-left: 20px !important;
+        transform: scale(1.05) !important;
+        font-weight: 700 !important;
+    }
+
+/* MOBILE SIDEBAR PREMIUM DESIGN (RED BACKGROUND) */
+#mobileMenu.offcanvas {
+    background-color: #9b0022 !important; /* solid ruby red background! */
+    border-right: 2px solid rgba(255, 255, 255, 0.1) !important;
+    width: 320px !important;
+}
+
+#mobileMenu .offcanvas-header {
+    background: #800020 !important; /* darker burgundy header for depth */
+    color: white !important;
+    padding: 20px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+#mobileMenu .offcanvas-title {
+    font-weight: 800 !important;
+    letter-spacing: 2px !important;
+    color: white !important;
+}
+
+#mobileMenu .btn-close {
+    filter: invert(1) grayscale(1) brightness(2) !important;
+    opacity: 0.8 !important;
+    transition: opacity 0.2s !important;
+}
+#mobileMenu .btn-close:hover {
+    opacity: 1 !important;
+}
+
 .mobile-menu {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 12px;
+    margin-top: 10px;
 }
 
-    .mobile-menu a {
-        text-decoration: none;
-        color: black;
-        font-size: 18px;
-        border-bottom: 1px solid #eee;
-        padding-bottom: 10px;
-    }
+.mobile-menu a {
+    text-decoration: none !important;
+    color: rgba(255, 255, 255, 0.9) !important; /* white links! */
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important; /* translucent white lines */
+    padding: 12px 5px !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.mobile-menu a i {
+    color: #ffd6db !important; /* light pink/white icons */
+    font-size: 16px !important;
+    transition: transform 0.3s !important;
+}
+
+.mobile-menu a:hover {
+    color: #dfba6b !important; /* elegant gold text on hover! */
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    padding-left: 15px !important;
+    border-left: 3px solid #dfba6b !important; /* gold left border */
+}
+
+.mobile-menu a:hover i {
+    color: #dfba6b !important;
+    transform: scale(1.2) !important;
+}
+
+/* AI Skincare Special Link in Sidebar (glowing dark background) */
+.mobile-menu a[href*="AI"] {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-radius: 8px !important;
+    border-bottom: none !important;
+    margin-top: 10px !important;
+    padding: 12px 15px !important;
+}
+.mobile-menu a[href*="AI"] i {
+    color: #dfba6b !important; /* gold icons */
+}
+.mobile-menu a[href*="AI"]:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-left: 3px solid #dfba6b !important;
+    color: #dfba6b !important;
+}
+
+/* Sidebar Footer (white text/links) */
+.mobile-menu-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+.mobile-menu-footer h6 {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+.mobile-menu-footer p {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+.mobile-menu-footer p i {
+    color: #ffd6db !important;
+}
+.mobile-menu-footer a {
+    color: rgba(255, 255, 255, 0.7) !important;
+    display: inline-block !important;
+    transition: transform 0.2s, color 0.2s !important;
+}
+.mobile-menu-footer a:hover {
+    transform: scale(1.1) !important;
+    color: #dfba6b !important; /* gold icon hover */
+}
 
 /* BADGE */
 .badge {

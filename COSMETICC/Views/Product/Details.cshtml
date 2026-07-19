@@ -193,7 +193,9 @@
             <div class="collapse-overlay"></div>
         </div>
         <div class="text-center">
-            <button class="btn-toggle-collapse" onclick="toggleDescriptionCollapse(this)">Xem thêm mô tả</button>
+            <button class="btn-toggle-collapse" id="descToggleBtn" onclick="toggleDescriptionCollapse()">
+                <i class="bi bi-chevron-down" id="descToggleIcon"></i> Xem thêm mô tả
+            </button>
         </div>
     </div>
 
@@ -653,6 +655,22 @@
             }
         })
         .catch(() => alert('Lỗi kết nối máy chủ.'));
+    }
+
+    // Toggle description expand/collapse
+    function toggleDescriptionCollapse() {
+        const container = document.getElementById('descCollapse');
+        const btn = document.getElementById('descToggleBtn');
+        const icon = document.getElementById('descToggleIcon');
+        const expanded = container.classList.toggle('expanded');
+
+        if (expanded) {
+            btn.innerHTML = '<i class="bi bi-chevron-up" id="descToggleIcon"></i> Thu gọn mô tả';
+        } else {
+            btn.innerHTML = '<i class="bi bi-chevron-down" id="descToggleIcon"></i> Xem thêm mô tả';
+            // Scroll back to the description section
+            document.getElementById('tab-desc').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     }
 </script>
 }

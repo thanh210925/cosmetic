@@ -1,193 +1,681 @@
+@model COSMETICC.Models.HomeViewModel
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Trang Chủ - Beauty Glow";
 }
 
-<!-- Font Awesome -->
-<link rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<!-- Link Google Fonts & CSS -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<link rel="stylesheet" href="~/css/home-luxury-red.css" asp-append-version="true" />
 
-<!-- CSS -->
-<link href="~/css/style.css" rel="stylesheet" />
+<style>
+    /* Scope these overrides to the home page only to break out of standard layout margins if needed */
+    .home-container {
+        padding-top: 0px;
+    }
+    .pb-3 {
+        padding-bottom: 0 !important;
+    }
+</style>
 
-<body>
+<div class="home-container">
+    
+    <!-- TOP PROMO MARQUEE (Full Bleed at the very top of page viewport) -->
+    <div class="top-announcement full-bleed">
+        <div class="container d-flex justify-content-between align-items-center flex-wrap">
+            <div class="d-flex gap-4 flex-wrap">
+                <span><i class="fa-solid fa-truck-fast me-2"></i> FREESHIP cho đơn từ 299.000đ</span>
+                <span><i class="fa-solid fa-shield-halved me-2"></i> 100% SẢN PHẨM CHÍNH HÃNG</span>
+                <span><i class="fa-solid fa-rotate me-2"></i> ĐỔI TRẢ TRONG 7 NGÀY</span>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <span><i class="fa-solid fa-phone me-1"></i> Hotline: <strong>1900 6868</strong></span>
+                <div class="social-icons d-none d-md-inline-block">
+                    <a href="#"><i class="fa-brands fa-facebook"></i></a>
+                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#"><i class="fa-brands fa-tiktok"></i></a>
+                    <a href="#"><i class="fa-brands fa-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <!-- BANNER -->
-    <section class="banner">
+    <!-- HERO BANNER / SLIDESHOW (Split screen Full Bleed sitting behind transparent header) -->
+    <div class="hero-slider">
+        <div class="hero-slide-split">
+            <div class="hero-left-col">
+                <div class="hero-text-wrapper">
+                    <span class="new-tag">New Collection 2026</span>
+                    <h1>Beauty Begins With<br>Healthy Skin</h1>
+                    <p>Rạng rỡ hơn mỗi ngày cùng Beauty Glow. Mỹ phẩm cao cấp thuần chay nuôi dưỡng làn da tươi trẻ rạng ngời.</p>
+                    <div class="discount-text">GIẢM ĐẾN <span>50%</span></div>
+                    <a asp-controller="Product" asp-action="List" class="hero-btn">MUA NGAY <i class="fa-solid fa-arrow-right ms-1"></i></a>
+                </div>
+            </div>
+            <div class="hero-right-col">
+                <img src="https://images.unsplash.com/photo-1526947425960-945c6e72858f?q=80&w=1200&auto=format&fit=crop" alt="Hero Cosmetic Model" />
+            </div>
+        </div>
+    </div>
 
-        <div class="banner-left">
-            <img src="https://images.unsplash.com/photo-1526947425960-945c6e72858f?q=80&w=1200&auto=format&fit=crop" alt="">
+    <!-- MAIN CENTERED CONTENT CONTAINER -->
+    <div class="container home-inner-container my-5">
+        
+        <!-- CATEGORIES CIRCLE GRID -->
+        <div class="category-circles mb-5">
+            <a href="/Product/List?search=Son" class="category-circle-item">
+                <div class="category-circle-img">
+                    <img src="https://images.unsplash.com/photo-1586495777744-4413f21062fa?q=80&w=200&auto=format&fit=crop" alt="Son">
+                </div>
+                <span>Son môi</span>
+            </a>
+            <a href="/Product/List?search=Kem+dưỡng" class="category-circle-item">
+                <div class="category-circle-img">
+                    <img src="https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?q=80&w=200&auto=format&fit=crop" alt="Kem dưỡng">
+                </div>
+                <span>Kem dưỡng</span>
+            </a>
+            <a href="/Product/List?search=Serum" class="category-circle-item">
+                <div class="category-circle-img">
+                    <img src="https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=200&auto=format&fit=crop" alt="Serum">
+                </div>
+                <span>Serum</span>
+            </a>
+            <a href="/Product/List?search=Chống+nắng" class="category-circle-item">
+                <div class="category-circle-img">
+                    <img src="https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?q=80&w=200&auto=format&fit=crop" alt="Kem chống nắng">
+                </div>
+                <span>Chống nắng</span>
+            </a>
+            <a href="/Product/List?search=Nước+hoa" class="category-circle-item">
+                <div class="category-circle-img">
+                    <img src="https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=200&auto=format&fit=crop" alt="Nước hoa">
+                </div>
+                <span>Nước hoa</span>
+            </a>
+            <a href="/Product/List?search=Rửa+mặt" class="category-circle-item">
+                <div class="category-circle-img">
+                    <img src="https://images.unsplash.com/photo-1556228578-8c89e6adf883?q=80&w=200&auto=format&fit=crop" alt="Sữa rửa mặt">
+                </div>
+                <span>Sữa rửa mặt</span>
+            </a>
+            <a href="/Product/List?search=Trang+điểm" class="category-circle-item">
+                <div class="category-circle-img">
+                    <img src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=200&auto=format&fit=crop" alt="Trang điểm">
+                </div>
+                <span>Trang điểm</span>
+            </a>
+            <a href="/Product/List?search=Mặt+nạ" class="category-circle-item">
+                <div class="category-circle-img">
+                    <img src="https://images.unsplash.com/photo-1567894340315-735d7c361db0?q=80&w=200&auto=format&fit=crop" alt="Mặt nạ">
+                </div>
+                <span>Mặt nạ</span>
+            </a>
         </div>
 
-        <div class="banner-right">
-            <h4>PHIÊN BẢN CẢI TIẾN</h4>
+        <!-- MAIN LAYOUT: Split sections -->
+        <div class="row g-4 mb-5">
+            
+            <!-- LEFT COLUMN (BEST SELLERS) - 8/12 grid -->
+            <div class="col-lg-8">
+                
+                <div class="section-header">
+                    <h2><i class="fa-solid fa-fire-flame-simple"></i> SẢN PHẨM BÁN CHẠY</h2>
+                    <a asp-controller="Product" asp-action="List" asp-route-sort="bestseller" class="view-all">Xem tất cả <i class="fa-solid fa-angle-right"></i></a>
+                </div>
 
-            <h1>
-                Gel tắm bí đao
-                sạch bã nhờn
-            </h1>
+                <!-- Products Grid -->
+                <div class="row g-3">
+                    @if (Model.Bestsellers != null && Model.Bestsellers.Any())
+                    {
+                        @foreach (var item in Model.Bestsellers)
+                        {
+                            <div class="col-md-6 col-xl-3 col-6">
+                                <div class="prod-card">
+                                    <button class="wishlist-btn" onclick="toggleWishlist(this, @item.Id)" title="Yêu thích">
+                                        <i class="fa-solid fa-heart"></i>
+                                    </button>
+                                    <a href="@Url.Action("Details", "Product", new { id = item.Id })" class="text-decoration-none d-block">
+                                        <div class="prod-card-img-wrap">
+                                            <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "https://placehold.co/300x300?text=No+Image" : item.ImageUrl)" alt="@item.Name" />
+                                        </div>
+                                        <div class="prod-brand">@(item.Brand?.Name ?? "Beauty Glow")</div>
+                                        <h3 class="prod-name">@item.Name</h3>
+                                    </a>
+                                    <div class="prod-rating">
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star-half-stroke"></i>
+                                        <span>(@(item.Reviews?.Count ?? 15))</span>
+                                    </div>
+                                    <div class="prod-price-row">
+                                        @if (item.PromoPrice.HasValue && item.PromoPrice < item.Price)
+                                        {
+                                            <span class="prod-price">@string.Format("{0:N0}đ", item.PromoPrice.Value)</span>
+                                            <span class="prod-old-price">@string.Format("{0:N0}đ", item.Price)</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="prod-price">@string.Format("{0:N0}đ", item.Price)</span>
+                                        }
+                                    </div>
+                                    <button class="prod-add-btn mt-auto" onclick="initAddToCart(this)" data-prod-id="@item.Id" data-prod-name="@item.Name">
+                                        <i class="fa-solid fa-cart-plus me-1"></i> Thêm vào giỏ
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <!-- Fallback Static Premium Cards if DB has no data -->
+                        @for (int i = 1; i <= 4; i++)
+                        {
+                            var names = new[] { "Son Tint Lì Romand Juicy Lasting Tint", "Sữa Rửa Mặt CeraVe Foaming Cleanser 236ml", "Tinh Chất Serum Phục Hồi B5 La Roche-Posay", "Kem Chống Nắng Anessa Gold Milk SPF50+" };
+                            var brands = new[] { "Romand", "CeraVe", "La Roche-Posay", "Anessa" };
+                            var prices = new[] { "195,000đ", "320,000đ", "950,000đ", "680,000đ" };
+                            var imgs = new[] {
+                                "https://images.unsplash.com/photo-1586495777744-4413f21062fa?q=80&w=300&auto=format&fit=crop",
+                                "https://images.unsplash.com/photo-1556228578-8c89e6adf883?q=80&w=300&auto=format&fit=crop",
+                                "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=300&auto=format&fit=crop",
+                                "https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?q=80&w=300&auto=format&fit=crop"
+                            };
 
-            <p>
-                Làm sạch sâu và hỗ trợ giảm mụn cơ thể.
-            </p>
+                            <div class="col-md-6 col-xl-3 col-6">
+                                <div class="prod-card">
+                                    <button class="wishlist-btn" onclick="toggleWishlist(this, 0)">
+                                        <i class="fa-solid fa-heart"></i>
+                                    </button>
+                                    <div class="prod-card-img-wrap">
+                                        <img src="@imgs[i-1]" alt="@names[i-1]" />
+                                    </div>
+                                    <div class="prod-brand">@brands[i-1]</div>
+                                    <h3 class="prod-name">@names[i-1]</h3>
+                                    <div class="prod-rating">
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                        <span>(128)</span>
+                                    </div>
+                                    <div class="prod-price-row">
+                                        <span class="prod-price">@prices[i-1]</span>
+                                    </div>
+                                    <button class="prod-add-btn" onclick="alert('Đã thêm sản phẩm demo vào giỏ!')">
+                                        <i class="fa-solid fa-cart-plus me-1"></i> Thêm vào giỏ
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
 
-            <button>MUA NGAY</button>
-        </div>
-
-    </section>
-
-    <!-- INTRO -->
-    <section class="intro">
-
-        <div class="intro-text">
-            <h2>Tinh chất dưỡng Sen Hậu Giang</h2>
-
-            <p>
-                Giúp cấp ẩm và làm dịu làn da tự nhiên.
-            </p>
-        </div>
-
-        <div class="intro-image">
-            <img src="https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=1200&auto=format&fit=crop" alt="">
-        </div>
-
-    </section>
-
-    <!-- BRAND -->
-    <section class="brand">
-
-        <div class="brand-content">
-            <h2>Triết lý THƯƠNG HIỆU</h2>
-
-            <p>
-                Mỹ phẩm thuần chay dành cho người Việt.
-            </p>
-
-            <button>TÌM HIỂU THÊM</button>
-        </div>
-
-    </section>
-
-    <!-- VEGAN -->
-    <section class="vegan">
-
-        <h1>THUẦN CHAY CHO NÉT ĐẸP THUẦN VIỆT</h1>
-
-        <div class="vegan-list">
-
-            <div class="vegan-item">
-                <i class="fa-solid fa-leaf"></i>
-                <h3>CRUELTY FREE</h3>
-                <p>Không thử nghiệm trên động vật.</p>
             </div>
 
-            <div class="vegan-item">
-                <i class="fa-solid fa-seedling"></i>
-                <h3>VEGAN</h3>
-                <p>100% thành phần thuần chay.</p>
-            </div>
+            <!-- RIGHT COLUMN (FLASH SALE & BRANDS) - 4/12 grid -->
+            <div class="col-lg-4 d-flex flex-column gap-4">
+                
+                <!-- FLASH SALE PANEL -->
+                <div class="flash-sale-card position-relative">
+                    <div class="flash-sale-header">
+                        <h3 class="flash-sale-title"><i class="fa-solid fa-bolt me-2"></i> FLASH SALE</h3>
+                        <div class="countdown-timer" id="flashCountdown">
+                            <div class="countdown-box" id="cdDays">01</div>
+                            <div class="countdown-box" id="cdHours">12</div>
+                            <div class="countdown-box" id="cdMinutes">45</div>
+                            <div class="countdown-box" id="cdSeconds">30</div>
+                        </div>
+                    </div>
 
-            <div class="vegan-item">
-                <i class="fa-solid fa-paw"></i>
-                <h3>ANIMAL TEST FREE</h3>
-                <p>Thân thiện với môi trường.</p>
+                    @if (Model.FlashSaleProduct != null)
+                    {
+                        <div class="flash-product">
+                            <div class="flash-img-wrap position-relative">
+                                <span class="flash-badge">-40%</span>
+                                <img src="@(string.IsNullOrEmpty(Model.FlashSaleProduct.ImageUrl) ? "https://placehold.co/300x300?text=No+Image" : Model.FlashSaleProduct.ImageUrl)" alt="@Model.FlashSaleProduct.Name">
+                            </div>
+                            <h4 class="prod-name text-center">@Model.FlashSaleProduct.Name</h4>
+                            
+                            <div class="prod-price-row text-center mb-3">
+                                @if (Model.FlashSaleProduct.PromoPrice.HasValue)
+                                {
+                                    <span class="prod-price fs-4">@string.Format("{0:N0}đ", Model.FlashSaleProduct.PromoPrice.Value)</span>
+                                    <span class="prod-old-price">@string.Format("{0:N0}đ", Model.FlashSaleProduct.Price)</span>
+                                }
+                                else
+                                {
+                                    <span class="prod-price fs-4">@string.Format("{0:N0}đ", Model.FlashSaleProduct.Price * 0.6m)</span>
+                                    <span class="prod-old-price">@string.Format("{0:N0}đ", Model.FlashSaleProduct.Price)</span>
+                                }
+                            </div>
+
+                            <div class="flash-stock-bar">
+                                <div class="flash-stock-fill" style="width: 25%"></div>
+                                <div class="flash-stock-text">Chỉ còn @(Model.FlashSaleProduct.Stock ?? 9) sản phẩm</div>
+                            </div>
+
+                            <a href="@Url.Action("Details", "Product", new { id = Model.FlashSaleProduct.Id })" class="hero-btn w-100 text-center py-2 fs-6">MUA NGAY <i class="fa-solid fa-bolt ms-1"></i></a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="flash-product">
+                            <div class="flash-img-wrap position-relative">
+                                <span class="flash-badge">-40%</span>
+                                <img src="https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=300&auto=format&fit=crop" alt="Serum">
+                            </div>
+                            <h4 class="prod-name text-center">Tinh Chất Trà Xanh Dưỡng Ẩm Innisfree Green Tea Serum</h4>
+                            <div class="prod-price-row text-center mb-3">
+                                <span class="prod-price fs-4">349,000đ</span>
+                                <span class="prod-old-price">560,000đ</span>
+                            </div>
+                            <div class="flash-stock-bar">
+                                <div class="flash-stock-fill" style="width: 15%"></div>
+                                <div class="flash-stock-text">Chỉ còn 3 sản phẩm (Bán chạy)</div>
+                            </div>
+                            <button class="hero-btn w-100 text-center py-2 fs-6" onclick="alert('Đã thêm sản phẩm flash sale vào giỏ!')">MUA NGAY <i class="fa-solid fa-bolt ms-1"></i></button>
+                        </div>
+                    }
+                </div>
+
+                <!-- POPULAR BRANDS GRID -->
+                <div class="brands-card">
+                    <div class="section-header mb-3 border-0 pb-0">
+                        <h2 class="fs-6"><i class="fa-solid fa-star me-2"></i> THƯƠNG HIỆU NỔI TIẾNG</h2>
+                    </div>
+                    <div class="brands-grid">
+                        @if (Model.Brands != null && Model.Brands.Any())
+                        {
+                            @foreach (var brand in Model.Brands.Take(12))
+                            {
+                                <a href="/Product/List?brandId=@brand.Id" class="brand-logo-item text-decoration-none">
+                                    <span>@brand.Name</span>
+                                </a>
+                            }
+                        }
+                        else
+                        {
+                            var staticBrands = new[] { "DIOR", "CHANEL", "MAC", "L'ORÉAL", "CERAVE", "ANUA", "SKIN1004", "VICHY", "SOME BY MI", "LA ROCHE", "KLAIRS", "AVENE" };
+                            @foreach (var bName in staticBrands)
+                            {
+                                <a href="/Product/List?search=@bName" class="brand-logo-item text-decoration-none">
+                                    <span>@bName</span>
+                                </a>
+                            }
+                        }
+                    </div>
+                </div>
+
             </div>
 
         </div>
 
-    </section>
-
-    <!-- PRODUCT -->
-    <section class="products">
-
-        <div class="section-title">
-            <h2>Sản phẩm BÁN CHẠY</h2>
+        <!-- TWO COLUMN PROMO BANNERS -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-6">
+                <div class="promo-banner" style="background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url('https://images.unsplash.com/photo-1501004318641-b39e6451bec6?q=80&w=500&auto=format&fit=crop');">
+                    <div class="promo-content">
+                        <h3>COMBO LÀM ĐẸP</h3>
+                        <p>Mua nhiều - Tiết kiệm hơn. Trọn bộ dưỡng da chuyên sâu được đề xuất bởi chuyên gia.</p>
+                        <a href="/Product/List?categoryId=1" class="promo-btn">KHÁM PHÁ NGAY <i class="fa-solid fa-angle-right ms-1"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="promo-banner" style="background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url('https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?q=80&w=500&auto=format&fit=crop');">
+                    <div class="promo-content">
+                        <h3>BẢO VỆ LÀN DA DƯỚI NẮNG HÈ</h3>
+                        <p>Chọn ngay kem chống nắng phù hợp với mọi làn da khô, dầu mụn.</p>
+                        <a href="/Product/List?search=Chống+nắng" class="promo-btn">XEM NGAY <i class="fa-solid fa-angle-right ms-1"></i></a>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="product-list">
+        <!-- BOTTOM GRID (NEW PRODUCTS, BLOG, REVIEWS) -->
+        <div class="row g-4 mb-5">
+            
+            <!-- NEW PRODUCTS & BLOG (Left column, wide) - 8/12 grid -->
+            <div class="col-lg-8">
+                
+                <div class="section-header">
+                    <h2><i class="fa-solid fa-wand-magic-sparkles"></i> SẢN PHẨM MỚI NHẤT</h2>
+                    <a asp-controller="Product" asp-action="List" class="view-all">Xem tất cả <i class="fa-solid fa-angle-right"></i></a>
+                </div>
 
-            <div class="product-item">
-                <img src="https://images.unsplash.com/photo-1556228578-8c89e6adf883?q=80&w=1200&auto=format&fit=crop" alt="">
+                <div class="row g-3 mb-5">
+                    @if (Model.NewProducts != null && Model.NewProducts.Any())
+                    {
+                        @foreach (var item in Model.NewProducts)
+                        {
+                            <div class="col-md-6 col-xl-3 col-6">
+                                <div class="prod-card">
+                                    <button class="wishlist-btn" onclick="toggleWishlist(this, @item.Id)" title="Yêu thích">
+                                        <i class="fa-solid fa-heart"></i>
+                                    </button>
+                                    <a href="@Url.Action("Details", "Product", new { id = item.Id })" class="text-decoration-none d-block">
+                                        <div class="prod-card-img-wrap">
+                                            <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "https://placehold.co/300x300?text=No+Image" : item.ImageUrl)" alt="@item.Name" />
+                                        </div>
+                                        <div class="prod-brand">@(item.Brand?.Name ?? "Beauty Glow")</div>
+                                        <h3 class="prod-name">@item.Name</h3>
+                                    </a>
+                                    <div class="prod-rating">
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                        <span>(5)</span>
+                                    </div>
+                                    <div class="prod-price-row">
+                                        <span class="prod-price">@string.Format("{0:N0}đ", item.Price)</span>
+                                    </div>
+                                    <button class="prod-add-btn mt-auto" onclick="initAddToCart(this)" data-prod-id="@item.Id" data-prod-name="@item.Name">
+                                        <i class="fa-solid fa-cart-plus me-1"></i> Thêm vào giỏ
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <!-- Fallback Static Cards -->
+                        @for (int i = 1; i <= 4; i++)
+                        {
+                            var names = new[] { "Nước Thần Hóa Hồng Hada Labo 170ml", "Kem Dưỡng Bioderma Cicabio Crème 40ml", "Nước Tẩy Trang L'Oréal Paris Sạch Sâu", "Serum Liftactiv Vichy B3 Mờ Thâm" };
+                            var brands = new[] { "Hada Labo", "Bioderma", "L'Oréal", "Vichy" };
+                            var prices = new[] { "169,000đ", "299,000đ", "179,000đ", "939,000đ" };
+                            var imgs = new[] {
+                                "https://images.unsplash.com/photo-1626784215021-2e39ccf971cd?q=80&w=300&auto=format&fit=crop",
+                                "https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?q=80&w=300&auto=format&fit=crop",
+                                "https://images.unsplash.com/photo-1556228578-8c89e6adf883?q=80&w=300&auto=format&fit=crop",
+                                "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=300&auto=format&fit=crop"
+                            };
 
-                <h3>Tinh chất sen</h3>
+                            <div class="col-md-6 col-xl-3 col-6">
+                                <div class="prod-card">
+                                    <button class="wishlist-btn" onclick="toggleWishlist(this, 0)">
+                                        <i class="fa-solid fa-heart"></i>
+                                    </button>
+                                    <div class="prod-card-img-wrap">
+                                        <img src="@imgs[i-1]" alt="@names[i-1]" />
+                                    </div>
+                                    <div class="prod-brand">@brands[i-1]</div>
+                                    <h3 class="prod-name">@names[i-1]</h3>
+                                    <div class="prod-rating">
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                        <i class="fa-solid fa-star"></i>
+                                        <span>(24)</span>
+                                    </div>
+                                    <div class="prod-price-row">
+                                        <span class="prod-price">@prices[i-1]</span>
+                                    </div>
+                                    <button class="prod-add-btn" onclick="alert('Đã thêm sản phẩm demo vào giỏ!')">
+                                        <i class="fa-solid fa-cart-plus me-1"></i> Thêm vào giỏ
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
 
-                <p>320.000đ</p>
+                <!-- BEAUTY BLOG -->
+                <div class="section-header">
+                    <h2><i class="fa-solid fa-book-open-reader"></i> BLOG LÀM ĐẸP</h2>
+                    <a asp-controller="Blog" asp-action="Index" class="view-all">Xem tất cả <i class="fa-solid fa-angle-right"></i></a>
+                </div>
+
+                <div class="row g-3">
+                    @if (Model.BlogPosts != null && Model.BlogPosts.Any())
+                    {
+                        @foreach (var post in Model.BlogPosts)
+                        {
+                            <div class="col-md-4">
+                                <a href="/Blog/Details/@post.Id" class="text-decoration-none d-block h-100">
+                                    <div class="blog-card">
+                                        <div class="blog-img-wrap">
+                                            <img src="@(string.IsNullOrEmpty(post.ImageUrl) ? "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=400&auto=format&fit=crop" : post.ImageUrl)" alt="@post.Title">
+                                        </div>
+                                        <div class="blog-content">
+                                            <span class="blog-date">@post.CreatedAt.ToString("dd/MM/yyyy")</span>
+                                            <h4 class="blog-title">@post.Title</h4>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        var staticBlogs = new[] { "5 bước chăm sóc da cho làn da khỏe mạnh", "Bí quyết trang điểm lâu trôi cả ngày dài", "Top kem chống nắng được yêu thích nhất 2026" };
+                        var blogDates = new[] { "19 Tháng 7, 2026", "17 Tháng 7, 2026", "15 Tháng 7, 2026" };
+                        var blogImgs = new[] {
+                            "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=400&auto=format&fit=crop",
+                            "https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=400&auto=format&fit=crop",
+                            "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=400&auto=format&fit=crop"
+                        };
+                        @for (int i = 0; i < 3; i++)
+                        {
+                            <div class="col-md-4">
+                                <a asp-controller="Blog" asp-action="Index" class="text-decoration-none d-block h-100">
+                                    <div class="blog-card">
+                                        <div class="blog-img-wrap">
+                                            <img src="@blogImgs[i]" alt="@staticBlogs[i]">
+                                        </div>
+                                        <div class="blog-content">
+                                            <span class="blog-date">@blogDates[i]</span>
+                                            <h4 class="blog-title">@staticBlogs[i]</h4>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        }
+                    }
+                </div>
+
             </div>
 
-            <div class="product-item">
-                <img src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=1200&auto=format&fit=crop" alt="">
+            <!-- CUSTOMER REVIEWS (Right column) - 4/12 grid -->
+            <div class="col-lg-4">
+                
+                <div class="section-header">
+                    <h2><i class="fa-solid fa-quote-left"></i> ĐÁNH GIÁ TỪ BLOG</h2>
+                </div>
 
-                <h3>Kem dưỡng nghệ</h3>
+                <div class="review-card">
+                    <span class="review-quote">“</span>
+                    <div class="review-slider-wrap">
+                        
+                        <div class="carousel slide" id="reviewCarousel" data-bs-ride="carousel">
+                            <div class="carousel-inner">
+                                
+                                @if (Model.FeaturedReviews != null && Model.FeaturedReviews.Any())
+                                {
+                                    int index = 0;
+                                    @foreach (var review in Model.FeaturedReviews)
+                                    {
+                                        <div class="carousel-item @(index == 0 ? "active" : "")">
+                                            <div class="review-item">
+                                                <div class="review-avatar">
+                                                    👤
+                                                </div>
+                                                <div class="prod-rating justify-content-center d-flex gap-1 mb-2">
+                                                    @for (int s = 0; s < (review.Rating ?? 5); s++)
+                                                    {
+                                                        <i class="fa-solid fa-star"></i>
+                                                    }
+                                                </div>
+                                                <p>"@review.Comment"</p>
+                                                <div class="review-author">@(string.IsNullOrEmpty(review.GuestName) ? "Độc giả ẩn danh" : review.GuestName) <i class="fa-solid fa-circle-check text-success ms-1" title="Ý kiến từ Blog" style="font-size:11px;"></i></div>
+                                            </div>
+                                        </div>
+                                        index++;
+                                    }
+                                }
+                                else
+                                {
+                                    <!-- Static Reviews -->
+                                    <div class="carousel-item active">
+                                        <div class="review-item">
+                                            <div class="review-avatar">
+                                                👩
+                                            </div>
+                                            <div class="prod-rating justify-content-center d-flex gap-1 mb-2">
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                            </div>
+                                            <p>"Bài viết chia sẻ kiến thức chăm sóc da mụn rất hữu ích. Tôi đã áp dụng và thấy da cải thiện rõ rệt!"</p>
+                                            <div class="review-author">Nguyễn Thu Hà <i class="fa-solid fa-circle-check text-success ms-1" style="font-size:11px;"></i></div>
+                                        </div>
+                                    </div>
+                                    <div class="carousel-item">
+                                        <div class="review-item">
+                                            <div class="review-avatar">
+                                                👨
+                                            </div>
+                                            <div class="prod-rating justify-content-center d-flex gap-1 mb-2">
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                            </div>
+                                            <p>"Cảm ơn shop đã hướng dẫn cách bôi kem chống nắng chuẩn. Trước giờ tôi bôi sai cách làm da bị bí tắc."</p>
+                                            <div class="review-author">Trần Minh Tâm <i class="fa-solid fa-circle-check text-success ms-1" style="font-size:11px;"></i></div>
+                                        </div>
+                                    </div>
+                                    <div class="carousel-item">
+                                        <div class="review-item">
+                                            <div class="review-avatar">
+                                                👩
+                                            </div>
+                                            <div class="prod-rating justify-content-center d-flex gap-1 mb-2">
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                                <i class="fa-solid fa-star"></i>
+                                            </div>
+                                            <p>"Các bước dưỡng da buổi sáng rất chi tiết, dễ nhớ. Sẽ theo dõi blog thường xuyên để học hỏi thêm!"</p>
+                                            <div class="review-author">Phạm Quỳnh Anh <i class="fa-solid fa-circle-check text-success ms-1" style="font-size:11px;"></i></div>
+                                        </div>
+                                    </div>
+                                }
 
-                <p>450.000đ</p>
+                            </div>
+                            <!-- Indicators -->
+                            <div class="carousel-indicators position-static mt-3 justify-content-center" style="margin-bottom:0;">
+                                <button type="button" data-bs-target="#reviewCarousel" data-bs-slide-to="0" class="active bg-secondary" style="width:8px;height:8px;border-radius:50%;"></button>
+                                <button type="button" data-bs-target="#reviewCarousel" data-bs-slide-to="1" class="bg-secondary" style="width:8px;height:8px;border-radius:50%;"></button>
+                                <button type="button" data-bs-target="#reviewCarousel" data-bs-slide-to="2" class="bg-secondary" style="width:8px;height:8px;border-radius:50%;"></button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
             </div>
 
-            <div class="product-item">
-                <img src="https://images.unsplash.com/photo-1626784215021-2e39ccf971cd?q=80&w=1200&auto=format&fit=crop" alt="">
-
-                <h3>Gel tắm bí đao</h3>
-
-                <p>390.000đ</p>
-            </div>
-
         </div>
 
-    </section>
+    </div>
+</div>
 
-    <!-- GREEN BANNER -->
-    <section class="green-banner">
+@section Scripts {
+    <script>
+        // Set home page class on body for full-width layout overrides
+        document.body.classList.add('home-page-active');
 
-        <div class="green-content">
-            <h1>CÙNG SKINZONE SỐNG XANH MỖI NGÀY</h1>
+        // COUNTDOWN TIMER FOR FLASH SALE
+        function startCountdown(durationSecs) {
+            let timer = durationSecs;
+            const interval = setInterval(function () {
+                const days = Math.floor(timer / (24 * 3600));
+                const hours = Math.floor((timer % (24 * 3600)) / 3600);
+                const minutes = Math.floor((timer % 3600) / 60);
+                const seconds = timer % 60;
 
-            <button>TÌM HIỂU THÊM</button>
-        </div>
+                document.getElementById("cdDays").textContent = days.toString().padStart(2, '0');
+                document.getElementById("cdHours").textContent = hours.toString().padStart(2, '0');
+                document.getElementById("cdMinutes").textContent = minutes.toString().padStart(2, '0');
+                document.getElementById("cdSeconds").textContent = seconds.toString().padStart(2, '0');
 
-    </section>
+                if (--timer < 0) {
+                    clearInterval(interval);
+                    document.getElementById("flashCountdown").innerHTML = "HẾT HẠN";
+                }
+            }, 1000);
+        }
 
-    <!-- BLOG -->
-    <section class="blog">
+        document.addEventListener("DOMContentLoaded", function () {
+            // Start a 2-day countdown timer
+            startCountdown(2 * 24 * 3600 + 18 * 3600 + 45 * 60 + 12);
+        });
 
-        <div class="blog-title">
-            <h2>Bài viết mới nhất</h2>
-        </div>
+        // WISHLIST INTERACTION
+        function toggleWishlist(btn, prodId) {
+            btn.classList.toggle('active');
+            const icon = btn.querySelector('i');
+            
+            if (btn.classList.contains('active')) {
+                icon.style.color = '#c70d3a';
+                if (prodId > 0) {
+                    fetch('/Wishlist/Add?productId=' + prodId, { method: 'POST' });
+                    if (typeof showCartToast === 'function') {
+                        showCartToast('Đã thêm sản phẩm vào danh sách yêu thích!');
+                    }
+                } else {
+                    alert('Đã thêm sản phẩm demo vào danh sách yêu thích!');
+                }
+            } else {
+                icon.style.color = '#cbd5e1';
+                if (prodId > 0) {
+                    fetch('/Wishlist/Remove?productId=' + prodId, { method: 'POST' });
+                }
+            }
+        }
 
-        <div class="blog-list">
+        // ADD TO CART INTERACTION
+        function initAddToCart(btn) {
+            const prodId = btn.dataset.prodId;
+            const prodName = btn.dataset.prodName || 'Sản phẩm';
 
-            <div class="blog-item">
-                <img src="https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=1200&auto=format&fit=crop" alt="">
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-hourglass-half"></i>';
 
-                <h3>Điểm xanh online</h3>
-
-                <p>Sống xanh cùng SKINZONE.</p>
-            </div>
-
-            <div class="blog-item">
-                <img src="https://images.unsplash.com/photo-1526045478516-99145907023c?q=80&w=1200&auto=format&fit=crop" alt="">
-
-                <h3>Thu hồi pin cũ</h3>
-
-                <p>Chung tay bảo vệ môi trường.</p>
-            </div>
-
-        </div>
-    </section>
-    <!-- INSTAGRAM -->
-    <section class="instagram">
-
-        <h2></h2>
-
-        <div class="instagram-list">
-
-            <img src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=1200&auto=format&fit=crop" alt="">
-
-            <img src="https://images.unsplash.com/photo-1556228578-8c89e6adf883?q=80&w=1200&auto=format&fit=crop" alt="">
-
-            <img src="https://images.unsplash.com/photo-1626784215021-2e39ccf971cd?q=80&w=1200&auto=format&fit=crop" alt="">
-
-            <img src="https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=1200&auto=format&fit=crop" alt="">
-
-        </div>
-
-    </section>
-    <!-- FOOTER -->
-</body>
+            fetch(`/Cart/AddToCart?productId=${prodId}&quantity=1`, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-cart-plus me-1"></i> Thêm vào giỏ';
+                    if (data.success) {
+                        if (typeof showCartToast === 'function') {
+                            showCartToast(`Đã thêm ${prodName} vào giỏ hàng!`);
+                        }
+                        if (typeof refreshCartBadge === 'function') {
+                            refreshCartBadge();
+                        }
+                    } else {
+                        alert(data.message || 'Lỗi khi thêm sản phẩm vào giỏ.');
+                    }
+                })
+                .catch(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-cart-plus me-1"></i> Thêm vào giỏ';
+                    alert('Lỗi kết nối máy chủ.');
+                });
+        }
+    </script>
+}
