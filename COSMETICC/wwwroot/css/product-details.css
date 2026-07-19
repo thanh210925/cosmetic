@@ -1,5 +1,5 @@
 :root {
-    --hasaki-green: #046838;
+    --hasaki-green: #800020;
     --hasaki-orange: #f57224;
     --hasaki-border: #e8e8e8;
 }
@@ -138,7 +138,7 @@ body {
 
 .variant-pill-btn.active {
     border-color: var(--hasaki-green);
-    background-color: #f0fdf4;
+    background-color: #faf0f2;
     color: var(--hasaki-green);
     font-weight: bold;
     box-shadow: 0 0 0 1px var(--hasaki-green);
@@ -198,7 +198,7 @@ body {
 }
 
 .btn-cart-hasaki:hover {
-    background-color: #e6f3ec;
+    background-color: #fae6e8;
 }
 
 .btn-buy-hasaki {
@@ -218,7 +218,7 @@ body {
 }
 
 .btn-buy-hasaki:hover {
-    background-color: #03522c;
+    background-color: #590016;
 }
 
 /* Tabbed navigation */

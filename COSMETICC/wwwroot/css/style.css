@@ -31,7 +31,7 @@ header {
     text-decoration: none;
     font-size: 32px;
     font-weight: bold;
-    color: #8b5e3c;
+    color: #800020;
     text-transform: uppercase;
 }
 
@@ -49,7 +49,7 @@ header {
 }
 
 .nav-links a:hover {
-    color: #8b5e3c;
+    color: #800020;
 }
 
 /* ================= BANNER ================= */
@@ -78,7 +78,7 @@ header {
 .banner-right h4 {
     font-size: 18px;
     margin-bottom: 20px;
-    color: #8b5e3c;
+    color: #800020;
 }
 
 .banner-right h1 {
@@ -103,7 +103,7 @@ header {
 }
 
 .banner-right button:hover {
-    background-color: #8b5e3c;
+    background-color: #800020;
 }
 
 /* ================= INTRO ================= */
@@ -198,7 +198,7 @@ header {
 
 .vegan-item i {
     font-size: 50px;
-    color: #8b5e3c;
+    color: #800020;
     margin-bottom: 20px;
 }
 
@@ -251,7 +251,7 @@ header {
 }
 
 .product-item p {
-    color: #8b5e3c;
+    color: #800020;
     font-weight: bold;
 }
 

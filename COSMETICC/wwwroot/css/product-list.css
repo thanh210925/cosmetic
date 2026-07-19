@@ -1,5 +1,5 @@
 :root {
-    --hasaki-green: #046838;
+    --hasaki-green: #800020;
     --hasaki-orange: #f57224;
     --hasaki-gray-bg: #f4f4f4;
     --hasaki-border: #e8e8e8;
@@ -353,5 +353,5 @@ body {
 }
 
 .btn-buy-now:hover {
-    background-color: #03522c;
+    background-color: #590016;
 }
