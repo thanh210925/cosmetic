@@ -1,0 +1,163 @@
+:root {
+    --about-red: #800020;
+    --about-pink: #fdf2f4;
+    --about-text: #2c3e50;
+    --about-border: #e2e8f0;
+}
+
+body {
+    background-color: #fafbfc;
+    color: var(--about-text);
+}
+
+.about-hero {
+    background: linear-gradient(135deg, var(--about-red) 0%, #4a0012 100%);
+    color: white;
+    padding: 80px 20px;
+    border-radius: 12px;
+    margin-top: 20px;
+    margin-bottom: 40px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.about-hero-title {
+    font-size: 40px;
+    font-weight: 800;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.about-hero-subtitle {
+    font-size: 18px;
+    opacity: 0.9;
+    max-width: 700px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+.about-section {
+    background: #ffffff;
+    border-radius: 10px;
+    border: 1px solid var(--about-border);
+    padding: 40px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+}
+
+.section-accent-title {
+    color: var(--about-red);
+    font-weight: 800;
+    font-size: 24px;
+    position: relative;
+    padding-bottom: 12px;
+    margin-bottom: 25px;
+}
+
+.section-accent-title::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 60px;
+    height: 4px;
+    background-color: var(--about-red);
+    border-radius: 2px;
+}
+
+.story-lead {
+    font-size: 17px;
+    font-weight: 600;
+    color: #4a5568;
+    line-height: 1.7;
+    margin-bottom: 20px;
+}
+
+.story-paragraph {
+    font-size: 15px;
+    line-height: 1.8;
+    color: #555;
+    margin-bottom: 15px;
+    text-align: justify;
+}
+
+/* Three columns layout for commitments */
+.commitment-card {
+    background: #ffffff;
+    border: 1px solid var(--about-border);
+    border-radius: 8px;
+    padding: 30px 20px;
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.commitment-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px -3px rgba(128, 0, 32, 0.08);
+    border-color: var(--about-red);
+}
+
+.commitment-icon {
+    font-size: 36px;
+    color: var(--about-red);
+    margin-bottom: 20px;
+}
+
+.commitment-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #2d3748;
+}
+
+.commitment-desc {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #666;
+}
+
+/* Quote/Highlight block */
+.emotional-quote-box {
+    background-color: var(--about-pink);
+    border-left: 5px solid var(--about-red);
+    padding: 30px;
+    border-radius: 0 8px 8px 0;
+    margin: 40px 0;
+}
+
+.emotional-quote {
+    font-size: 18px;
+    font-style: italic;
+    font-weight: 500;
+    color: #4a1521;
+    line-height: 1.6;
+    margin-bottom: 10px;
+}
+
+.emotional-quote-author {
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--about-red);
+    text-transform: uppercase;
+}
+
+/* Core Values Stats */
+.stat-item {
+    text-align: center;
+    padding: 20px;
+}
+
+.stat-number {
+    font-size: 40px;
+    font-weight: 800;
+    color: var(--about-red);
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}

@@ -228,4 +228,46 @@ public class AdminProductsController : AdminBaseController
 
         return Json(new { success = true, message = "Đã xóa biến thể thành công!" });
     }
+
+    // ================= PRODUCT IMAGES API (AJAX) =================
+
+    [HttpGet]
+    public async Task<IActionResult> GetImages(int productId)
+    {
+        var images = await _context.ProductImages
+            .Where(i => i.ProductId == productId)
+            .Select(i => new { i.Id, i.ImageUrl })
+            .ToListAsync();
+        return Json(images);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddImage(int productId, string imageUrl)
+    {
+        if (string.IsNullOrWhiteSpace(imageUrl))
+            return Json(new { success = false, message = "URL ảnh không được để trống." });
+
+        var product = await _context.Products.FindAsync(productId);
+        if (product == null)
+            return Json(new { success = false, message = "Sản phẩm không tồn tại." });
+
+        var img = new ProductImage { ProductId = productId, ImageUrl = imageUrl };
+        _context.ProductImages.Add(img);
+        await _context.SaveChangesAsync();
+
+        return Json(new { success = true, message = "Đã thêm ảnh thành công!", id = img.Id, imageUrl = img.ImageUrl });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> DeleteImage(int imageId)
+    {
+        var img = await _context.ProductImages.FindAsync(imageId);
+        if (img == null)
+            return Json(new { success = false, message = "Ảnh không tồn tại." });
+
+        _context.ProductImages.Remove(img);
+        await _context.SaveChangesAsync();
+
+        return Json(new { success = true, message = "Đã xóa ảnh thành công!" });
+    }
 }

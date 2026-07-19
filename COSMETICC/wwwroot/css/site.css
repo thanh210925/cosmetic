@@ -30,18 +30,35 @@ body {
   text-align: start;
 }
 .header {
-    border-bottom: 1px solid #eee;
+    background-color: #800020;
+    color: white;
+    border-bottom: 1px solid #66001a;
+}
+
+.header a {
+    color: white !important;
+    transition: color 0.2s ease;
+}
+
+.header a:hover {
+    color: #ffd6db !important;
 }
 
 /* LOGO */
+.logo {
+    text-decoration: none;
+    color: white !important;
+}
+
 .logo h2 {
     font-weight: bold;
     font-size: 28px;
+    margin: 0;
 }
 
 .logo small {
     font-size: 12px;
-    margin-left: 5px;
+    color: #ffd6db !important;
 }
 
 /* SEARCH */
@@ -55,27 +72,51 @@ body {
         padding: 10px 40px 10px 15px;
         border-radius: 25px;
         border: none;
-        background: #f2f2f2;
+        background: #fdf2f4;
+        color: #333;
+        font-size: 14px;
     }
 
-    .search-box span {
+    .search-box button.search-submit-btn {
         position: absolute;
-        right: 15px;
+        right: 5px;
         top: 50%;
         transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 8px 12px;
+        color: #666;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        outline: none;
+        z-index: 5;
+        transition: color 0.2s ease;
+    }
+
+    .search-box button.search-submit-btn:hover {
+        color: #800020;
     }
 
 /* DESKTOP MENU */
 .menu {
     display: flex;
     justify-content: space-between;
-    padding: 15px 0;
+    padding: 12px 0;
+    border-top: 1px solid #9e0c30;
 }
 
     .menu a {
         text-decoration: none;
-        color: black;
+        color: white !important;
         font-size: 15px;
+        font-weight: bold;
+    }
+
+    .menu a:hover {
+        color: #ffd6db !important;
     }
 
 /* MOBILE SIDEBAR */

@@ -32,6 +32,7 @@ namespace COSMETICC.Controllers
                 .Include(p => p.Category)
                 .Include(p => p.Brand)
                 .Include(p => p.Reviews)
+                .Include(p => p.ProductImages)
                 .Where(p => p.IsActive)
                 .AsQueryable();
 

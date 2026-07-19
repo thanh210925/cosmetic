@@ -207,6 +207,35 @@
                 </a>
             </div>
         </form>
+
+        <!-- ===== GALLERY ẢNH PHỤ (ngoài form) ===== -->
+        <div class="mt-4 p-4" style="background:#f8f9fb; border-radius:8px; border:1px solid #e2e8f0;">
+            <h5 class="fw-bold mb-3" style="color:#444;">
+                <i class="bi bi-images me-2 text-warning"></i>Ảnh phụ sản phẩm (Gallery)
+                <small class="text-muted fw-normal ms-2" style="font-size:13px;">Ảnh thứ 2 hiển thị khi hover card</small>
+            </h5>
+
+            <!-- Input thêm ảnh mới -->
+            <div class="d-flex gap-2 mb-3">
+                <input type="text" id="newGalleryUrl" class="form-control-admin flex-grow-1"
+                       placeholder="Dán URL ảnh phụ vào đây, VD: https://example.com/sp-angle2.jpg" />
+                <button type="button" class="btn btn-success px-4 fw-bold" onclick="addGalleryImage()" style="white-space:nowrap; background:#800020; border:none;">
+                    <i class="bi bi-plus-lg me-1"></i>Thêm ảnh
+                </button>
+            </div>
+
+            <!-- Preview trước khi thêm -->
+            <div id="newImgPreviewWrap" class="mb-3" style="display:none;">
+                <div class="text-muted small mb-1"><i class="bi bi-eye me-1"></i>Xem trước:</div>
+                <img id="newImgPreview" src="" style="max-height:80px; border:1px solid #ddd; border-radius:6px; padding:4px;" />
+            </div>
+
+            <!-- Grid hiển thị ảnh hiện có -->
+            <div id="galleryGrid" class="d-flex flex-wrap gap-3">
+                <div class="text-muted small" id="galleryEmpty"><i class="bi bi-image me-1"></i>Chưa có ảnh phụ nào. Hãy thêm ảnh bên trên.</div>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -218,12 +247,59 @@
             border-color: #cbd5e1 !important;
             background-color: #ffffff;
         }
+        .gallery-img-card {
+            position: relative;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            width: 110px;
+            height: 110px;
+            background: #f8f8f8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .gallery-img-card img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .gallery-img-card .del-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(220,38,38,0.85);
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .gallery-img-card .del-btn:hover { background: #b91c1c; transform: scale(1.1); }
+        .gallery-img-card .img-num {
+            position: absolute;
+            bottom: 3px;
+            left: 4px;
+            background: rgba(0,0,0,0.55);
+            color: white;
+            font-size: 10px;
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
     </style>
 }
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
     <script>
+        const PRODUCT_ID = @Model.Id;
+
         $(document).ready(function() {
             $('textarea[name="Description"]').summernote({
                 placeholder: 'Nhập mô tả sản phẩm và chèn ảnh tại đây...',
@@ -239,14 +315,15 @@
                     ['view', ['fullscreen', 'codeview', 'help']]
                 ]
             });
+
+            // Load gallery on page load
+            loadGallery();
         });
 
         document.getElementById("imageInput").addEventListener("input", function() {
             const url = this.value;
             const preview = document.getElementById("imagePreview");
-            if (preview && url) {
-                preview.src = url;
-            }
+            if (preview && url) { preview.src = url; }
         });
 
         // Auto Slug Generation
@@ -260,11 +337,86 @@
                 .replace(/ú|ù|ủ|ũ|ụ|ư|ứ|ừ|ử|ữ|ự/g, 'u')
                 .replace(/ý|ỳ|ỷ|ỹ|ỵ/g, 'y')
                 .replace(/đ/g, 'd')
-                .replace(/[^a-z0-9 -]/g, '') // remove invalid chars
-                .replace(/\s+/g, '-')        // replace spaces with -
-                .replace(/-+/g, '-');        // collapse dashes
-            
+                .replace(/[^a-z0-9 -]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-');
             document.getElementById("prodSlug").value = slug;
         });
+
+        // ======== GALLERY MANAGEMENT ========
+
+        function loadGallery() {
+            fetch(`/AdminProducts/GetImages?productId=${PRODUCT_ID}`)
+                .then(r => r.json())
+                .then(images => renderGallery(images))
+                .catch(() => console.error('Lỗi tải gallery'));
+        }
+
+        function renderGallery(images) {
+            const grid = document.getElementById('galleryGrid');
+            const emptyMsg = document.getElementById('galleryEmpty');
+            grid.innerHTML = '';
+            if (images.length === 0) {
+                grid.appendChild(emptyMsg);
+                return;
+            }
+            images.forEach((img, idx) => {
+                const card = document.createElement('div');
+                card.className = 'gallery-img-card';
+                card.id = `imgCard-${img.id}`;
+                card.innerHTML = `
+                    <img src="${img.imageUrl}" alt="Ảnh ${idx + 1}" onerror="this.src='https://placehold.co/110x110?text=X'" />
+                    <div class="img-num">#${idx + 1}</div>
+                    <button class="del-btn" onclick="deleteGalleryImage(${img.id})" title="Xóa ảnh">
+                        <i class="bi bi-x-lg"></i>
+                    </button>`;
+                grid.appendChild(card);
+            });
+        }
+
+        // Live preview new image before adding
+        document.getElementById('newGalleryUrl').addEventListener('input', function() {
+            const url = this.value.trim();
+            const wrap = document.getElementById('newImgPreviewWrap');
+            const prev = document.getElementById('newImgPreview');
+            if (url) { prev.src = url; wrap.style.display = 'block'; }
+            else { wrap.style.display = 'none'; }
+        });
+
+        function addGalleryImage() {
+            const url = document.getElementById('newGalleryUrl').value.trim();
+            if (!url) { alert('Vui lòng dán URL ảnh trước khi thêm!'); return; }
+
+            fetch(`/AdminProducts/AddImage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `productId=${PRODUCT_ID}&imageUrl=${encodeURIComponent(url)}`
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('newGalleryUrl').value = '';
+                    document.getElementById('newImgPreviewWrap').style.display = 'none';
+                    loadGallery();
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+
+        function deleteGalleryImage(imageId) {
+            if (!confirm('Bạn có chắc muốn xóa ảnh này khỏi gallery?')) return;
+
+            fetch('/AdminProducts/DeleteImage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `imageId=${imageId}`
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) { loadGallery(); }
+                else { alert(data.message); }
+            });
+        }
     </script>
 }

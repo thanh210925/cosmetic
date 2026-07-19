@@ -16,7 +16,7 @@
         <!-- TOP -->
 
         <div class="container d-flex align-items-center justify-content-between py-3">
-            <button class="btn btn-dark d-lg-none m-2"
+            <button class="btn btn-outline-light d-lg-none m-2"
                     type="button"
                     data-bs-toggle="offcanvas"
                     data-bs-target="#mobileMenu">
@@ -31,7 +31,7 @@
             <!-- SEARCH -->
             <form asp-controller="Product" asp-action="List" method="get" class="search-box">
                 <input type="text" name="search" placeholder="Bạn muốn tìm gì hôm nay?" value="@Context.Request.Query["search"]" />
-                <button type="submit" style="background:none; border:none; cursor:pointer;">🔍</button>
+                <button type="submit" class="search-submit-btn"><i class="bi bi-search"></i></button>
             </form>
 
             <!-- RIGHT -->
@@ -97,7 +97,7 @@
                     <a asp-controller="Product" asp-action="List" asp-route-sort="bestseller">Sản phẩm bán chạy</a>
                     <a href="#">BLOG làm đẹp</a>
                     <a asp-controller="Product" asp-action="List" asp-route-hasPromo="true">Sản phẩm giảm giá</a>
-                    <a href="#">About Us</a>
+                    <a asp-controller="Home" asp-action="About">Về chúng tôi</a>
                     <a href="#">Media</a>
                     <a href="#">B2B Inquiry</a>
 
@@ -112,7 +112,7 @@
             <a asp-controller="Product" asp-action="List" asp-route-sort="bestseller">Sản phẩm bán chạy</a>
             <a href="#">BLOG làm đẹp</a>
             <a asp-controller="Product" asp-action="List" asp-route-hasPromo="true">Sản phẩm giảm giá</a>
-            <a href="#">About Us</a>
+            <a asp-controller="Home" asp-action="About">Về chúng tôi</a>
             <a href="#">Media</a>
             <a href="#">B2B Inquiry</a>
         </div>

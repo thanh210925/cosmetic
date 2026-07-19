@@ -166,30 +166,51 @@
                                 var reviewCount = item.Reviews.Count();
 
                                 <div class="hasaki-card">
-                                    <!-- Discount badge if promo price exists -->
-                                    @if (hasDiscount)
-                                    {
-                                        <div class="discount-badge">-@discountPercent%</div>
-                                    }
+                                    @* Badges top row *@
+                                    <div class="card-badges-row">
+                                        @if (hasDiscount)
+                                        {
+                                            <div class="discount-badge">-@discountPercent%</div>
+                                        }
+                                        @if (item.IsVegan)
+                                        {
+                                            <div class="vegan-badge">VEGAN</div>
+                                        }
+                                    </div>
 
-                                    <!-- Wishlist button (client heart) -->
+                                    @* Wishlist button *@
                                     <button type="button" class="wishlist-heart-btn" onclick="toggleWishlist(@item.Id, this)" data-prod-id="@item.Id">
                                         <i class="bi bi-heart-fill"></i>
                                     </button>
 
-                                    <!-- Image -->
+                                    @* IMAGE AREA — dual image hover *@
                                     <a href="@Url.Action("Details", "Product", new { id = item.Id })" class="card-img-area">
-                                        <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "https://placehold.co/300x300?text=No+Image" : item.ImageUrl)" alt="@item.Name" />
+                                        @{
+                                            var secondImg = item.ProductImages.FirstOrDefault()?.ImageUrl;
+                                        }
+                                        <img class="card-img-primary" src="@(string.IsNullOrEmpty(item.ImageUrl) ? "https://placehold.co/300x300?text=No+Image" : item.ImageUrl)" alt="@item.Name" />
+                                        @if (!string.IsNullOrEmpty(secondImg))
+                                        {
+                                            <img class="card-img-hover" src="@secondImg" alt="@item.Name - ảnh 2" />
+                                        }
                                     </a>
 
-                                    <!-- Card Body -->
+                                    @* Gift banner *@
+                                    @if (hasDiscount)
+                                    {
+                                        <div class="card-gift-bar">
+                                            <i class="bi bi-gift-fill me-1"></i> Quà tặng kèm hấp dẫn
+                                        </div>
+                                    }
+
+                                    @* Card Body *@
                                     <div class="card-body-area">
                                         <div class="card-brand">@(item.Brand?.Name ?? "Cosmetic")</div>
                                         <a href="@Url.Action("Details", "Product", new { id = item.Id })" class="text-decoration-none">
                                             <div class="card-title-text" title="@item.Name">@item.Name</div>
                                         </a>
 
-                                        <!-- Ratings -->
+                                        @* Ratings *@
                                         <div class="rating-area">
                                             <div class="rating-stars">
                                                 @for (int i = 1; i <= 5; i++)
@@ -204,15 +225,18 @@
                                                     }
                                                 }
                                             </div>
-                                            <span>@avgRating (@reviewCount)</span>
+                                            <span>@avgRating</span>
+                                            <span class="text-muted">(@reviewCount đánh giá)</span>
                                         </div>
 
-                                        <!-- Price -->
+                                        @* Price block *@
                                         <div class="price-area">
                                             @if (hasDiscount)
                                             {
-                                                <span class="promo-price">@String.Format("{0:N0} đ", item.PromoPrice)</span>
-                                                <span class="old-price text-decoration-line-through">@String.Format("{0:N0} đ", item.Price)</span>
+                                                <div class="d-flex align-items-baseline gap-2 flex-wrap">
+                                                    <span class="promo-price">@String.Format("{0:N0} đ", item.PromoPrice)</span>
+                                                    <span class="old-price">@String.Format("{0:N0} đ", item.Price)</span>
+                                                </div>
                                             }
                                             else
                                             {
@@ -220,8 +244,23 @@
                                             }
                                         </div>
 
-                                        <!-- Buy Button -->
-                                        <button type="button" class="btn-buy-now" onclick="addToCart(@item.Id)">
+                                        @* Sold info + progress bar *@
+                                        @{
+                                            var soldCount = item.Stock.HasValue ? Math.Max(0, 500 - item.Stock.Value) : 120;
+                                            var stockPct = item.Stock.HasValue && item.Stock.Value > 0
+                                                ? Math.Max(10, Math.Min(95, (int)(100 - ((double)item.Stock.Value / 600 * 100))))
+                                                : 75;
+                                        }
+                                        <div class="sold-info-row">
+                                            <span class="sold-count"><i class="bi bi-bag-check me-1"></i>Đã bán @soldCount.ToString("N0")</span>
+                                            <span class="stock-left">Còn @(item.Stock ?? 0)</span>
+                                        </div>
+                                        <div class="stock-progress-bar">
+                                            <div class="stock-progress-fill" style="width: @stockPct%"></div>
+                                        </div>
+
+                                        @* Buy Button *@
+                                        <button type="button" class="btn-buy-now mt-2" onclick="addToCart(@item.Id)">
                                             <i class="bi bi-cart-plus"></i> Thêm vào giỏ
                                         </button>
                                     </div>
