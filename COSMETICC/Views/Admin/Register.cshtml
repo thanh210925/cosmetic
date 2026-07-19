@@ -1,48 +1,160 @@
-﻿@model COSMETICC.Models.Admin
+@model COSMETICC.Models.Admin
 
 @{
     ViewData["Title"] = "Admin Register";
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
-
+    Layout = "~/Views/Shared/_AdminAuthLayout.cshtml";
 }
 
-<div class="container d-flex justify-content-center align-items-center" style="height:90vh;">
-    <div class="card shadow p-4" style="width:400px; border-radius:15px;">
+<div class="auth-card">
+    <!-- Brand Header -->
+    <div class="brand-header">
+        <h2>MeiLing</h2>
+        <p>Cosmetics Portal</p>
+    </div>
 
-        <h3 class="text-center mb-4">🛠️ Tạo Admin</h3>
+    <div class="auth-title">🛠️ TẠO TÀI KHOẢN ADMIN</div>
 
-        <form asp-action="Register" method="post">
-            @Html.AntiForgeryToken()
+    <!-- Error message display -->
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert-premium">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span>@ViewBag.Error</span>
+        </div>
+    }
 
-            <div class="mb-2">
-                <input asp-for="FullName" class="form-control" placeholder="Họ tên" required />
-            </div>
+    <!-- Form Submit -->
+    <form asp-action="Register" method="post" autocomplete="off" id="registerForm">
+        @Html.AntiForgeryToken()
 
-            <div class="mb-2">
-                <input asp-for="Username" class="form-control" placeholder="Username" required />
-            </div>
-
-            <div class="mb-2">
-                <input asp-for="Email" class="form-control" placeholder="Email (phải có 'ml')" required />
-            </div>
-
-            <div class="mb-3">
-                <input asp-for="Password" type="password" class="form-control" placeholder="Mật khẩu" required />
-            </div>
-
-            <button class="btn btn-dark w-100">Đăng ký</button>
-        </form>
-
-        @if (ViewBag.Error != null)
-        {
-            <div class="alert alert-danger mt-3 text-center p-2">
-                @ViewBag.Error
-            </div>
-        }
-
-        <div class="text-center mt-3">
-            <a asp-action="Login">Quay lại đăng nhập</a>
+        <!-- Full Name input -->
+        <div class="form-group-custom">
+            <input asp-for="FullName" 
+                   class="form-input-custom" 
+                   placeholder="Họ và tên" 
+                   required 
+                   autocomplete="name" />
+            <i class="bi bi-person-badge-fill input-icon-left"></i>
         </div>
 
+        <!-- Username input -->
+        <div class="form-group-custom">
+            <input asp-for="Username" 
+                   class="form-input-custom" 
+                   placeholder="Tên đăng nhập" 
+                   required 
+                   autocomplete="username" />
+            <i class="bi bi-person-fill input-icon-left"></i>
+        </div>
+
+        <!-- Email input with dynamic 'ml' helper badge -->
+        <div class="form-group-custom mb-1">
+            <input asp-for="Email" 
+                   id="emailInput"
+                   type="email"
+                   class="form-input-custom" 
+                   placeholder="Địa chỉ Email" 
+                   required 
+                   autocomplete="email" />
+            <i class="bi bi-envelope-fill input-icon-left"></i>
+        </div>
+        <div class="mb-3 px-1">
+            <div id="emailWarning" class="validation-badge invalid">
+                <i class="bi bi-exclamation-circle-fill me-1" id="badgeIcon"></i>
+                <span id="badgeText">Email bắt buộc phải chứa ký tự 'ml'</span>
+            </div>
+        </div>
+
+        <!-- Password input -->
+        <div class="form-group-custom">
+            <input asp-for="Password" 
+                   type="password" 
+                   id="passwordInput"
+                   class="form-input-custom form-input-custom-pwd" 
+                   placeholder="Mật khẩu" 
+                   required 
+                   autocomplete="new-password" />
+            <i class="bi bi-shield-lock-fill input-icon-left"></i>
+            
+            <button type="button" 
+                    class="password-toggle-btn" 
+                    id="passwordToggleBtn"
+                    title="Hiển thị/Ẩn mật khẩu">
+                <i class="bi bi-eye-slash-fill" id="passwordIcon"></i>
+            </button>
+        </div>
+
+        <!-- Submit action -->
+        <button type="submit" class="btn-premium mt-4">
+            Đăng ký <i class="bi bi-person-plus-fill fs-5"></i>
+        </button>
+
+    </form>
+
+    <!-- Navigation Footer -->
+    <div class="auth-footer">
+        <a asp-action="Login">Quay lại đăng nhập</a>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Password toggle script
+            const passwordInput = document.getElementById("passwordInput");
+            const passwordToggleBtn = document.getElementById("passwordToggleBtn");
+            const passwordIcon = document.getElementById("passwordIcon");
+
+            passwordToggleBtn.addEventListener("click", function () {
+                const isPassword = passwordInput.getAttribute("type") === "password";
+                if (isPassword) {
+                    passwordInput.setAttribute("type", "text");
+                    passwordIcon.classList.remove("bi-eye-slash-fill");
+                    passwordIcon.classList.add("bi-eye-fill");
+                } else {
+                    passwordInput.setAttribute("type", "password");
+                    passwordIcon.classList.remove("bi-eye-fill");
+                    passwordIcon.classList.add("bi-eye-slash-fill");
+                }
+            });
+
+            // Email validation script
+            const emailInput = document.getElementById("emailInput");
+            const emailWarning = document.getElementById("emailWarning");
+            const badgeIcon = document.getElementById("badgeIcon");
+            const badgeText = document.getElementById("badgeText");
+            const form = document.getElementById("registerForm");
+
+            function validateEmail() {
+                const emailVal = emailInput.value || '';
+                const hasMl = emailVal.toLowerCase().includes('ml');
+                
+                if (emailVal === '') {
+                    // Empty input
+                    emailWarning.className = "validation-badge invalid";
+                    badgeIcon.className = "bi bi-exclamation-circle-fill me-1";
+                    badgeText.innerText = "Email bắt buộc phải chứa ký tự 'ml'";
+                    emailInput.setCustomValidity("Vui lòng điền Email.");
+                } else if (!hasMl) {
+                    // Email exists but doesn't have 'ml'
+                    emailWarning.className = "validation-badge invalid";
+                    badgeIcon.className = "bi bi-x-circle-fill me-1";
+                    badgeText.innerText = "Email không hợp lệ (thiếu ký tự 'ml')";
+                    emailInput.setCustomValidity("Email của quản trị viên phải chứa ký tự 'ml'!");
+                } else {
+                    // Valid
+                    emailWarning.className = "validation-badge valid";
+                    badgeIcon.className = "bi bi-check-circle-fill me-1";
+                    badgeText.innerText = "Email hợp lệ (có chứa ký tự 'ml')";
+                    emailInput.setCustomValidity(""); // Clear custom validation error
+                }
+            }
+
+            // Real-time checking
+            emailInput.addEventListener("input", validateEmail);
+            
+            // Run initially in case of binding errors/backwards navigation
+            validateEmail();
+        });
+    </script>
+}

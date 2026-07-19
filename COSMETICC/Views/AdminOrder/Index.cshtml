@@ -1,0 +1,100 @@
+@model IEnumerable<COSMETICC.Models.Order>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Quản lý Đơn hàng";
+}
+
+<div class="admin-card">
+    <div class="admin-card-title">
+        <span><i class="bi bi-cart-check text-muted me-2"></i> Danh sách Đơn hàng</span>
+        
+        <!-- Search bar input -->
+        <div style="width: 250px;">
+            <input type="text" id="orderSearch" class="form-control-admin" placeholder="Tìm kiếm đơn hàng..." onkeyup="filterOrders()" />
+        </div>
+    </div>
+
+    <div class="admin-table-container">
+        <table class="admin-table" id="ordersTable">
+            <thead>
+                <tr>
+                    <th>Mã đơn</th>
+                    <th>Khách hàng</th>
+                    <th>Ngày đặt</th>
+                    <th>Tổng tiền</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var order in Model)
+                    {
+                        var statusClass = "status-pending";
+                        if (order.Status == "Đang giao" || order.Status == "Đã xác nhận") statusClass = "status-shipping";
+                        else if (order.Status == "Hoàn thành" || order.Status == "Đã giao") statusClass = "status-completed";
+                        else if (order.Status == "Hủy" || order.Status == "Đã hủy") statusClass = "status-cancelled";
+
+                        <tr>
+                            <td class="fw-bold">#@order.Id</td>
+                            <td>
+                                <div><strong>@(order.User?.FullName ?? "N/A")</strong></div>
+                                <small class="text-muted">@@@(order.User?.Username ?? "N/A")</small>
+                            </td>
+                            <td>@(order.OrderDate?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")</td>
+                            <td class="fw-bold">@String.Format("{0:N0} đ", order.TotalAmount)</td>
+                            <td>
+                                <span class="status-badge @statusClass">@(order.Status ?? "Đang xử lý")</span>
+                            </td>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@order.Id" class="btn-action btn-action-primary">
+                                    <i class="bi bi-eye me-1"></i> Chi tiết
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-5">Không tìm thấy đơn hàng nào</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function filterOrders() {
+            const input = document.getElementById("orderSearch");
+            const filter = input.value.toLowerCase();
+            const table = document.getElementById("ordersTable");
+            const tr = table.getElementsByTagName("tr");
+
+            // Loop through all table rows, skip header
+            for (let i = 1; i < tr.length; i++) {
+                const tdId = tr[i].getElementsByTagName("td")[0];
+                const tdName = tr[i].getElementsByTagName("td")[1];
+                const tdStatus = tr[i].getElementsByTagName("td")[4];
+                
+                if (tdId || tdName || tdStatus) {
+                    const textId = tdId.textContent || tdId.innerText;
+                    const textName = tdName.textContent || tdName.innerText;
+                    const textStatus = tdStatus.textContent || tdStatus.innerText;
+                    
+                    if (textId.toLowerCase().indexOf(filter) > -1 || 
+                        textName.toLowerCase().indexOf(filter) > -1 ||
+                        textStatus.toLowerCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+    </script>
+}

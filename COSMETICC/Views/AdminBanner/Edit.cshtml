@@ -1,0 +1,71 @@
+@model COSMETICC.Models.Banner
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Chỉnh sửa Banner";
+}
+
+<div class="container-fluid px-4" style="max-width: 600px;">
+    
+    <div class="mb-4">
+        <a asp-action="Index" class="btn-action btn-action-outline">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+        </a>
+    </div>
+
+    <div class="admin-card m-0">
+        <div class="admin-card-title pb-3 border-bottom">
+            <span><i class="bi bi-pencil-square text-muted me-2"></i> Chỉnh sửa thông tin Banner</span>
+        </div>
+
+        <form asp-action="Edit" method="post" class="py-3">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+
+            <div class="form-group mb-3">
+                <label asp-for="Title">Tiêu đề Banner (tùy chọn)</label>
+                <input asp-for="Title" class="form-control-admin" />
+                <span asp-validation-for="Title" class="text-danger small"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="ImageUrl">Đường dẫn hình ảnh (URL)</label>
+                <input asp-for="ImageUrl" class="form-control-admin" required />
+                <span asp-validation-for="ImageUrl" class="text-danger small"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="LinkUrl">Đường dẫn chuyển hướng (URL)</label>
+                <input asp-for="LinkUrl" class="form-control-admin" />
+                <span asp-validation-for="LinkUrl" class="text-danger small"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Type">Vị trí hiển thị (Type)</label>
+                <select asp-for="Type" class="form-control-admin" required>
+                    <!option value="Home" @(Model.Type == "Home" ? "selected" : "")>Banner trang chủ</!option>
+                    <!option value="FlashSale" @(Model.Type == "FlashSale" ? "selected" : "")>Banner Flash Sale</!option>
+                    <!option value="Brand" @(Model.Type == "Brand" ? "selected" : "")>Banner thương hiệu</!option>
+                </select>
+                <span asp-validation-for="Type" class="text-danger small"></span>
+            </div>
+
+            <div class="form-group mb-4">
+                <label class="form-check-label d-flex align-items-center gap-2">
+                    <input asp-for="IsActive" type="checkbox" style="width: 18px; height: 18px;" />
+                    Hiển thị Banner
+                </label>
+                <span asp-validation-for="IsActive" class="text-danger small"></span>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn-action btn-action-primary px-4 py-2">
+                    Lưu thay đổi
+                </button>
+                <a asp-action="Index" class="btn-action btn-action-outline px-4 py-2 text-center">
+                    Hủy bỏ
+                </a>
+            </div>
+        </form>
+    </div>
+</div>

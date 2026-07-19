@@ -1,116 +1,270 @@
 @model COSMETICC.Models.Product
 
 @{
-    ViewData["Title"] = "Sửa sản phẩm";
+    ViewData["Title"] = "Chỉnh sửa sản phẩm";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<div class="card shadow border-0">
-
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-
-        <h3 class="mb-0">
-            ✏️ Sửa sản phẩm
-        </h3>
-
-        <a asp-action="Index"
-           class="btn btn-secondary">
-            ← Quay lại
+<div class="container-fluid px-4">
+    
+    <div class="mb-4">
+        <a asp-action="Index" class="btn-action btn-action-outline">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
         </a>
-
     </div>
 
-    <div class="card-body">
+    <div class="admin-card m-0">
+        <div class="admin-card-title pb-3 border-bottom">
+            <span><i class="bi bi-pencil-square text-muted me-2"></i> Chỉnh sửa thông tin sản phẩm</span>
+        </div>
 
-        <form asp-action="Edit" method="post">
-
+        <form asp-action="Edit" method="post" class="py-3">
+            @Html.AntiForgeryToken()
             <input type="hidden" asp-for="Id" />
 
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger" role="alert">
+                    <div asp-validation-summary="All" class="text-danger"></div>
+                </div>
+            }
+
             <div class="row">
+                <!-- Left Column: Content details -->
+                <div class="col-md-7 border-end">
+                    
+                    <div class="form-group mb-3">
+                        <label asp-for="Name">Tên sản phẩm</label>
+                        <input asp-for="Name" id="prodName" class="form-control-admin" required />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
 
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Tên sản phẩm</label>
-                    <input asp-for="Name" class="form-control" />
-                </div>
+                    <div class="form-group mb-3">
+                        <label asp-for="Slug">Đường dẫn thân thiện (Slug)</label>
+                        <input asp-for="Slug" id="prodSlug" class="form-control-admin" required />
+                        <span asp-validation-for="Slug" class="text-danger small"></span>
+                    </div>
 
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">Giá bán</label>
-                    <input asp-for="Price" class="form-control" />
-                </div>
+                    <div class="form-group mb-3">
+                        <label asp-for="Description">Mô tả sản phẩm</label>
+                        <textarea asp-for="Description" class="form-control-admin" rows="5"></textarea>
+                        <span asp-validation-for="Description" class="text-danger small"></span>
+                    </div>
 
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">Tồn kho</label>
-                    <input asp-for="Stock" class="form-control" />
-                </div>
+                    <div class="form-group mb-3">
+                        <label asp-for="Ingredient">Thành phần chi tiết</label>
+                        <textarea asp-for="Ingredient" class="form-control-admin" rows="4"></textarea>
+                        <span asp-validation-for="Ingredient" class="text-danger small"></span>
+                    </div>
 
-                <div class="col-md-12 mb-3">
+                    <div class="form-group mb-3">
+                        <label asp-for="VideoUrl">Link Video Review (Youtube/URL)</label>
+                        <input asp-for="VideoUrl" class="form-control-admin" />
+                        <span asp-validation-for="VideoUrl" class="text-danger small"></span>
+                    </div>
 
-                    <label class="form-label">
-                        Ảnh sản phẩm
-                    </label>
-
-                    <input asp-for="ImageUrl"
-                           class="form-control" />
-
-                    <div class="mt-2">
-
-                        <img src="@Model.ImageUrl"
-                             width="120"
-                             style="border-radius:10px;
-                        border:1px solid #ddd;" />
-
+                    <div class="form-group mb-3">
+                        <label asp-for="Tags">Tags sản phẩm (phân cách bằng dấu phẩy)</label>
+                        <input asp-for="Tags" class="form-control-admin" />
+                        <span asp-validation-for="Tags" class="text-danger small"></span>
                     </div>
 
                 </div>
 
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Danh mục</label>
-                    <input asp-for="CategoryId"
-                           class="form-control" />
-                </div>
+                <!-- Right Column: Meta details and attributes -->
+                <div class="col-md-5 ps-4">
+                    
+                    <div class="row">
+                        <div class="col-6 form-group mb-3">
+                            <label asp-for="CategoryId">Danh mục</label>
+                            <select asp-for="CategoryId" class="form-control-admin" required>
+                                <option value="">-- Chọn danh mục --</option>
+                                @foreach (var item in ViewBag.Categories)
+                                {
+                                    <!option value="@item.Id" @(Model.CategoryId == item.Id ? "selected" : "")>@item.Name</!option>
+                                }
+                            </select>
+                            <span asp-validation-for="CategoryId" class="text-danger small"></span>
+                        </div>
 
-                <div class="col-md-6 mb-3">
+                        <div class="col-6 form-group mb-3">
+                            <label asp-for="BrandId">Thương hiệu</label>
+                            <select asp-for="BrandId" class="form-control-admin">
+                                <option value="">-- Chọn thương hiệu --</option>
+                                @foreach (var item in ViewBag.Brands)
+                                {
+                                    <!option value="@item.Id" @(Model.BrandId == item.Id ? "selected" : "")>@item.Name</!option>
+                                }
+                            </select>
+                            <span asp-validation-for="BrandId" class="text-danger small"></span>
+                        </div>
+                    </div>
 
-                    <label class="form-label">
-                        Vegan
-                    </label>
+                    <div class="row">
+                        <div class="col-6 form-group mb-3">
+                            <label asp-for="Price">Giá bán niêm yết (đ)</label>
+                            <input asp-for="Price" type="number" class="form-control-admin" min="0" required />
+                            <span asp-validation-for="Price" class="text-danger small"></span>
+                        </div>
 
-                    <div class="form-check mt-2">
-                        <input asp-for="IsVegan"
-                               class="form-check-input" />
+                        <div class="col-6 form-group mb-3">
+                            <label asp-for="PromoPrice">Giá khuyến mãi (đ)</label>
+                            <input asp-for="PromoPrice" type="number" class="form-control-admin" min="0" />
+                            <span asp-validation-for="PromoPrice" class="text-danger small"></span>
+                        </div>
+                    </div>
 
-                        <label class="form-check-label">
-                            Sản phẩm Vegan
+                    <div class="row">
+                        <div class="col-6 form-group mb-3">
+                            <label asp-for="Stock">Số lượng tồn kho</label>
+                            <input asp-for="Stock" type="number" class="form-control-admin" min="0" required />
+                            <span asp-validation-for="Stock" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-6 form-group mb-3">
+                            <label asp-for="ExpiryDate">Hạn sử dụng</label>
+                            <input asp-for="ExpiryDate" type="date" value="@(Model.ExpiryDate?.ToString("yyyy-MM-dd"))" class="form-control-admin" />
+                            <span asp-validation-for="ExpiryDate" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-6 form-group mb-3">
+                            <label asp-for="SKU">Mã SKU</label>
+                            <input asp-for="SKU" class="form-control-admin" />
+                            <span asp-validation-for="SKU" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-6 form-group mb-3">
+                            <label asp-for="Barcode">Mã vạch (Barcode)</label>
+                            <input asp-for="Barcode" class="form-control-admin" />
+                            <span asp-validation-for="Barcode" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="ImageUrl">Đường dẫn hình ảnh (URL)</label>
+                        <input asp-for="ImageUrl" id="imageInput" class="form-control-admin" />
+                        <span asp-validation-for="ImageUrl" class="text-danger small"></span>
+                        
+                        <!-- Image Preview Block -->
+                        <div class="mt-2 text-center">
+                            <img src="@(string.IsNullOrEmpty(Model.ImageUrl) ? "https://placehold.co/150x150" : Model.ImageUrl)" id="imagePreview" class="rounded" style="max-width: 120px; max-height: 120px; object-fit: cover; border: 1px solid var(--admin-border-color);" alt="" />
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="SkinType">Loại da phù hợp</label>
+                        <input asp-for="SkinType" class="form-control-admin" />
+                        <span asp-validation-for="SkinType" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-group mb-4 d-flex gap-4">
+                        <label class="form-check-label d-flex align-items-center gap-2">
+                            <input asp-for="IsVegan" type="checkbox" style="width: 18px; height: 18px;" />
+                            Sản phẩm thuần chay (Vegan)
+                        </label>
+                        
+                        <label class="form-check-label d-flex align-items-center gap-2">
+                            <input asp-for="IsActive" type="checkbox" style="width: 18px; height: 18px;" />
+                            Hiển thị trên web (Active)
                         </label>
                     </div>
 
                 </div>
-
-                <div class="col-md-12 mb-3">
-                    <label class="form-label">Thành phần</label>
-                    <textarea asp-for="Ingredient"
-                              rows="3"
-                              class="form-control">
-                    </textarea>
-                </div>
-
-                <div class="col-md-12 mb-3">
-                    <label class="form-label">Mô tả</label>
-                    <textarea asp-for="Description"
-                              rows="5"
-                              class="form-control">
-                    </textarea>
-                </div>
-
             </div>
 
-            <button type="submit"
-                    class="btn btn-primary">
-                💾 Lưu thay đổi
-            </button>
+            <!-- Full-width SEO Settings -->
+            <div class="mt-4 p-4 rounded bg-light" style="border: 1px dashed var(--admin-border-color);">
+                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-search text-muted me-2"></i>Cấu hình SEO Tối ưu hóa</h5>
+                <div class="row">
+                    <div class="col-md-6 form-group mb-3">
+                        <label asp-for="MetaTitle">Tiêu đề SEO (Meta Title)</label>
+                        <input asp-for="MetaTitle" class="form-control-admin" />
+                        <span asp-validation-for="MetaTitle" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6 form-group mb-3">
+                        <label asp-for="MetaKeywords">Từ khóa SEO (Meta Keywords)</label>
+                        <input asp-for="MetaKeywords" class="form-control-admin" />
+                        <span asp-validation-for="MetaKeywords" class="text-danger small"></span>
+                    </div>
+                    <div class="col-12 form-group mb-3">
+                        <label asp-for="MetaDescription">Mô tả SEO (Meta Description)</label>
+                        <textarea asp-for="MetaDescription" class="form-control-admin" rows="3"></textarea>
+                        <span asp-validation-for="MetaDescription" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
 
+            <hr />
+
+            <div class="d-flex justify-content-end gap-2 mt-3">
+                <button type="submit" class="btn-action btn-action-primary px-5 py-2">
+                    Lưu thay đổi
+                </button>
+                <a asp-action="Index" class="btn-action btn-action-outline px-4 py-2">
+                    Hủy bỏ
+                </a>
+            </div>
         </form>
-
     </div>
-
 </div>
+
+@section Styles {
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
+    <style>
+        .note-editor {
+            border-radius: 6px !important;
+            border-color: #cbd5e1 !important;
+            background-color: #ffffff;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('textarea[name="Description"]').summernote({
+                placeholder: 'Nhập mô tả sản phẩm và chèn ảnh tại đây...',
+                tabsize: 2,
+                height: 250,
+                toolbar: [
+                    ['style', ['style']],
+                    ['font', ['bold', 'underline', 'clear']],
+                    ['color', ['color']],
+                    ['para', ['ul', 'ol', 'paragraph']],
+                    ['table', ['table']],
+                    ['insert', ['link', 'picture', 'video']],
+                    ['view', ['fullscreen', 'codeview', 'help']]
+                ]
+            });
+        });
+
+        document.getElementById("imageInput").addEventListener("input", function() {
+            const url = this.value;
+            const preview = document.getElementById("imagePreview");
+            if (preview && url) {
+                preview.src = url;
+            }
+        });
+
+        // Auto Slug Generation
+        document.getElementById("prodName").addEventListener("input", function() {
+            let name = this.value;
+            let slug = name.toLowerCase()
+                .replace(/á|à|ả|ã|ạ|ă|ắ|ằ|ẳ|ẵ|ặ|â|ấ|ầ|ẩ|ẫ|ậ/g, 'a')
+                .replace(/é|è|ẻ|ẽ|ẹ|ê|ế|ề|ể|ễ|ệ/g, 'e')
+                .replace(/í|ì|ỉ|ĩ|ị/g, 'i')
+                .replace(/ó|ò|ỏ|õ|ọ|ô|ố|ồ|ổ|ỗ|ộ|ơ|ớ|ờ|ở|ỡ|ợ/g, 'o')
+                .replace(/ú|ù|ủ|ũ|ụ|ư|ứ|ừ|ử|ữ|ự/g, 'u')
+                .replace(/ý|ỳ|ỷ|ỹ|ỵ/g, 'y')
+                .replace(/đ/g, 'd')
+                .replace(/[^a-z0-9 -]/g, '') // remove invalid chars
+                .replace(/\s+/g, '-')        // replace spaces with -
+                .replace(/-+/g, '-');        // collapse dashes
+            
+            document.getElementById("prodSlug").value = slug;
+        });
+    </script>
+}

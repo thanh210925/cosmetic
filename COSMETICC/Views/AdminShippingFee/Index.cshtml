@@ -1,0 +1,79 @@
+@model IEnumerable<COSMETICC.Models.ShippingFee>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Cấu hình Phí vận chuyển";
+}
+
+<div class="container-fluid px-4">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="admin-card m-0">
+        <div class="admin-card-title">
+            <span><i class="bi bi-truck text-muted me-2"></i> Thiết lập phí vận chuyển theo khu vực</span>
+            <a asp-action="Create" class="btn-action btn-action-primary">
+                <i class="bi bi-plus-lg me-1"></i> Thiết lập phí ship mới
+            </a>
+        </div>
+
+        <div class="admin-table-container">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Khu vực (Vùng miền)</th>
+                        <th>Phí vận chuyển</th>
+                        <th>Hạn mức Free Ship</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var fee in Model)
+                        {
+                            <tr>
+                                <td class="fw-bold">@fee.Region</td>
+                                <td class="fw-bold text-dark">@String.Format("{0:N0} đ", fee.Fee)</td>
+                                <td>
+                                    @if (fee.MinAmountForFreeShipping != null)
+                                    {
+                                        <span>Đơn hàng trên @String.Format("{0:N0} đ", fee.MinAmountForFreeShipping)</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Không áp dụng</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <a asp-action="Edit" asp-route-id="@fee.Id" class="btn-action btn-action-outline">
+                                            <i class="bi bi-pencil-square"></i> Sửa
+                                        </a>
+                                        <form asp-action="Delete" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa thiết lập phí ship này không?');">
+                                            <input type="hidden" name="id" value="@fee.Id" />
+                                            <button type="submit" class="btn-action btn-action-danger">
+                                                <i class="bi bi-trash-fill"></i> Xóa
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-5">Chưa cấu hình phí vận chuyển nào</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -26,14 +26,53 @@ public partial class Product
 
     public int? CategoryId { get; set; }
 
+    public int? BrandId { get; set; }
+
     public int? Stock { get; set; }
 
-    public bool? IsVegan { get; set; }
+    public bool IsVegan { get; set; } = false;
+
+    [Column(TypeName = "decimal(10, 2)")]
+    public decimal? PromoPrice { get; set; }
+
+    [Column(TypeName = "datetime")]
+    public DateTime? ExpiryDate { get; set; }
+
+    public bool IsActive { get; set; } = true;
+
+    [StringLength(255)]
+    public string? SkinType { get; set; }
+
+    [StringLength(100)]
+    public string? SKU { get; set; }
+
+    [StringLength(100)]
+    public string? Barcode { get; set; }
+
+    [StringLength(255)]
+    public string? Slug { get; set; }
+
+    [StringLength(500)]
+    public string? VideoUrl { get; set; }
+
+    [StringLength(500)]
+    public string? Tags { get; set; }
+
+    [StringLength(255)]
+    public string? MetaTitle { get; set; }
+
+    [StringLength(500)]
+    public string? MetaDescription { get; set; }
+
+    [StringLength(500)]
+    public string? MetaKeywords { get; set; }
 
     public int? CreatedByAdminId { get; set; }
 
     [Column(TypeName = "datetime")]
     public DateTime? CreatedAt { get; set; }
+
+    public virtual ICollection<ProductVariant> ProductVariants { get; set; } = new List<ProductVariant>();
 
     [InverseProperty("Product")]
     public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
@@ -41,6 +80,10 @@ public partial class Product
     [ForeignKey("CategoryId")]
     [InverseProperty("Products")]
     public virtual Category? Category { get; set; }
+
+    [ForeignKey("BrandId")]
+    [InverseProperty("Products")]
+    public virtual Brand? Brand { get; set; }
 
     [ForeignKey("CreatedByAdminId")]
     [InverseProperty("Products")]

@@ -1,0 +1,533 @@
+@model COSMETICC.Models.Product
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = Model.Name;
+    var hasDiscount = Model.PromoPrice.HasValue && Model.PromoPrice < Model.Price;
+    var avgRating = Model.Reviews.Any() ? Math.Round(Model.Reviews.Average(r => r.Rating ?? 5), 1) : 5.0;
+    var reviewCount = Model.Reviews.Count();
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="~/css/product-details.css" asp-append-version="true" />
+
+<div class="breadcrumb-container container">
+    <a asp-controller="Home" asp-action="Index">Trang chủ</a>
+    <i class="bi bi-chevron-right mx-1"></i>
+    <a asp-controller="Product" asp-action="List">Sản phẩm</a>
+    <i class="bi bi-chevron-right mx-1"></i>
+    <span class="text-dark fw-bold">@Model.Name</span>
+</div>
+
+<div class="container pb-5">
+    
+    <!-- Top Details Section -->
+    <div class="row mb-4">
+        
+        <!-- Left Column: Product Image Gallery -->
+        <div class="col-lg-5 col-md-6 mb-3">
+            <div class="details-wrapper text-center">
+                <img src="@(string.IsNullOrEmpty(Model.ImageUrl) ? "https://placehold.co/500x500?text=No+Image" : Model.ImageUrl)" id="mainProdImage" class="img-fluid rounded" style="max-height: 380px; object-fit: contain;" alt="@Model.Name" />
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.VideoUrl))
+            {
+                <div class="details-wrapper p-3">
+                    <h6 class="fw-bold mb-2"><i class="bi bi-play-circle-fill text-danger me-1"></i> Video Review sản phẩm</h6>
+                    @if (Model.VideoUrl.Contains("youtube.com/watch?v="))
+                    {
+                        var videoId = Model.VideoUrl.Split("v=")[1].Split("&")[0];
+                        <div class="ratio ratio-16x9">
+                            <iframe src="https://www.youtube.com/embed/@videoId" title="YouTube video player" frameborder="0" allowfullscreen></iframe>
+                        </div>
+                    }
+                    else
+                    {
+                        <a href="@Model.VideoUrl" target="_blank" class="btn btn-sm btn-outline-success w-100"><i class="bi bi-play-fill"></i> Xem trên Youtube</a>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Middle Column: Product Specifications & Pricing -->
+        <div class="col-lg-4 col-md-6 mb-3">
+            <div class="details-wrapper">
+                <div class="brand-title">Thương hiệu: @(Model.Brand?.Name ?? "COSMETIC")</div>
+                <h1 class="product-main-title">@Model.Name</h1>
+
+                <!-- Rating and views bar -->
+                <div class="rating-meta-bar">
+                    <span class="rating-score-badge"><i class="bi bi-star-fill me-1"></i> @avgRating</span>
+                    <span>(@reviewCount đánh giá)</span>
+                    <span>|</span>
+                    <span>Mã sản phẩm: <strong>@(Model.SKU ?? $"PROD-{Model.Id}")</strong></span>
+                </div>
+
+                <!-- Price panel -->
+                <div class="price-panel">
+                    @if (hasDiscount)
+                    {
+                        var discountPercent = (int)(100 - (Model.PromoPrice!.Value / Model.Price * 100));
+                        <div>
+                            <span class="promo-price-text" id="displayPrice">@String.Format("{0:N0} đ", Model.PromoPrice)</span>
+                            <span class="discount-percent-badge">-@discountPercent%</span>
+                        </div>
+                        <div class="mt-1">
+                            <span class="text-muted small">Giá thị trường:</span>
+                            <span class="original-price-text">@String.Format("{0:N0} đ", Model.Price)</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div>
+                            <span class="promo-price-text" id="displayPrice">@String.Format("{0:N0} đ", Model.Price)</span>
+                        </div>
+                    }
+                </div>
+
+                <!-- Dynamic variants selector -->
+                @if (Model.ProductVariants != null && Model.ProductVariants.Any())
+                {
+                    var groupedVariants = Model.ProductVariants.GroupBy(v => v.Name);
+                    foreach (var group in groupedVariants)
+                    {
+                        <div class="mb-3">
+                            <div class="fw-bold small text-muted mb-2">Chọn @group.Key:</div>
+                            <div class="variant-pills-container" data-type="@group.Key">
+                                @foreach (var v in group)
+                                {
+                                    <button class="variant-pill-btn" onclick="selectVariant(this, '@group.Key', '@v.Value', @v.PriceAdjustment)">
+                                        @v.Value
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+
+                <!-- Quantity selector -->
+                <div class="mb-4">
+                    <div class="fw-bold small text-muted mb-2">Số lượng:</div>
+                    <div class="quantity-selector">
+                        <button class="qty-btn-action" onclick="adjustDetailQty(-1)">-</button>
+                        <input type="text" id="detailQty" class="qty-display-input" value="1" readonly />
+                        <button class="qty-btn-action" onclick="adjustDetailQty(1)">+</button>
+                    </div>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="d-flex gap-2">
+                    <button class="btn-cart-hasaki" onclick="addDetailToCart(false)">
+                        <i class="bi bi-cart-plus"></i> Thêm vào giỏ
+                    </button>
+                    <button class="btn-buy-hasaki" onclick="addDetailToCart(true)">
+                        Mua ngay
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Right Column: Trust list -->
+        <div class="col-lg-3 col-md-12 mb-3">
+            <div class="trust-sidebar">
+                <div class="fw-bold text-dark border-bottom pb-2 mb-3" style="font-size: 14px;">CAM KẾT TỪ MEILING</div>
+                
+                <div class="trust-item">
+                    <i class="bi bi-check-circle-fill trust-icon"></i>
+                    <div>
+                        <strong>100% Hàng chính hãng</strong>
+                        <div class="text-muted small">Cam kết bồi thường gấp 200% nếu phát hiện hàng giả hàng nhái.</div>
+                    </div>
+                </div>
+                
+                <div class="trust-item">
+                    <i class="bi bi-truck-flatbed trust-icon"></i>
+                    <div>
+                        <strong>Giao nhanh miễn phí</strong>
+                        <div class="text-muted small">Miễn phí giao hàng toàn quốc cho đơn hàng từ 150k.</div>
+                    </div>
+                </div>
+
+                <div class="trust-item">
+                    <i class="bi bi-arrow-counterclockwise trust-icon"></i>
+                    <div>
+                        <strong>Đổi trả 14 ngày</strong>
+                        <div class="text-muted small">Hỗ trợ đổi trả miễn phí trong vòng 14 ngày nếu lỗi NSX.</div>
+                    </div>
+                </div>
+
+                <div class="trust-item">
+                    <i class="bi bi-headset trust-icon"></i>
+                    <div>
+                        <strong>Hỗ trợ tận tâm 24/7</strong>
+                        <div class="text-muted small">Đội ngũ chuyên viên tư vấn làm đẹp sẵn sàng giải đáp mọi thắc mắc.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bottom tabbed content panel -->
+    <div class="hasaki-nav-tabs">
+        <a href="#tab-desc" class="hasaki-nav-link active" onclick="scrollToSection(event, 'tab-desc')">Mô tả sản phẩm</a>
+        <a href="#tab-specs" class="hasaki-nav-link" onclick="scrollToSection(event, 'tab-specs')">Thông số kỹ thuật</a>
+        <a href="#tab-ingredients" class="hasaki-nav-link" onclick="scrollToSection(event, 'tab-ingredients')">Thành phần</a>
+        <a href="#tab-reviews" class="hasaki-nav-link" onclick="scrollToSection(event, 'tab-reviews')">Đánh giá khách hàng (@reviewCount)</a>
+    </div>
+
+    <!-- Section 1: Detailed Description -->
+    <div id="tab-desc" class="details-wrapper p-4 bg-white mt-3 tab-section">
+        <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Mô tả sản phẩm</h5>
+        <div class="collapse-container" id="descCollapse">
+            <div class="product-description-content" style="line-height: 1.8; color: #444; font-size: 14.5px;">
+                @Html.Raw(Model.Description ?? "Sản phẩm hiện chưa được cập nhật mô tả chi tiết.")
+            </div>
+            <div class="collapse-overlay"></div>
+        </div>
+        <div class="text-center">
+            <button class="btn-toggle-collapse" onclick="toggleDescriptionCollapse(this)">Xem thêm mô tả</button>
+        </div>
+    </div>
+
+    <!-- Section 2: Technical Specifications -->
+    <div id="tab-specs" class="details-wrapper p-4 bg-white mt-3 tab-section">
+        <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Thông số kỹ thuật</h5>
+        <table class="table table-bordered specs-table mb-0">
+            <tbody>
+                <tr>
+                    <th>Tên sản phẩm</th>
+                    <td class="fw-bold text-dark">@Model.Name</td>
+                </tr>
+                <tr>
+                    <th>Mã SKU</th>
+                    <td>@(Model.SKU ?? "N/A")</td>
+                </tr>
+                <tr>
+                    <th>Mã Barcode</th>
+                    <td>@(Model.Barcode ?? "N/A")</td>
+                </tr>
+                <tr>
+                    <th>Thương hiệu</th>
+                    <td>@(Model.Brand?.Name ?? "N/A")</td>
+                </tr>
+                <tr>
+                    <th>Phân loại danh mục</th>
+                    <td>@(Model.Category?.Name ?? "N/A")</td>
+                </tr>
+                <tr>
+                    <th>Loại da phù hợp</th>
+                    <td><span class="badge bg-info-subtle text-info fs-6">@(Model.SkinType ?? "Mọi loại da")</span></td>
+                </tr>
+                <tr>
+                    <th>Xuất xứ thương hiệu</th>
+                    <td>@(Model.Brand?.Country ?? "Chưa rõ")</td>
+                </tr>
+                <tr>
+                    <th>Hạn sử dụng</th>
+                    <td>@(Model.ExpiryDate?.ToString("dd/MM/yyyy") ?? "Chưa thiết lập")</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Section 3: Ingredients -->
+    <div id="tab-ingredients" class="details-wrapper p-4 bg-white mt-3 tab-section">
+        <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Thành phần chi tiết</h5>
+        <div class="p-3 bg-light rounded mb-0" style="line-height: 1.8; color: #444; font-size: 14px; white-space: pre-line; border: 1px solid #eee;">
+            @(Model.Ingredient ?? "Đang cập nhật danh sách các thành phần hoạt chất chính.")
+        </div>
+    </div>
+
+    <!-- Section 4: Customer Reviews -->
+    <div id="tab-reviews" class="details-wrapper p-4 bg-white mt-3 tab-section">
+        <h5 class="fw-bold text-dark border-bottom pb-2 mb-4">Nhận xét khách hàng</h5>
+        
+        <div class="row align-items-center mb-4 p-4 bg-light rounded border mx-0">
+            <div class="col-md-4 text-center border-end">
+                <span class="display-3 fw-bold text-success">@avgRating</span>
+                <span class="fs-4 text-muted">/5</span>
+                <div class="text-warning my-2">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        if (i <= Math.Round(avgRating))
+                        {
+                            <i class="bi bi-star-fill fs-5"></i>
+                        }
+                        else
+                        {
+                            <i class="bi bi-star fs-5"></i>
+                        }
+                    }
+                </div>
+                <div class="small text-muted">Có @reviewCount lượt đánh giá từ khách hàng</div>
+            </div>
+            <div class="col-md-8 ps-4">
+                <h6 class="fw-bold text-dark mb-3">Tất cả đánh giá phải tuân thủ chính sách:</h6>
+                <ul class="small text-muted mb-0">
+                    <li>Đánh giá thực tế từ khách hàng đã mua và sử dụng sản phẩm.</li>
+                    <li>Nội dung lịch sự, không spam, không chèn link quảng cáo ngoài.</li>
+                    <li>Các đánh giá tích cực sẽ được ưu tiên hiển thị.</li>
+                </ul>
+            </div>
+        </div>
+
+        @if (Model.Reviews != null && Model.Reviews.Any())
+        {
+            <div class="reviews-list">
+                @foreach (var r in Model.Reviews)
+                {
+                    <div class="review-item py-3 border-bottom">
+                        <div class="d-flex justify-content-between mb-2">
+                            <div>
+                                <span class="fw-bold text-dark me-2">@(r.User?.FullName ?? "Khách hàng ẩn danh")</span>
+                                <span class="badge bg-success-subtle text-success small"><i class="bi bi-patch-check-fill"></i> Đã mua hàng</span>
+                            </div>
+                            <div class="text-muted small">@r.CreatedAt?.ToString("dd/MM/yyyy HH:mm")</div>
+                        </div>
+                        <div class="text-warning mb-2" style="font-size: 12px;">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                if (i <= (r.Rating ?? 5))
+                                {
+                                    <i class="bi bi-star-fill"></i>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-star"></i>
+                                }
+                            }
+                        </div>
+                        <div class="text-dark" style="font-size: 14.5px;">@r.Comment</div>
+
+                        @if (!string.IsNullOrEmpty(r.ReplyText))
+                        {
+                            <div class="mt-3 p-3 bg-light rounded border-start border-4 border-success">
+                                <strong class="text-success small"><i class="bi bi-reply-fill"></i> MeiLing Shop Phản Hồi:</strong>
+                                <div class="text-muted small mt-1">@r.ReplyText</div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-chat-dots fs-1"></i>
+                <p class="mt-3">Sản phẩm này chưa có đánh giá nào. Mua hàng ngay để chia sẻ trải nghiệm đầu tiên nhé!</p>
+            </div>
+        }
+    </div>
+
+    <!-- Suggested Products Carousel Section -->
+    @if (ViewBag.SuggestedProducts != null && ((List<Product>)ViewBag.SuggestedProducts).Any())
+    {
+        <div class="details-wrapper mt-4">
+            <h5 class="fw-bold text-dark mb-4 pb-2 border-bottom"><i class="bi bi-heart-fill text-danger me-2"></i>Sản phẩm tương tự bán chạy</h5>
+            
+            <div class="suggest-grid">
+                @foreach (Product p in ViewBag.SuggestedProducts)
+                {
+                    var isDisc = p.PromoPrice.HasValue && p.PromoPrice < p.Price;
+                    <div class="suggest-card">
+                        <a href="@Url.Action("Details", "Product", new { id = p.Id })" class="text-decoration-none text-center">
+                            <img src="@(string.IsNullOrEmpty(p.ImageUrl) ? "https://placehold.co/150x150?text=No+Image" : p.ImageUrl)" class="suggest-img" alt="" />
+                            <div style="font-size: 11px; font-weight: bold; color: var(--hasaki-green); text-transform: uppercase;">@(p.Brand?.Name ?? "COSMETIC")</div>
+                            <div class="text-truncate text-dark small fw-bold px-1 my-1" title="@p.Name">@p.Name</div>
+                        </a>
+                        <div class="mt-auto pt-2">
+                            @if (isDisc)
+                            {
+                                <div class="text-danger fw-bold small">@String.Format("{0:N0} đ", p.PromoPrice)</div>
+                                <div class="text-muted text-decoration-line-through" style="font-size: 11px;">@String.Format("{0:N0} đ", p.Price)</div>
+                            }
+                            else
+                            {
+                                <div class="text-danger fw-bold small">@String.Format("{0:N0} đ", p.Price)</div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Suggested Products from same Brand -->
+    @if (ViewBag.BrandProducts != null && ((List<Product>)ViewBag.BrandProducts).Any())
+    {
+        <div class="details-wrapper mt-4">
+            <h5 class="fw-bold text-dark mb-4 pb-2 border-bottom"><i class="bi bi-award-fill text-success me-2"></i>Sản phẩm cùng thương hiệu @(Model.Brand?.Name)</h5>
+            
+            <div class="suggest-grid">
+                @foreach (Product p in ViewBag.BrandProducts)
+                {
+                    var isDisc = p.PromoPrice.HasValue && p.PromoPrice < p.Price;
+                    <div class="suggest-card">
+                        <a href="@Url.Action("Details", "Product", new { id = p.Id })" class="text-decoration-none text-center">
+                            <img src="@(string.IsNullOrEmpty(p.ImageUrl) ? "https://placehold.co/150x150?text=No+Image" : p.ImageUrl)" class="suggest-img" alt="" />
+                            <div style="font-size: 11px; font-weight: bold; color: var(--hasaki-green); text-transform: uppercase;">@(p.Brand?.Name ?? "COSMETIC")</div>
+                            <div class="text-truncate text-dark small fw-bold px-1 my-1" title="@p.Name">@p.Name</div>
+                        </a>
+                        <div class="mt-auto pt-2">
+                            @if (isDisc)
+                            {
+                                <div class="text-danger fw-bold small">@String.Format("{0:N0} đ", p.PromoPrice)</div>
+                                <div class="text-muted text-decoration-line-through" style="font-size: 11px;">@String.Format("{0:N0} đ", p.Price)</div>
+                            }
+                            else
+                            {
+                                <div class="text-danger fw-bold small">@String.Format("{0:N0} đ", p.Price)</div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+</div>
+
+@section Scripts {
+<script>
+    let selectedVariants = {};
+    const basePrice = @((hasDiscount ? Model.PromoPrice : Model.Price) ?? 0);
+
+    // Select dynamic variant button
+    function selectVariant(btn, type, val, priceAdjustment) {
+        const container = btn.parentElement;
+        container.querySelectorAll('.variant-pill-btn').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+
+        selectedVariants[type] = val;
+
+        // Recalculate dynamic pricing
+        if (priceAdjustment !== 0) {
+            const displayPrice = basePrice + priceAdjustment;
+            document.getElementById("displayPrice").innerText = new Intl.NumberFormat('vi-VN').format(displayPrice) + " đ";
+        } else {
+            document.getElementById("displayPrice").innerText = new Intl.NumberFormat('vi-VN').format(basePrice) + " đ";
+        }
+    }
+
+    // Adjust purchase quantity
+    function adjustDetailQty(delta) {
+        const input = document.getElementById("detailQty");
+        let currentVal = parseInt(input.value) || 1;
+        let newVal = currentVal + delta;
+        if (newVal >= 1) {
+            input.value = newVal;
+        }
+    }
+
+    // Call AJAX addToCart
+    function addDetailToCart(checkoutAfter) {
+        const qty = parseInt(document.getElementById("detailQty").value) || 1;
+        fetch(`/Cart/AddToCart?productId=@Model.Id&quantity=${qty}`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    if (checkoutAfter) {
+                        window.location.href = '/Cart';
+                    } else {
+                        alert('Đã thêm sản phẩm vào giỏ hàng thành công!');
+                    }
+                } else {
+                    alert(data.message || 'Lỗi khi thêm sản phẩm.');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Lỗi kết nối máy chủ.');
+            });
+    }
+
+    // Scroll smoothly to section
+    function scrollToSection(e, targetId) {
+        e.preventDefault();
+        const target = document.getElementById(targetId);
+        if (target) {
+            const offset = 80;
+            const bodyRect = document.body.getBoundingClientRect().top;
+            const targetRect = target.getBoundingClientRect().top;
+            const targetPosition = targetRect - bodyRect;
+            const offsetPosition = targetPosition - offset;
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
+        }
+    }
+
+    // Readmore description collapse handler
+    function toggleDescriptionCollapse(btn) {
+        const container = document.getElementById("descCollapse");
+        container.classList.toggle("expanded");
+        if (container.classList.contains("expanded")) {
+            btn.innerText = "Thu gọn mô tả";
+        } else {
+            btn.innerText = "Xem thêm mô tả";
+        }
+    }
+
+    // Modern, performant Scrollspy using IntersectionObserver
+    document.addEventListener("DOMContentLoaded", function() {
+        // 1. Auto-hide the toggle button if the description is short
+        const container = document.getElementById("descCollapse");
+        if (container) {
+            const content = container.querySelector(".product-description-content");
+            const btn = document.querySelector(".btn-toggle-collapse");
+            if (content && btn) {
+                if (content.scrollHeight <= 400) {
+                    container.style.maxHeight = "none";
+                    const overlay = container.querySelector(".collapse-overlay");
+                    if (overlay) overlay.style.display = "none";
+                    btn.style.display = "none";
+                }
+            }
+        }
+
+        // 2. Setup IntersectionObserver for Scrollspy
+        const observerOptions = {
+            root: null, // viewport
+            rootMargin: "-120px 0px -50% 0px", // triggers when element is in the top-middle area
+            threshold: 0
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.getAttribute("id");
+                    document.querySelectorAll('.hasaki-nav-link').forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href') === '#' + id) {
+                            link.classList.add('active');
+                        }
+                    });
+                }
+            });
+        }, observerOptions);
+
+        // Start observing all tab sections
+        document.querySelectorAll('.tab-section').forEach(sec => {
+            observer.observe(sec);
+        });
+
+        // Backup Scrollspy: handle bottom of page trigger for reviews
+        window.addEventListener('scroll', function() {
+            const scrollPos = window.scrollY || document.documentElement.scrollTop;
+            const isBottom = (window.innerHeight + scrollPos) >= (document.documentElement.scrollHeight - 100);
+            if (isBottom) {
+                document.querySelectorAll('.hasaki-nav-link').forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === '#tab-reviews') {
+                        link.classList.add('active');
+                    }
+                });
+            }
+        });
+    });
+</script>
+}

@@ -1,0 +1,64 @@
+@model IEnumerable<COSMETICC.Models.InventoryLog>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Lịch sử Nhập/Xuất kho";
+}
+
+<div class="container-fluid px-4">
+    
+    <div class="mb-4">
+        <a asp-action="Index" class="btn-action btn-action-outline">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại quản lý tồn kho
+        </a>
+    </div>
+
+    <div class="admin-card m-0">
+        <div class="admin-card-title pb-3 border-bottom">
+            <span><i class="bi bi-journal-text text-muted me-2"></i> Nhật ký thay đổi kho hàng</span>
+        </div>
+
+        <div class="admin-table-container">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Mã log</th>
+                        <th>Ngày thay đổi</th>
+                        <th>Sản phẩm</th>
+                        <th>Loại giao dịch</th>
+                        <th>Số lượng</th>
+                        <th>Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var log in Model)
+                        {
+                            var badgeClass = log.Type == "NHAP" ? "bg-success" : "bg-danger";
+                            var typeLabel = log.Type == "NHAP" ? "Nhập kho (+)" : "Xuất kho (-)";
+                            <tr>
+                                <td class="fw-bold text-muted">#@log.Id</td>
+                                <td>@log.CreatedAt.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                <td class="fw-bold">@(log.Product?.Name ?? "Sản phẩm đã bị xóa")</td>
+                                <td>
+                                    <span class="badge @badgeClass">@typeLabel</span>
+                                </td>
+                                <td class="fw-bold @(log.Type == "NHAP" ? "text-success" : "text-danger")">
+                                    @(log.Type == "NHAP" ? "+" : "-") @log.Quantity
+                                </td>
+                                <td>@(log.Note ?? "Không có ghi chú")</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-5">Chưa có giao dịch nhập xuất nào được ghi nhận</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

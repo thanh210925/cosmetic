@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -32,6 +32,10 @@ public partial class User
 
     [Column(TypeName = "datetime")]
     public DateTime? CreatedAt { get; set; }
+
+    public bool IsLocked { get; set; } = false;
+
+    public int Points { get; set; } = 0;
 
     [StringLength(255)]
     public string? GoogleId { get; set; }

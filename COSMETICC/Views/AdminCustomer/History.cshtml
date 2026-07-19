@@ -1,0 +1,67 @@
+@model IEnumerable<COSMETICC.Models.Order>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = $"Lịch sử mua hàng - {ViewBag.CustomerName}";
+}
+
+<div class="container-fluid px-4">
+    
+    <div class="mb-4">
+        <a asp-action="Index" class="btn-action btn-action-outline">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách khách hàng
+        </a>
+    </div>
+
+    <div class="admin-card m-0">
+        <div class="admin-card-title pb-3 border-bottom">
+            <span><i class="bi bi-clock-history text-muted me-2"></i> Đơn hàng đã đặt bởi <strong>@ViewBag.CustomerName</strong></span>
+        </div>
+
+        <div class="admin-table-container">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Mã đơn</th>
+                        <th>Ngày đặt hàng</th>
+                        <th>Tổng số tiền</th>
+                        <th>Trạng thái giao dịch</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var order in Model)
+                        {
+                            var statusClass = "status-pending";
+                            if (order.Status == "Đang giao" || order.Status == "Đã xác nhận") statusClass = "status-shipping";
+                            else if (order.Status == "Hoàn thành" || order.Status == "Đã giao") statusClass = "status-completed";
+                            else if (order.Status == "Hủy" || order.Status == "Đã hủy") statusClass = "status-cancelled";
+
+                            <tr>
+                                <td class="fw-bold">#@order.Id</td>
+                                <td>@(order.OrderDate?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")</td>
+                                <td class="fw-bold text-dark">@String.Format("{0:N0} đ", order.TotalAmount)</td>
+                                <td>
+                                    <span class="status-badge @statusClass">@(order.Status ?? "Chờ xác nhận")</span>
+                                </td>
+                                <td>
+                                    <a asp-controller="AdminOrder" asp-action="Details" asp-route-id="@order.Id" class="btn-action btn-action-primary">
+                                        <i class="bi bi-eye me-1"></i> Xem hóa đơn
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-5">Khách hàng này chưa thực hiện đơn đặt hàng nào</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

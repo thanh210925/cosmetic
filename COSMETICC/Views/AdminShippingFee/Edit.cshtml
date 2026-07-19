@@ -1,0 +1,53 @@
+@model COSMETICC.Models.ShippingFee
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Chỉnh sửa Phí ship";
+}
+
+<div class="container-fluid px-4" style="max-width: 600px;">
+    
+    <div class="mb-4">
+        <a asp-action="Index" class="btn-action btn-action-outline">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+        </a>
+    </div>
+
+    <div class="admin-card m-0">
+        <div class="admin-card-title pb-3 border-bottom">
+            <span><i class="bi bi-pencil-square text-muted me-2"></i> Chỉnh sửa thiết lập phí vận chuyển</span>
+        </div>
+
+        <form asp-action="Edit" method="post" class="py-3">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+
+            <div class="form-group mb-3">
+                <label asp-for="Region">Khu vực (Vùng miền / Tỉnh thành)</label>
+                <input asp-for="Region" class="form-control-admin" required />
+                <span asp-validation-for="Region" class="text-danger small"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Fee">Phí vận chuyển (VNĐ)</label>
+                <input asp-for="Fee" type="number" class="form-control-admin" min="0" required />
+                <span asp-validation-for="Fee" class="text-danger small"></span>
+            </div>
+
+            <div class="form-group mb-4">
+                <label asp-for="MinAmountForFreeShipping">Miễn phí ship cho đơn hàng đạt giá trị tối thiểu (tùy chọn)</label>
+                <input asp-for="MinAmountForFreeShipping" type="number" class="form-control-admin" min="0" />
+                <span asp-validation-for="MinAmountForFreeShipping" class="text-danger small"></span>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn-action btn-action-primary px-4 py-2">
+                    Lưu thay đổi
+                </button>
+                <a asp-action="Index" class="btn-action btn-action-outline px-4 py-2 text-center">
+                    Hủy bỏ
+                </a>
+            </div>
+        </form>
+    </div>
+</div>

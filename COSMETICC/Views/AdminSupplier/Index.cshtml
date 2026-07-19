@@ -1,0 +1,118 @@
+@model IEnumerable<COSMETICC.Models.Supplier>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Quản lý Nhà cung cấp";
+}
+
+<div class="container-fluid px-4">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="admin-card m-0">
+        <div class="admin-card-title">
+            <span><i class="bi bi-truck text-muted me-2"></i> Danh sách Nhà cung cấp đối tác</span>
+            <div class="d-flex gap-2">
+                <a asp-action="Create" class="btn-action btn-action-primary">
+                    <i class="bi bi-plus-lg me-1"></i> Thêm mới Nhà cung cấp
+                </a>
+                <div style="width: 200px;">
+                    <input type="text" id="suppSearch" class="form-control-admin" placeholder="Tìm nhà cung cấp..." onkeyup="filterSuppliers()" />
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-table-container">
+            <table class="admin-table" id="suppsTable">
+                <thead>
+                    <tr>
+                        <th>Mã NCC</th>
+                        <th>Tên Nhà cung cấp</th>
+                        <th>Số điện thoại</th>
+                        <th>Email</th>
+                        <th>Địa chỉ</th>
+                        <th>Ngày hợp tác</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var supplier in Model)
+                        {
+                            <tr>
+                                <td class="fw-bold">#NCC-@supplier.Id</td>
+                                <td class="fw-bold text-dark">@supplier.Name</td>
+                                <td>@(supplier.Phone ?? "N/A")</td>
+                                <td>@(supplier.Email ?? "N/A")</td>
+                                <td>
+                                    <div class="text-truncate" style="max-width: 220px;" title="@supplier.Address">@(supplier.Address ?? "N/A")</div>
+                                </td>
+                                <td>@supplier.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <a asp-action="Details" asp-route-id="@supplier.Id" class="btn-action btn-action-outline p-1 px-2" title="Xem chi tiết">
+                                            <i class="bi bi-eye"></i> Chi tiết
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@supplier.Id" class="btn-action btn-action-outline p-1 px-2 text-warning" title="Sửa">
+                                            <i class="bi bi-pencil-square"></i> Sửa
+                                        </a>
+                                        <form asp-action="Delete" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa nhà cung cấp này không?');" style="display:inline;">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@supplier.Id" />
+                                            <button type="submit" class="btn-action btn-action-danger p-1 px-2" title="Xóa">
+                                                <i class="bi bi-trash"></i> Xóa
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-5">Chưa có nhà cung cấp nào được tạo</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function filterSuppliers() {
+            const input = document.getElementById("suppSearch");
+            const filter = input.value.toLowerCase();
+            const table = document.getElementById("suppsTable");
+            const tr = table.getElementsByTagName("tr");
+
+            for (let i = 1; i < tr.length; i++) {
+                const tdName = tr[i].getElementsByTagName("td")[1];
+                const tdPhone = tr[i].getElementsByTagName("td")[2];
+                const tdEmail = tr[i].getElementsByTagName("td")[3];
+                
+                if (tdName || tdPhone || tdEmail) {
+                    const textName = tdName.textContent || tdName.innerText;
+                    const textPhone = tdPhone.textContent || tdPhone.innerText;
+                    const textEmail = tdEmail.textContent || tdEmail.innerText;
+                    
+                    if (textName.toLowerCase().indexOf(filter) > -1 || 
+                        textPhone.toLowerCase().indexOf(filter) > -1 ||
+                        textEmail.toLowerCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+    </script>
+}

@@ -1,0 +1,337 @@
+:root {
+    --hasaki-green: #046838;
+    --hasaki-orange: #f57224;
+    --hasaki-border: #e8e8e8;
+}
+
+body {
+    background-color: #f5f7f6;
+}
+
+.details-wrapper {
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1px solid var(--hasaki-border);
+    padding: 25px;
+    margin-bottom: 20px;
+}
+
+/* Product Title Area */
+.brand-title {
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--hasaki-green);
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+
+.product-main-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #333;
+    line-height: 1.4;
+    margin-bottom: 12px;
+}
+
+.rating-meta-bar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.rating-score-badge {
+    background: var(--hasaki-orange);
+    color: white;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+/* Trust sidebar on right */
+.trust-sidebar {
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1px solid var(--hasaki-border);
+    padding: 20px;
+}
+
+.trust-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 15px;
+    font-size: 13px;
+    color: #444;
+}
+
+.trust-item:last-child {
+    margin-bottom: 0;
+}
+
+.trust-icon {
+    color: var(--hasaki-green);
+    font-size: 20px;
+    line-height: 1;
+}
+
+/* Price panel */
+.price-panel {
+    background: #fafafa;
+    border-radius: 6px;
+    padding: 15px 20px;
+    margin-bottom: 25px;
+    border: 1px solid #f0f0f0;
+}
+
+.price-panel .promo-price-text {
+    font-size: 28px;
+    font-weight: 800;
+    color: #e02424;
+}
+
+.price-panel .original-price-text {
+    font-size: 15px;
+    color: #999;
+    text-decoration: line-through;
+    margin-left: 10px;
+}
+
+.price-panel .discount-percent-badge {
+    background: var(--hasaki-orange);
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+/* Variant Pills styling */
+.variant-pills-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.variant-pill-btn {
+    border: 1px solid #ddd;
+    background: #fff;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.variant-pill-btn:hover {
+    border-color: var(--hasaki-green);
+    color: var(--hasaki-green);
+}
+
+.variant-pill-btn.active {
+    border-color: var(--hasaki-green);
+    background-color: #f0fdf4;
+    color: var(--hasaki-green);
+    font-weight: bold;
+    box-shadow: 0 0 0 1px var(--hasaki-green);
+}
+
+/* Qty Input */
+.quantity-selector {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    overflow: hidden;
+    width: 120px;
+    margin-bottom: 25px;
+}
+
+.qty-btn-action {
+    border: none;
+    background: #f5f5f5;
+    width: 35px;
+    height: 35px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.qty-btn-action:hover {
+    background: #e5e5e5;
+}
+
+.qty-display-input {
+    width: 50px;
+    height: 35px;
+    text-align: center;
+    border: none;
+    border-left: 1px solid #ccc;
+    border-right: 1px solid #ccc;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+/* Actions Buttons */
+.btn-cart-hasaki {
+    background-color: #fff;
+    border: 1px solid var(--hasaki-green);
+    color: var(--hasaki-green);
+    font-weight: bold;
+    font-size: 15px;
+    padding: 12px 25px;
+    border-radius: 4px;
+    flex-grow: 1;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-cart-hasaki:hover {
+    background-color: #e6f3ec;
+}
+
+.btn-buy-hasaki {
+    background-color: var(--hasaki-green);
+    color: white;
+    border: none;
+    font-weight: bold;
+    font-size: 15px;
+    padding: 12px 25px;
+    border-radius: 4px;
+    flex-grow: 1;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-buy-hasaki:hover {
+    background-color: #03522c;
+}
+
+/* Tabbed navigation */
+.hasaki-nav-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    border-bottom: 2px solid #ddd;
+    margin-bottom: 25px;
+    display: flex;
+    background: #ffffff;
+    border-radius: 4px;
+    overflow-x: auto;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.hasaki-nav-link {
+    padding: 15px 25px;
+    color: #333;
+    font-weight: bold;
+    text-decoration: none;
+    border-bottom: 3px solid transparent;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.hasaki-nav-link.active {
+    color: var(--hasaki-green);
+    border-bottom-color: var(--hasaki-green);
+}
+
+.hasaki-nav-link:hover {
+    color: var(--hasaki-green);
+}
+
+/* Collapse Expand text for Description */
+.collapse-container {
+    position: relative;
+    max-height: 400px;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+}
+
+.collapse-container.expanded {
+    max-height: none;
+}
+
+.collapse-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 80px;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1));
+    pointer-events: none;
+}
+
+.collapse-container.expanded .collapse-overlay {
+    display: none;
+}
+
+.btn-toggle-collapse {
+    background: #ffffff;
+    border: 1px solid var(--hasaki-green);
+    color: var(--hasaki-green);
+    font-weight: bold;
+    padding: 8px 24px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 13px;
+    display: inline-block;
+    margin-top: 15px;
+}
+
+/* Tech specs table */
+.specs-table th {
+    background-color: #f7f9f8;
+    width: 200px;
+    font-weight: 600;
+    color: #555;
+}
+
+.specs-table td {
+    color: #333;
+}
+
+/* Suggestions Grid */
+.suggest-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 15px;
+}
+
+.suggest-card {
+    background: #fff;
+    border-radius: 6px;
+    border: 1px solid var(--hasaki-border);
+    padding: 10px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+}
+
+.suggest-img {
+    height: 120px;
+    object-fit: contain;
+    margin-bottom: 8px;
+}
+
+.product-description-content img {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block;
+    margin: 15px auto;
+    border-radius: 8px;
+}

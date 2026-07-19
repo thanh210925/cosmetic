@@ -1,94 +1,147 @@
-﻿<!DOCTYPE html>
-<html>
+<!DOCTYPE html>
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
-    <title>Admin Panel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - MeiLing Admin</title>
 
-    <link rel="stylesheet" href="~/css/admin.css" />
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <!-- Bootstrap Icons CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Admin Core Styles -->
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
 
     <div class="admin-wrapper">
 
+        <!-- Sidebar Navigation -->
         <aside class="sidebar">
-
-            <div class="logo">MEILING ADMIN
-            </div>
+            <div class="logo">MEILING ADMIN</div>
+            
             <div class="admin-info">
                 <div>👤 @Context.Session.GetString("AdminName")</div>
                 <small>Administrator</small>
             </div>
+            
             <ul>
+                @{
+                    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+                    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+                }
 
-                <li>
-                    <a asp-controller="Admin"
-                       asp-action="Dashboard">
-                        Dashboard
+                <li class="@(currentController == "Admin" && currentAction == "Dashboard" ? "active" : "")">
+                    <a asp-controller="Admin" asp-action="Dashboard">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="@(currentController == "AdminProducts" ? "active" : "")">
+                    <a asp-controller="AdminProducts" asp-action="Index">
+                        <i class="bi bi-box-seam"></i>
+                        <span>Quản lý sản phẩm</span>
+                    </a>
+                </li>
+                <li class="@(currentController == "AdminCategories" ? "active" : "")">
+                    <a asp-controller="AdminCategories" asp-action="Index">
+                        <i class="bi bi-tags"></i>
+                        <span>Quản lý Danh mục</span>
+                    </a>
+                </li>
+                <li class="@(currentController == "AdminBrand" ? "active" : "")">
+                    <a asp-controller="AdminBrand" asp-action="Index">
+                        <i class="bi bi-award-fill"></i>
+                        <span>Quản lý Thương hiệu</span>
+                    </a>
+                </li>
+                <li class="@(currentController == "AdminInventory" ? "active" : "")">
+                    <a asp-controller="AdminInventory" asp-action="Index">
+                        <i class="bi bi-boxes"></i>
+                        <span>Quản lý Tồn kho</span>
+                    </a>
+                </li>
+                <li class="@(currentController == "AdminSupplier" ? "active" : "")">
+                    <a asp-controller="AdminSupplier" asp-action="Index">
+                        <i class="bi bi-truck"></i>
+                        <span>Nhà cung cấp</span>
+                    </a>
+                </li>
+                <li class="@(currentController == "AdminOrder" ? "active" : "")">
+                    <a asp-controller="AdminOrder" asp-action="Index">
+                        <i class="bi bi-cart-check"></i>
+                        <span>Quản lý Đơn hàng</span>
+                    </a>
+                </li>
+                <li class="@(currentController == "AdminCustomer" ? "active" : "")">
+                    <a asp-controller="AdminCustomer" asp-action="Index">
+                        <i class="bi bi-people"></i>
+                        <span>Khách hàng</span>
+                    </a>
+                </li>
+                <li class="@(currentController == "AdminReview" ? "active" : "")">
+                    <a asp-controller="AdminReview" asp-action="Index">
+                        <i class="bi bi-chat-left-text"></i>
+                        <span>Đánh giá</span>
+                    </a>
+                </li>
+                <li class="@(currentController == "AdminBanner" ? "active" : "")">
+                    <a asp-controller="AdminBanner" asp-action="Index">
+                        <i class="bi bi-image"></i>
+                        <span>Quản lý Banner</span>
+                    </a>
+                </li>
+                <li class="@(currentController == "AdminVoucher" ? "active" : "")">
+                    <a asp-controller="AdminVoucher" asp-action="Index">
+                        <i class="bi bi-ticket-perforated"></i>
+                        <span>Voucher</span>
+                    </a>
+                </li>
+                <li class="@(currentController == "AdminShippingFee" ? "active" : "")">
+                    <a asp-controller="AdminShippingFee" asp-action="Index">
+                        <i class="bi bi-truck"></i>
+                        <span>Phí vận chuyển</span>
                     </a>
                 </li>
                 <li>
-                    <a asp-controller="AdminProducts"
-                       asp-action="Index">
-                         Quản lý sản phẩm
-                    </a>
-                </li>
-
-                <li>
-                    <a asp-controller="AdminCategories"
-                       asp-action="Index">
-                        Quản lý Danh mục
-                    </a>
-                </li>
-
-                <li>
-                    <a asp-controller="AdminOrder"
-                       asp-action="Index">
-                        Quản lý Đơn hàng
-                    </a>
-                </li>
-
-                <li>
-                    <a asp-controller="AdminCustomer"
-                       asp-action="Index">
-                        Khách hàng
-                    </a>
-                </li>
-
-                <li>
-                    <a asp-controller="AdminReview"
-                       asp-action="Index">
-                        Đánh giá
-                    </a>
-                </li>
-
-                <li>
-                    <a asp-controller="AdminVoucher"
-                       asp-action="Index">
-                        Voucher
-                    </a>
-                </li>
-
-                <li>
-                    <a asp-controller="AdminReport"
-                       asp-action="Index">
-                        Báo cáo
-                    </a>
-                </li>
-                <li>
-                    <a asp-controller="Admin"
-                       asp-action="Logout">
-                        🚪 Đăng xuất
+                    <a asp-controller="Admin" asp-action="Logout" class="text-danger">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Đăng xuất</span>
                     </a>
                 </li>
             </ul>
-
         </aside>
 
+        <!-- Main Content Shell -->
         <main class="content">
-            @RenderBody()
+            
+            <!-- Navbar Header -->
+            <header class="content-header shadow-sm">
+                <div class="page-title">
+                    <h2>@ViewData["Title"]</h2>
+                </div>
+                <div class="user-menu">
+                    <span class="d-none d-md-inline-block text-muted me-2">Chào mừng trở lại,</span>
+                    <strong class="text-dark">@Context.Session.GetString("AdminName")</strong>
+                    <div class="badge bg-gold-light p-2 rounded-circle text-center" style="width: 32px; height: 32px;">
+                        <i class="bi bi-shield-check text-warning"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Render view content -->
+            <div class="py-4">
+                @RenderBody()
+            </div>
+
         </main>
 
     </div>
 
+    <!-- Core Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

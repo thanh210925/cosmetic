@@ -15,7 +15,11 @@ public class AdminProductsController : AdminBaseController
     // GET: PRODUCTS
     public async Task<IActionResult> Index()    
     {
-        return View(await _context.Products.ToListAsync());
+        var products = await _context.Products
+            .Include(p => p.Category)
+            .Include(p => p.Brand)
+            .ToListAsync();
+        return View(products);
     }
 
     // GET: PRODUCTS/Details/5
@@ -41,22 +45,25 @@ public class AdminProductsController : AdminBaseController
     // GET: PRODUCTS/Create
     public IActionResult Create()
     {
+        ViewBag.Categories = _context.Categories.ToList();
+        ViewBag.Brands = _context.Brands.ToList();
         return View();
     }
 
     // POST: PRODUCTS/Create
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("Id,Name,Price,Description,Ingredient,ImageUrl,CategoryId,Stock,IsVegan,CreatedByAdminId,CreatedAt,CartItems,Category,CreatedByAdmin,OrderDetails,ProductImages,Reviews,Wishlists")] Product product)
+    public async Task<IActionResult> Create([Bind("Id,Name,Price,PromoPrice,Description,Ingredient,ImageUrl,CategoryId,BrandId,Stock,IsVegan,ExpiryDate,IsActive,SkinType,SKU,Barcode,Slug,VideoUrl,Tags,MetaTitle,MetaDescription,MetaKeywords")] Product product)
     {
         if (ModelState.IsValid)
         {
+            product.CreatedAt = DateTime.Now;
             _context.Add(product);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
+        ViewBag.Categories = _context.Categories.ToList();
+        ViewBag.Brands = _context.Brands.ToList();
         return View(product);
     }
     [HttpPost]
@@ -84,20 +91,19 @@ public class AdminProductsController : AdminBaseController
         }
 
         var product = await _context.Products.FindAsync(id);
-        ViewBag.Categories = _context.Categories.ToList();
         if (product == null)
         {
             return NotFound();
         }
+        ViewBag.Categories = _context.Categories.ToList();
+        ViewBag.Brands = _context.Brands.ToList();
         return View(product);
     }
 
     // POST: PRODUCTS/Edit/5
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int? id, [Bind("Id,Name,Price,Description,Ingredient,ImageUrl,CategoryId,Stock,IsVegan,CreatedByAdminId,CreatedAt,CartItems,Category,CreatedByAdmin,OrderDetails,ProductImages,Reviews,Wishlists")] Product product)
+    public async Task<IActionResult> Edit(int? id, [Bind("Id,Name,Price,PromoPrice,Description,Ingredient,ImageUrl,CategoryId,BrandId,Stock,IsVegan,ExpiryDate,IsActive,SkinType,SKU,Barcode,Slug,VideoUrl,Tags,MetaTitle,MetaDescription,MetaKeywords")] Product product)
     {
         if (id != product.Id)
         {
@@ -124,6 +130,8 @@ public class AdminProductsController : AdminBaseController
             }
             return RedirectToAction(nameof(Index));
         }
+        ViewBag.Categories = _context.Categories.ToList();
+        ViewBag.Brands = _context.Brands.ToList();
         return View(product);
     }
 
@@ -165,5 +173,59 @@ public class AdminProductsController : AdminBaseController
         return _context.Products.Any(e => e.Id == id);
     }
 
+    // ================= PRODUCT VARIANTS API (AJAX) =================
 
+    [HttpGet]
+    public async Task<IActionResult> GetVariants(int productId)
+    {
+        var variants = await _context.ProductVariants
+            .Where(v => v.ProductId == productId)
+            .OrderBy(v => v.Name)
+            .ToListAsync();
+        return Json(variants);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddVariant(int productId, string name, string value, decimal priceAdjustment, int stock)
+    {
+        if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(value))
+        {
+            return Json(new { success = false, message = "Tên thuộc tính và Giá trị không được để trống." });
+        }
+
+        var product = await _context.Products.FindAsync(productId);
+        if (product == null)
+        {
+            return Json(new { success = false, message = "Sản phẩm không tồn tại." });
+        }
+
+        var variant = new ProductVariant
+        {
+            ProductId = productId,
+            Name = name,
+            Value = value,
+            PriceAdjustment = priceAdjustment,
+            Stock = stock
+        };
+
+        _context.ProductVariants.Add(variant);
+        await _context.SaveChangesAsync();
+
+        return Json(new { success = true, message = "Đã thêm biến thể thành công!", variant });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> DeleteVariant(int variantId)
+    {
+        var variant = await _context.ProductVariants.FindAsync(variantId);
+        if (variant == null)
+        {
+            return Json(new { success = false, message = "Biến thể không tồn tại." });
+        }
+
+        _context.ProductVariants.Remove(variant);
+        await _context.SaveChangesAsync();
+
+        return Json(new { success = true, message = "Đã xóa biến thể thành công!" });
+    }
 }

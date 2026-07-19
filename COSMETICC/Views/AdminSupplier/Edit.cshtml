@@ -1,0 +1,81 @@
+@model COSMETICC.Models.Supplier
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Chỉnh sửa Nhà cung cấp";
+}
+
+<div class="container-fluid px-4">
+    <div class="mb-4">
+        <a asp-action="Index" class="btn-action btn-action-outline">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+        </a>
+    </div>
+
+    <div class="admin-card m-0">
+        <div class="admin-card-title pb-3 border-bottom">
+            <span><i class="bi bi-pencil-square text-muted me-2"></i> Chỉnh sửa thông tin Nhà cung cấp</span>
+        </div>
+
+        <form asp-action="Edit" method="post" class="py-3">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger" role="alert">
+                    <div asp-validation-summary="All" class="text-danger"></div>
+                </div>
+            }
+
+            <div class="row">
+                <!-- Left column: Main info -->
+                <div class="col-md-6 border-end">
+                    <div class="form-group mb-3">
+                        <label asp-for="Name">Tên nhà cung cấp</label>
+                        <input asp-for="Name" class="form-control-admin" required />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Phone">Số điện thoại liên hệ</label>
+                        <input asp-for="Phone" class="form-control-admin" />
+                        <span asp-validation-for="Phone" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Email">Email liên hệ</label>
+                        <input asp-for="Email" type="email" class="form-control-admin" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Address">Địa chỉ văn phòng / kho hàng</label>
+                        <input asp-for="Address" class="form-control-admin" />
+                        <span asp-validation-for="Address" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <!-- Right column: Contract Details -->
+                <div class="col-md-6 ps-4">
+                    <div class="form-group mb-3 h-100 d-flex flex-column">
+                        <label asp-for="ContractDetails">Thông tin hợp đồng & Điều khoản hợp tác</label>
+                        <textarea asp-for="ContractDetails" class="form-control-admin flex-grow-1" rows="9"></textarea>
+                        <span asp-validation-for="ContractDetails" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
+
+            <hr />
+
+            <div class="d-flex justify-content-end gap-2 mt-3">
+                <button type="submit" class="btn-action btn-action-primary px-5 py-2">
+                    Lưu thay đổi
+                </button>
+                <a asp-action="Index" class="btn-action btn-action-outline px-4 py-2">
+                    Hủy bỏ
+                </a>
+            </div>
+        </form>
+    </div>
+</div>

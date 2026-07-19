@@ -1,0 +1,73 @@
+@model COSMETICC.Models.Discount
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Tạo mới Voucher";
+}
+
+<div class="container-fluid px-4" style="max-width: 600px;">
+    
+    <div class="mb-4">
+        <a asp-action="Index" class="btn-action btn-action-outline">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+        </a>
+    </div>
+
+    <div class="admin-card m-0">
+        <div class="admin-card-title pb-3 border-bottom">
+            <span><i class="bi bi-ticket-perforated-fill text-muted me-2"></i> Thêm mới mã giảm giá</span>
+        </div>
+
+        <form asp-action="Create" method="post" class="py-3">
+            @Html.AntiForgeryToken()
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger" role="alert">
+                    <div asp-validation-summary="All" class="text-danger"></div>
+                </div>
+            }
+
+            <div class="form-group mb-3">
+                <label asp-for="Code">Mã giảm giá (Code)</label>
+                <input asp-for="Code" class="form-control-admin" placeholder="VD: SUMMER26, MEILING50,..." required style="text-transform: uppercase;" />
+                <span asp-validation-for="Code" class="text-danger small"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Percentage">Phần trăm giảm giá (%)</label>
+                <input asp-for="Percentage" type="number" class="form-control-admin" min="1" max="100" placeholder="VD: 10, 20, 50" required />
+                <span asp-validation-for="Percentage" class="text-danger small"></span>
+            </div>
+
+            <div class="row">
+                <div class="col-6 form-group mb-3">
+                    <label asp-for="StartDate">Ngày bắt đầu</label>
+                    <input asp-for="StartDate" type="datetime-local" class="form-control-admin" required />
+                    <span asp-validation-for="StartDate" class="text-danger small"></span>
+                </div>
+
+                <div class="col-6 form-group mb-3">
+                    <label asp-for="ExpiryDate">Ngày kết thúc</label>
+                    <input asp-for="ExpiryDate" type="datetime-local" class="form-control-admin" required />
+                    <span asp-validation-for="ExpiryDate" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="form-group mb-4">
+                <label asp-for="UsageLimit">Giới hạn số lượt sử dụng (để trống nếu không giới hạn)</label>
+                <input asp-for="UsageLimit" type="number" class="form-control-admin" placeholder="VD: 100, 500" min="1" />
+                <span asp-validation-for="UsageLimit" class="text-danger small"></span>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn-action btn-action-primary px-4 py-2">
+                    Lưu lại
+                </button>
+                <a asp-action="Index" class="btn-action btn-action-outline px-4 py-2 text-center">
+                    Hủy bỏ
+                </a>
+            </div>
+        </form>
+    </div>
+</div>

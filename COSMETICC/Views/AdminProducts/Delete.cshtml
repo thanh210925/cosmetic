@@ -1,27 +1,46 @@
 @model COSMETICC.Models.Product
 
 @{
+    ViewData["Title"] = "Xóa sản phẩm";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h2>🗑 Xóa sản phẩm</h2>
+<div class="container-fluid px-4" style="max-width: 600px;">
+    
+    <div class="mb-4">
+        <a asp-action="Index" class="btn-action btn-action-outline">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+        </a>
+    </div>
 
-<div class="alert alert-danger">
-    Bạn có chắc muốn xóa:
-    <strong>@Model.Name</strong> ?
+    <div class="admin-card m-0">
+        <div class="admin-card-title pb-3 border-bottom text-danger">
+            <span><i class="bi bi-exclamation-triangle-fill me-2"></i> Xác nhận xóa sản phẩm</span>
+        </div>
+
+        <div class="py-4 text-center">
+            <i class="bi bi-trash text-danger" style="font-size: 3rem;"></i>
+            
+            <p class="fs-5 text-dark mt-3">Bạn có chắc chắn muốn xóa sản phẩm này?</p>
+            <h4 class="fw-bold text-dark mb-4">@Model.Name</h4>
+            
+            <div class="alert alert-warning text-start">
+                <i class="bi bi-info-circle-fill me-2"></i> Hành động này không thể hoàn tác. Lịch sử đơn hàng liên quan có thể chịu ảnh hưởng.
+            </div>
+
+            <form asp-action="Delete" method="post" class="mt-4">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+                
+                <div class="d-flex justify-content-center gap-2">
+                    <button type="submit" class="btn-action btn-action-danger px-5 py-2">
+                        Xác nhận xóa
+                    </button>
+                    <a asp-action="Index" class="btn-action btn-action-outline px-4 py-2">
+                        Hủy bỏ
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
-
-<form asp-action="Delete">
-    <input type="hidden" asp-for="Id" />
-
-    <button type="submit"
-            class="btn btn-danger">
-        Xóa
-    </button>
-
-    <a asp-action="Index"
-       class="btn btn-secondary">
-        Hủy
-    </a>
-
-</form>

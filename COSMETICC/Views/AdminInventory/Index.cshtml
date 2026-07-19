@@ -1,0 +1,265 @@
+@model IEnumerable<COSMETICC.Models.Product>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Quản lý Tồn kho";
+}
+
+<div class="container-fluid px-4">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="admin-card m-0">
+        <div class="admin-card-title">
+            <span><i class="bi bi-boxes text-muted me-2"></i> Số lượng hàng tồn trong kho</span>
+            <div class="d-flex gap-2">
+                <a asp-action="Logs" class="btn-action btn-action-outline">
+                    <i class="bi bi-journal-text me-1"></i> Xem lịch sử Nhập/Xuất
+                </a>
+                <div style="width: 200px;">
+                    <input type="text" id="invSearch" class="form-control-admin" placeholder="Tìm kiếm sản phẩm..." onkeyup="filterInventory()" />
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-table-container">
+            <table class="admin-table" id="invTable">
+                <thead>
+                    <tr>
+                        <th>Hình ảnh</th>
+                        <th>Tên sản phẩm</th>
+                        <th>Mã SKU / Barcode</th>
+                        <th>Nhãn mã</th>
+                        <th>Lượng tồn</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var product in Model)
+                        {
+                            var isLowStock = (product.Stock ?? 0) <= 10;
+                            var displayBarcode = string.IsNullOrEmpty(product.Barcode) ? $"PROD-{product.Id}" : product.Barcode;
+                            <tr>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(product.ImageUrl))
+                                    {
+                                        <img src="@product.ImageUrl" class="rounded" style="width: 40px; height: 40px; object-fit: cover;" alt="" />
+                                    }
+                                    else
+                                    {
+                                        <div class="rounded bg-light text-center text-muted" style="width: 40px; height: 40px; line-height: 40px; font-size: 10px;">No Image</div>
+                                    }
+                                </td>
+                                <td class="fw-bold text-dark">@product.Name</td>
+                                <td>
+                                    <div><small class="text-primary fw-bold">SKU: @(product.SKU ?? "N/A")</small></div>
+                                    <div><small class="text-muted">Barcode: @(product.Barcode ?? "Chưa gán")</small></div>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="showLabelModal('@product.Name', '@displayBarcode', '@product.SKU', '@product.Id')">
+                                        <i class="bi bi-qr-code-scan me-1"></i> Xem mã vạch / QR
+                                    </button>
+                                </td>
+                                <td class="fw-bold fs-6">@product.Stock</td>
+                                <td>
+                                    @if (product.Stock <= 0)
+                                    {
+                                        <span class="badge bg-danger text-white">Hết hàng</span>
+                                    }
+                                    else if (isLowStock)
+                                    {
+                                        <span class="badge bg-warning text-dark">Sắp hết hàng (&lt;= 10)</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success text-white">An toàn</span>
+                                    }
+                                </td>
+                                <td>
+                                    <button type="button" class="btn-action btn-action-primary" data-bs-toggle="modal" data-bs-target="#manageModal-@product.Id">
+                                        <i class="bi bi-arrow-left-right me-1"></i> Điều chỉnh kho
+                                    </button>
+
+                                    <!-- Quick Modal for each product -->
+                                    <div class="modal fade" id="manageModal-@product.Id" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title fw-bold text-dark">Điều chỉnh kho: @product.Name</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <form asp-action="Manage" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="productId" value="@product.Id" />
+                                                    <div class="modal-body text-start">
+                                                        
+                                                        <div class="mb-3 text-center">
+                                                            <span class="text-muted">Tồn kho hiện tại:</span>
+                                                            <h3 class="fw-bold text-dark mt-1">@product.Stock sản phẩm</h3>
+                                                        </div>
+
+                                                        <div class="form-group mb-3">
+                                                            <label class="form-label fw-bold">Loại giao dịch</label>
+                                                            <select name="type" class="form-control-admin" required>
+                                                                <!option value="NHAP">Nhập hàng (+)</!option>
+                                                                <!option value="XUAT" @(product.Stock <= 0 ? "disabled" : "")>Xuất hàng (-)</!option>
+                                                            </select>
+                                                        </div>
+
+                                                        <div class="form-group mb-3">
+                                                            <label class="form-label fw-bold">Số lượng điều chỉnh</label>
+                                                            <input type="number" name="quantity" class="form-control-admin" min="1" required />
+                                                        </div>
+
+                                                        <div class="form-group">
+                                                            <label class="form-label fw-bold">Ghi chú giao dịch</label>
+                                                            <textarea name="note" class="form-control-admin" placeholder="VD: Nhập thêm lô hàng tháng 7, xuất kho hủy hàng hỏng..." rows="3"></textarea>
+                                                        </div>
+
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn-action btn-action-outline" data-bs-dismiss="modal">Hủy</button>
+                                                        <button type="submit" class="btn-action btn-action-primary">Xác nhận</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-5">Không tìm thấy sản phẩm nào</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xem và in tem mã Barcode/QR -->
+<div class="modal fade" id="labelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-upc-scan me-2 text-primary"></i>Tem nhãn kiểm kho</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="printArea" class="p-4 bg-white rounded shadow-sm d-inline-block border text-center" style="width: 100%; max-width: 320px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                    <div style="font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #333; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="lblProdName">TÊN SẢN PHẨM</div>
+                    <div style="font-size: 11px; margin-bottom: 12px; color: #666;" id="lblProdSKU">SKU: N/A</div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <svg id="labelBarcode" style="max-width: 100%;"></svg>
+                    </div>
+                    
+                    <div style="margin-bottom: 8px;">
+                        <img id="labelQR" src="" style="width: 120px; height: 120px; border: 1px solid #eee; padding: 4px;" alt="QR Code" />
+                    </div>
+                    <div style="font-size: 10px; color: #999;">HỆ THỐNG KIỂM KHO COSMETIC</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-action btn-action-outline" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn-action btn-action-primary" onclick="printLabel()">
+                    <i class="bi bi-printer me-1"></i> In tem mã nhãn
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script>
+        function filterInventory() {
+            const input = document.getElementById("invSearch");
+            const filter = input.value.toLowerCase();
+            const table = document.getElementById("invTable");
+            const tr = table.getElementsByTagName("tr");
+
+            for (let i = 1; i < tr.length; i++) {
+                const tdName = tr[i].getElementsByTagName("td")[1];
+                const tdSKU = tr[i].getElementsByTagName("td")[2];
+                
+                if (tdName || tdSKU) {
+                    const textName = tdName.textContent || tdName.innerText;
+                    const textSKU = tdSKU.textContent || tdSKU.innerText;
+                    
+                    if (textName.toLowerCase().indexOf(filter) > -1 || 
+                        textSKU.toLowerCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+
+        // Show Barcode / QR label modal
+        function showLabelModal(name, barcode, sku, prodId) {
+            document.getElementById("lblProdName").innerText = name;
+            document.getElementById("lblProdSKU").innerText = "SKU: " + (sku || "N/A") + " | ID: " + prodId;
+            
+            // Generate barcode image inside svg via JsBarcode
+            JsBarcode("#labelBarcode", barcode, {
+                format: "CODE128",
+                width: 2,
+                height: 50,
+                displayValue: true,
+                fontSize: 12,
+                margin: 0
+            });
+            
+            // Generate QR code targeting product detail URL or ID
+            const qrData = window.location.origin + "/Product/Details/" + prodId;
+            document.getElementById("labelQR").src = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(qrData);
+            
+            // Open Modal
+            const myModal = new bootstrap.Modal(document.getElementById('labelModal'));
+            myModal.show();
+        }
+
+        // Print label sticker functionality
+        function printLabel() {
+            const printContent = document.getElementById("printArea").outerHTML;
+            const originalContent = document.body.innerHTML;
+            
+            // Open a clean printable print window
+            const printWindow = window.open('', '_blank', 'height=500,width=400');
+            printWindow.document.write('<html><head><title>Print Label</title>');
+            printWindow.document.write('<style>body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; padding: 0; background-color: white; } @@media print { body { height: auto; } }</style>');
+            printWindow.document.write('</head><body>');
+            printWindow.document.write(printContent);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            
+            printWindow.focus();
+            setTimeout(function() {
+                printWindow.print();
+                printWindow.close();
+            }, 500);
+        }
+    </script>
+}

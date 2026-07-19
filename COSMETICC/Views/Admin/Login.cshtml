@@ -1,45 +1,91 @@
-﻿@{
+@{
     ViewData["Title"] = "Admin Login";
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
-
+    Layout = "~/Views/Shared/_AdminAuthLayout.cshtml";
 }
 
-<div class="container d-flex justify-content-center align-items-center" style="height:80vh;">
-    <div class="card shadow p-4" style="width:380px; border-radius:15px;">
+<div class="auth-card">
+    <!-- Brand Header -->
+    <div class="brand-header">
+        <h2>MeiLing</h2>
+        <p>Cosmetics Portal</p>
+    </div>
 
-        <h3 class="text-center mb-4">🔐 Admin Login</h3>
+    <div class="auth-title">🔐 ĐĂNG NHẬP QUẢN TRỊ</div>
 
-        <form asp-action="Login" method="post">
+    <!-- Error message display -->
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert-premium">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span>@ViewBag.Error</span>
+        </div>
+    }
 
-            <div class="mb-3">
-                <label>Tên đăng nhập</label>
-                <input name="username" class="form-control" required />
-            </div>
-
-            <div class="mb-3">
-                <label>Mật khẩu</label>
-                <input name="password" type="password" class="form-control" required />
-            </div>
-
-            <button type="submit" class="btn btn-dark w-100">
-                Đăng nhập
-            </button>
-
-        </form>
-
-        @if (ViewBag.Error != null)
-        {
-            <div class="alert alert-danger mt-3 text-center">
-                @ViewBag.Error
-            </div>
-        }
-
-        <div class="text-center mt-3">
-            <small>
-                Chưa có tài khoản?
-                <a asp-action="Register">Đăng ký</a>
-            </small>
+    <!-- Form Submit -->
+    <form asp-action="Login" method="post" autocomplete="off">
+        
+        <!-- Username input -->
+        <div class="form-group-custom">
+            <input name="username" 
+                   class="form-input-custom" 
+                   placeholder="Tên đăng nhập" 
+                   required 
+                   autocomplete="username" />
+            <i class="bi bi-person-fill input-icon-left"></i>
         </div>
 
+        <!-- Password input -->
+        <div class="form-group-custom">
+            <input name="password" 
+                   type="password" 
+                   id="passwordInput"
+                   class="form-input-custom form-input-custom-pwd" 
+                   placeholder="Mật khẩu" 
+                   required 
+                   autocomplete="current-password" />
+            <i class="bi bi-shield-lock-fill input-icon-left"></i>
+            
+            <button type="button" 
+                    class="password-toggle-btn" 
+                    id="passwordToggleBtn"
+                    title="Hiển thị/Ẩn mật khẩu">
+                <i class="bi bi-eye-slash-fill" id="passwordIcon"></i>
+            </button>
+        </div>
+
+        <!-- Submit action -->
+        <button type="submit" class="btn-premium mt-4">
+            Đăng nhập <i class="bi bi-arrow-right-short fs-5"></i>
+        </button>
+
+    </form>
+
+    <!-- Navigation Footer -->
+    <div class="auth-footer">
+        <span>Chưa có tài khoản? </span>
+        <a asp-action="Register">Tạo tài khoản mới</a>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const passwordInput = document.getElementById("passwordInput");
+            const passwordToggleBtn = document.getElementById("passwordToggleBtn");
+            const passwordIcon = document.getElementById("passwordIcon");
+
+            passwordToggleBtn.addEventListener("click", function () {
+                const isPassword = passwordInput.getAttribute("type") === "password";
+                if (isPassword) {
+                    passwordInput.setAttribute("type", "text");
+                    passwordIcon.classList.remove("bi-eye-slash-fill");
+                    passwordIcon.classList.add("bi-eye-fill");
+                } else {
+                    passwordInput.setAttribute("type", "password");
+                    passwordIcon.classList.remove("bi-eye-fill");
+                    passwordIcon.classList.add("bi-eye-slash-fill");
+                }
+            });
+        });
+    </script>
+}

@@ -5,102 +5,397 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<div class="card shadow border-0">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-
-        <h3 class="mb-0">
-            📄 Chi tiết sản phẩm
-        </h3>
-
-        <a asp-action="Index"
-           class="btn btn-secondary">
-            ← Quay lại
+<div class="container-fluid px-4">
+    
+    <div class="mb-4 d-flex justify-content-between align-items-center">
+        <a asp-action="Index" class="btn-action btn-action-outline">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
         </a>
-
+        <div class="d-flex gap-2">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-action btn-action-outline text-warning">
+                <i class="bi bi-pencil-square me-1"></i> Chỉnh sửa sản phẩm
+            </a>
+        </div>
     </div>
 
-    <div class="card-body">
+    <!-- Tab Navigation -->
+    <ul class="nav nav-tabs mb-4" id="productDetailTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-bold" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab">
+                <i class="bi bi-info-circle me-1"></i> Thông tin chi tiết
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold" id="variants-tab" data-bs-toggle="tab" data-bs-target="#variants" type="button" role="tab" onclick="loadVariants()">
+                <i class="bi bi-tags me-1"></i> Quản lý Biến thể
+            </button>
+        </li>
+    </ul>
 
-        <div class="row">
+    <!-- Tab Contents -->
+    <div class="tab-content" id="productDetailTabsContent">
+        
+        <!-- Tab 1: Detailed Specifications -->
+        <div class="tab-pane fade show active" id="info" role="tabpanel">
+            <div class="admin-card m-0">
+                <div class="row py-3">
+                    <!-- Image and Video Review -->
+                    <div class="col-md-4 text-center border-end">
+                        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                        {
+                            <img src="@Model.ImageUrl" class="img-fluid rounded shadow" style="max-height: 320px; object-fit: cover; border: 1px solid var(--admin-border-color);" alt="" />
+                        }
+                        else
+                        {
+                            <div class="rounded bg-light text-center text-muted" style="width: 100%; height: 250px; line-height: 250px;">Không có hình ảnh</div>
+                        }
 
-            <div class="col-md-4 text-center">
+                        <!-- Video review integration -->
+                        @if (!string.IsNullOrEmpty(Model.VideoUrl))
+                        {
+                            <div class="mt-4 p-3 bg-light rounded text-start" style="border: 1px solid #ddd;">
+                                <h6 class="fw-bold text-dark"><i class="bi bi-play-btn-fill text-danger me-1"></i> Video review liên kết:</h6>
+                                <a href="@Model.VideoUrl" target="_blank" class="text-truncate d-block small text-decoration-none"><i class="bi bi-link-45deg"></i> @Model.VideoUrl</a>
+                                @if (Model.VideoUrl.Contains("youtube.com/watch?v="))
+                                {
+                                    var videoId = Model.VideoUrl.Split("v=")[1].Split("&")[0];
+                                    <div class="mt-2 ratio ratio-16x9">
+                                        <iframe src="https://www.youtube.com/embed/@videoId" title="YouTube video player" frameborder="0" allowfullscreen></iframe>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
 
-                <img src="@Model.ImageUrl"
-                     class="img-fluid rounded shadow-sm"
-                     style="max-height:300px;object-fit:cover;" />
-
-            </div>
-
-            <div class="col-md-8">
-
-                <table class="table table-bordered">
-
-                    <tr>
-                        <th width="200">Mã sản phẩm</th>
-                        <td>#@Model.Id</td>
-                    </tr>
-
-                    <tr>
-                        <th>Tên sản phẩm</th>
-                        <td>@Model.Name</td>
-                    </tr>
-
-                    <tr>
-                        <th>Giá bán</th>
-                        <td class="text-danger fw-bold">
-                            @Model.Price.ToString("N0") đ
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <th>Tồn kho</th>
-                        <td>@Model.Stock</td>
-                    </tr>
-
-                    <tr>
-                        <th>Danh mục</th>
-                        <td>@Model.CategoryId</td>
-                    </tr>
-
-                    <tr>
-                        <th>Loại sản phẩm</th>
-                        <td>
-                            @(Model.IsVegan == true ? "🌱 Vegan" : "Thông thường")
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <th>Thành phần</th>
-                        <td>@Model.Ingredient</td>
-                    </tr>
-
-                    <tr>
-                        <th>Mô tả</th>
-                        <td>@Model.Description</td>
-                    </tr>
-
-                </table>
-
-                <div class="mt-3">
-
-                    <a asp-action="Edit"
-                       asp-route-id="@Model.Id"
-                       class="btn btn-warning">
-                        ✏️ Sửa
-                    </a>
-
-                    <a asp-action="Delete"
-                       asp-route-id="@Model.Id"
-                       class="btn btn-danger">
-                        🗑 Xóa
-                    </a>
-
+                    <!-- Detail Specs -->
+                    <div class="col-md-8 ps-4">
+                        <table class="admin-table">
+                            <tbody>
+                                <tr>
+                                    <th style="width: 220px;">Mã nội bộ (Product ID)</th>
+                                    <td class="fw-bold">#PROD-@Model.Id</td>
+                                </tr>
+                                <tr>
+                                    <th>Mã SKU</th>
+                                    <td class="fw-bold text-primary">@(Model.SKU ?? "Chưa thiết lập")</td>
+                                </tr>
+                                <tr>
+                                    <th>Mã vạch (Barcode)</th>
+                                    <td>@(Model.Barcode ?? "Chưa thiết lập")</td>
+                                </tr>
+                                <tr>
+                                    <th>Đường dẫn tĩnh (Slug)</th>
+                                    <td class="text-muted">@(Model.Slug ?? "Chưa thiết lập")</td>
+                                </tr>
+                                <tr>
+                                    <th>Tên sản phẩm</th>
+                                    <td class="fw-bold fs-5 text-dark">@Model.Name</td>
+                                </tr>
+                                <tr>
+                                    <th>Thương hiệu</th>
+                                    <td>@(Model.Brand?.Name ?? "Không rõ")</td>
+                                </tr>
+                                <tr>
+                                    <th>Danh mục</th>
+                                    <td>@(Model.Category?.Name ?? "Không rõ")</td>
+                                </tr>
+                                <tr>
+                                    <th>Loại da phù hợp</th>
+                                    <td><span class="badge bg-info-subtle text-info">@(Model.SkinType ?? "Mọi loại da")</span></td>
+                                </tr>
+                                <tr>
+                                    <th>Giá niêm yết</th>
+                                    <td class="fw-bold">@String.Format("{0:N0} đ", Model.Price)</td>
+                                </tr>
+                                <tr>
+                                    <th>Giá khuyến mãi (Promo)</th>
+                                    <td>
+                                        @if (Model.PromoPrice != null)
+                                        {
+                                            <span class="text-danger fw-bold fs-6">@String.Format("{0:N0} đ", Model.PromoPrice)</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Không áp dụng</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Số lượng tồn kho (Gốc)</th>
+                                    <td class="fw-bold">@Model.Stock</td>
+                                </tr>
+                                <tr>
+                                    <th>Phân loại thuần chay</th>
+                                    <td>
+                                        @if (Model.IsVegan == true)
+                                        {
+                                            <span class="badge bg-success-subtle text-success">🌱 Thuần chay (Vegan)</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary-subtle text-secondary">Thông thường</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Hạn sử dụng</th>
+                                    <td>@(Model.ExpiryDate?.ToString("dd/MM/yyyy") ?? "Chưa thiết lập")</td>
+                                </tr>
+                                <tr>
+                                    <th>Tags phân loại</th>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(Model.Tags))
+                                        {
+                                            foreach (var tag in Model.Tags.Split(","))
+                                            {
+                                                <span class="badge bg-secondary-subtle text-dark me-1">#@tag.Trim()</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Không có tag</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Trạng thái hiển thị</th>
+                                    <td>
+                                        @if (Model.IsActive)
+                                        {
+                                            <span class="badge bg-success">Đang hoạt động</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Đang ẩn</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Thành phần</th>
+                                    <td>
+                                        <div class="text-wrap">@(Model.Ingredient ?? "Chưa có thông tin")</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Mô tả chi tiết</th>
+                                    <td>
+                                        <div class="text-wrap" style="white-space: pre-line;">@(Model.Description ?? "Chưa có mô tả")</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <!-- SEO Settings info box -->
+                        <div class="mt-4 p-3 rounded bg-light" style="border: 1px dashed var(--admin-border-color);">
+                            <h6 class="fw-bold text-dark"><i class="bi bi-search me-1"></i> Cấu hình SEO:</h6>
+                            <div class="small mt-2"><strong>Meta Title:</strong> @(Model.MetaTitle ?? "Mặc định")</div>
+                            <div class="small mt-1"><strong>Meta Keywords:</strong> @(Model.MetaKeywords ?? "Mặc định")</div>
+                            <div class="small mt-1"><strong>Meta Description:</strong> @(Model.MetaDescription ?? "Mặc định")</div>
+                        </div>
+                    </div>
                 </div>
-
             </div>
+        </div>
 
+        <!-- Tab 2: Variant Manager -->
+        <div class="tab-pane fade" id="variants" role="tabpanel">
+            <div class="admin-card m-0">
+                <div class="row">
+                    <!-- Variant List -->
+                    <div class="col-md-8 border-end">
+                        <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-list-stars me-2"></i>Các biến thể hiện tại</h5>
+                        <div class="admin-table-container">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Mã số</th>
+                                        <th>Tên thuộc tính (Nhóm)</th>
+                                        <th>Giá trị thuộc tính</th>
+                                        <th>Chênh lệch giá (đ)</th>
+                                        <th>Tồn kho biến thể</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                id="variantListBody"
+                                <tbody>
+                                    <!-- Populated via AJAX -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Add Variant Form -->
+                    <div class="col-md-4 ps-4">
+                        <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-plus-circle me-2"></i>Thêm biến thể mới</h5>
+                        <div class="p-3 bg-light rounded" style="border: 1px solid var(--admin-border-color);">
+                            <div class="form-group mb-3">
+                                <label for="varName">Tên thuộc tính</label>
+                                <select id="varName" class="form-control-admin" onchange="checkCustomVarName(this)">
+                                    <option value="Màu sắc">Màu sắc (VD: Đỏ, Cam, Hồng)</option>
+                                    <option value="Dung tích">Dung tích (VD: 30ml, 50ml, 100ml)</option>
+                                    <option value="Kích thước">Kích thước (VD: Lớn, Nhỏ)</option>
+                                    <option value="custom">-- Tùy chỉnh khác --</option>
+                                </select>
+                                <input type="text" id="customVarName" class="form-control-admin mt-2 d-none" placeholder="Nhập tên thuộc tính tùy chỉnh..." />
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label for="varValue">Giá trị biến thể</label>
+                                <input type="text" id="varValue" class="form-control-admin" placeholder="VD: Đỏ hồng, 50ml, 100ml..." required />
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label for="varPrice">Chênh lệch giá bán (đ)</label>
+                                <input type="number" id="varPrice" class="form-control-admin" value="0" placeholder="VD: +20000 hoặc -10000" />
+                                <small class="text-muted">Nhập 0 nếu bằng giá niêm yết của sản phẩm chính</small>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label for="varStock">Số lượng tồn kho biến thể</label>
+                                <input type="number" id="varStock" class="form-control-admin" value="0" min="0" required />
+                            </div>
+
+                            <button onclick="addVariant()" class="btn-action btn-action-primary w-100 py-2 mt-2">
+                                <i class="bi bi-plus-lg me-1"></i> Thêm biến thể
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
     </div>
-
 </div>
+
+@section Scripts {
+    <script>
+        const productId = @Model.Id;
+
+        function checkCustomVarName(select) {
+            const customInput = document.getElementById("customVarName");
+            if (select.value === "custom") {
+                customInput.classList.remove("d-none");
+                customInput.setAttribute("required", "required");
+            } else {
+                customInput.classList.add("d-none");
+                customInput.removeAttribute("required");
+            }
+        }
+
+        // Fetch variants list via AJAX
+        async function loadVariants() {
+            const tableBody = document.querySelector("#variants table tbody");
+            tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4"><div class="spinner-border spinner-border-sm text-dark me-2"></div> Đang tải...</td></tr>`;
+
+            try {
+                const response = await fetch(`/AdminProducts/GetVariants?productId=${productId}`);
+                const data = await response.json();
+
+                if (data && data.length > 0) {
+                    let html = "";
+                    data.forEach(item => {
+                        html += `
+                            <tr id="variant-row-${item.id}">
+                                <td class="fw-bold">#VAR-${item.id}</td>
+                                <td><span class="badge bg-secondary-subtle text-dark fs-6">${item.name}</span></td>
+                                <td class="fw-bold">${item.value}</td>
+                                <td class="fw-bold text-success">${item.priceAdjustment >= 0 ? '+' : ''}${new Intl.NumberFormat('vi-VN').format(item.priceAdjustment)} đ</td>
+                                <td class="fw-bold">${item.stock}</td>
+                                <td>
+                                    <button onclick="deleteVariant(${item.id})" class="btn btn-sm btn-outline-danger" title="Xóa biến thể">
+                                        <i class="bi bi-trash-fill"></i> Xóa
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    tableBody.innerHTML = html;
+                } else {
+                    tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-5">Sản phẩm này chưa có biến thể nào. Hãy tạo thêm ở bên phải.</td></tr>`;
+                }
+            } catch (err) {
+                console.error(err);
+                tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Lỗi khi tải danh sách biến thể.</td></tr>`;
+            }
+        }
+
+        // Add a variant via AJAX
+        async function addVariant() {
+            const nameSelect = document.getElementById("varName");
+            let name = nameSelect.value;
+            if (name === "custom") {
+                name = document.getElementById("customVarName").value.trim();
+            }
+
+            const value = document.getElementById("varValue").value.trim();
+            const priceAdjustment = parseFloat(document.getElementById("varPrice").value) || 0;
+            const stock = parseInt(document.getElementById("varStock").value) || 0;
+
+            if (!name || !value) {
+                alert("Vui lòng nhập đầy đủ tên thuộc tính và giá trị biến thể!");
+                return;
+            }
+
+            try {
+                const response = await fetch(`/AdminProducts/AddVariant?productId=${productId}&name=${encodeURIComponent(name)}&value=${encodeURIComponent(value)}&priceAdjustment=${priceAdjustment}&stock=${stock}`, {
+                    method: "POST"
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    // Clear inputs
+                    document.getElementById("varValue").value = "";
+                    document.getElementById("varPrice").value = "0";
+                    document.getElementById("varStock").value = "0";
+                    if (nameSelect.value === "custom") {
+                        document.getElementById("customVarName").value = "";
+                    }
+
+                    // Reload list
+                    loadVariants();
+                } else {
+                    alert(result.message || "Lỗi khi thêm biến thể.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Đã xảy ra lỗi hệ thống.");
+            }
+        }
+
+        // Delete a variant via AJAX
+        async function deleteVariant(variantId) {
+            if (!confirm("Bạn có chắc chắn muốn xóa biến thể này không?")) return;
+
+            try {
+                const response = await fetch(`/AdminProducts/DeleteVariant?variantId=${variantId}`, {
+                    method: "POST"
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    const row = document.getElementById(`variant-row-${variantId}`);
+                    if (row) {
+                        row.style.transform = "scale(0.9)";
+                        row.style.opacity = "0";
+                        row.style.transition = "all 0.3s ease";
+                        setTimeout(() => {
+                            row.remove();
+                            // Check if table is empty
+                            const remaining = document.querySelectorAll("#variants table tbody tr");
+                            if (remaining.length === 0) {
+                                loadVariants();
+                            }
+                        }, 300);
+                    } else {
+                        loadVariants();
+                    }
+                } else {
+                    alert(result.message || "Lỗi khi xóa biến thể.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Đã xảy ra lỗi hệ thống.");
+            }
+        }
+    </script>
+}

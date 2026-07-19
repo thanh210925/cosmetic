@@ -1,0 +1,92 @@
+@model IEnumerable<COSMETICC.Models.Brand>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Quản lý Thương hiệu";
+}
+
+<div class="container-fluid px-4">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="admin-card m-0">
+        <div class="admin-card-title">
+            <span><i class="bi bi-award-fill text-muted me-2"></i> Danh sách Thương hiệu</span>
+            <a asp-action="Create" class="btn-action btn-action-primary">
+                <i class="bi bi-plus-lg me-1"></i> Thêm mới Thương hiệu
+            </a>
+        </div>
+
+        <div class="admin-table-container">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Mã TH</th>
+                        <th>Logo</th>
+                        <th>Tên Thương hiệu</th>
+                        <th>Quốc gia</th>
+                        <th>Website</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var brand in Model)
+                        {
+                            <tr>
+                                <td class="fw-bold">#@brand.Id</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(brand.LogoUrl))
+                                    {
+                                        <img src="@brand.LogoUrl" class="rounded" style="width: 48px; height: 48px; object-fit: contain; background: #fff; padding: 2px; border: 1px solid var(--admin-border-color);" alt="" />
+                                    }
+                                    else
+                                    {
+                                        <div class="rounded bg-light text-center text-muted" style="width: 48px; height: 48px; line-height: 48px; font-size: 11px;">No Logo</div>
+                                    }
+                                </td>
+                                <td class="fw-bold">@brand.Name</td>
+                                <td>@(brand.Country ?? "Không rõ")</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(brand.Website))
+                                    {
+                                        <a href="@brand.Website" target="_blank" class="text-decoration-none"><i class="bi bi-link-45deg"></i> Link</a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">N/A</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <a asp-action="Edit" asp-route-id="@brand.Id" class="btn-action btn-action-outline">
+                                            <i class="bi bi-pencil-square"></i> Sửa
+                                        </a>
+                                        <form asp-action="Delete" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa thương hiệu này không? Các sản phẩm liên quan sẽ bị gỡ thương hiệu.');">
+                                            <input type="hidden" name="id" value="@brand.Id" />
+                                            <button type="submit" class="btn-action btn-action-danger">
+                                                <i class="bi bi-trash-fill"></i> Xóa
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-5">Chưa có thương hiệu nào được tạo</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

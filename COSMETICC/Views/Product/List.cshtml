@@ -1,0 +1,367 @@
+@model IEnumerable<COSMETICC.Models.Product>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = ViewBag.PageTitle;
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="~/css/product-list.css" asp-append-version="true" />
+
+<div class="breadcrumb-container container">
+    <a asp-controller="Home" asp-action="Index">Trang chủ</a>
+    <i class="bi bi-chevron-right mx-1"></i>
+    <span class="text-dark fw-bold">@ViewBag.PageTitle</span>
+</div>
+
+<div class="container pb-5">
+    <div class="row">
+        <!-- Sidebar filters left column (col-md-3) -->
+        <div class="col-lg-3 col-md-4">
+            
+            <!-- Category Filter Card -->
+            <div class="filter-sidebar">
+                <div class="filter-section-title">Danh mục nổi bật</div>
+                <div class="filter-item-list">
+                    <div class="form-check mb-2">
+                        <a href="@Url.Action("List", "Product", new { sort = ViewBag.CurrentSort })" class="text-decoration-none @(ViewBag.CurrentCategoryId == null ? "fw-bold text-success" : "text-dark")">Tất cả sản phẩm</a>
+                    </div>
+                    @foreach (COSMETICC.Models.Category cat in ViewBag.Categories)
+                    {
+                        <div class="mb-2">
+                            <a href="@Url.Action("List", "Product", new { categoryId = cat.Id, sort = ViewBag.CurrentSort })" class="text-decoration-none @(ViewBag.CurrentCategoryId == cat.Id ? "fw-bold text-success" : "text-dark")">
+                                <strong>@cat.Name</strong>
+                            </a>
+                          @if (cat.ChildCategories != null && cat.ChildCategories.Any())
+                            {
+                                <div class="ps-3 mt-1">
+                                    @foreach (COSMETICC.Models.Category child in cat.ChildCategories)
+                                    {
+                                        <div class="mb-1">
+                                            <a href="@Url.Action("List", "Product", new { categoryId = child.Id, sort = ViewBag.CurrentSort })" class="text-decoration-none small @(ViewBag.CurrentCategoryId == child.Id ? "fw-bold text-success" : "text-muted")">
+                                                - @child.Name
+                                            </a>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Price Range Filter Card -->
+            <div class="filter-sidebar">
+                <div class="filter-section-title">Khoảng giá</div>
+                <form id="priceFilterForm" method="get" action="@Url.Action("List", "Product")">
+                    <input type="hidden" name="categoryId" value="@ViewBag.CurrentCategoryId" />
+                    <input type="hidden" name="brandId" value="@ViewBag.CurrentBrandId" />
+                    <input type="hidden" name="skinType" value="@ViewBag.CurrentSkinType" />
+                    <input type="hidden" name="sort" value="@ViewBag.CurrentSort" />
+                    <input type="hidden" name="search" value="@ViewBag.SearchTerm" />
+                    <input type="hidden" name="hasPromo" value="@(ViewBag.CurrentHasPromo == true ? "true" : "")" />
+                    
+                    <div class="range-slider-container">
+                        <div class="slider-track"></div>
+                        <input type="range" min="0" max="3000000" step="10000" value="@(ViewBag.PriceMin ?? 0)" id="slider-1" oninput="slideOne()" />
+                        <input type="range" min="0" max="3000000" step="10000" value="@(ViewBag.PriceMax ?? 3000000)" id="slider-2" oninput="slideTwo()" />
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mb-3" style="font-size: 11px; font-weight: bold; color: #444;">
+                        <span id="range1">0 đ</span>
+                        <span id="range2">3.000.000 đ</span>
+                    </div>
+
+                    <input type="hidden" id="priceMin" name="priceMin" value="@ViewBag.PriceMin" />
+                    <input type="hidden" id="priceMax" name="priceMax" value="@ViewBag.PriceMax" />
+
+                    <button type="submit" class="btn-apply-price w-100">ÁP DỤNG</button>
+                </form>
+            </div>
+
+            <!-- Brand Filter Card -->
+            <div class="filter-sidebar">
+                <div class="filter-section-title">Thương hiệu</div>
+                <div class="filter-item-list">
+                    @foreach (var b in ViewBag.Brands)
+                    {
+                        var isChecked = ViewBag.CurrentBrandId == b.Id;
+                        <div class="form-check mb-2">
+                            <input class="form-check-input brand-check" type="checkbox" id="brand-@b.Id" value="@b.Id" @(isChecked ? "checked" : "") onclick="filterByBrand(@b.Id, this.checked)" />
+                            <label class="form-check-label" for="brand-@b.Id">
+                                @b.Name
+                            </label>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Skin Type Filter Card -->
+            <div class="filter-sidebar">
+                <div class="filter-section-title">Phù hợp loại da</div>
+                <div class="filter-item-list">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input skin-check" type="radio" name="skinTypeOpt" id="skin-all" value="" @(string.IsNullOrEmpty(ViewBag.CurrentSkinType) ? "checked" : "") onclick="filterBySkinType('')" />
+                        <label class="form-check-label" for="skin-all">Mọi loại da</label>
+                    </div>
+                    @foreach (var st in ViewBag.SkinTypes)
+                    {
+                        var isChecked = ViewBag.CurrentSkinType == st;
+                        <div class="form-check mb-2">
+                            <input class="form-check-input skin-check" type="radio" name="skinTypeOpt" id="skin-@st" value="@st" @(isChecked ? "checked" : "") onclick="filterBySkinType('@st')" />
+                            <label class="form-check-label" for="skin-@st">
+                                @st
+                            </label>
+                        </div>
+                    }
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Products list right column (col-md-9) -->
+        <div class="col-lg-9 col-md-8">
+            
+            <!-- Sorting Bar -->
+            <div class="sorting-bar">
+                <div class="sorting-tabs">
+                    <a href="@Url.Action("List", "Product", new { categoryId = ViewBag.CurrentCategoryId, brandId = ViewBag.CurrentBrandId, priceMin = ViewBag.PriceMin, priceMax = ViewBag.PriceMax, skinType = ViewBag.CurrentSkinType, search = ViewBag.SearchTerm, sort = "newest" })" class="sorting-tab @(ViewBag.CurrentSort == "newest" ? "active" : "")">
+                        Mới nhất
+                    </a>
+                    <a href="@Url.Action("List", "Product", new { categoryId = ViewBag.CurrentCategoryId, brandId = ViewBag.CurrentBrandId, priceMin = ViewBag.PriceMin, priceMax = ViewBag.PriceMax, skinType = ViewBag.CurrentSkinType, search = ViewBag.SearchTerm, sort = "bestseller" })" class="sorting-tab @(ViewBag.CurrentSort == "bestseller" ? "active" : "")">
+                        Bán chạy
+                    </a>
+                    <a href="@Url.Action("List", "Product", new { categoryId = ViewBag.CurrentCategoryId, brandId = ViewBag.CurrentBrandId, priceMin = ViewBag.PriceMin, priceMax = ViewBag.PriceMax, skinType = ViewBag.CurrentSkinType, search = ViewBag.SearchTerm, sort = "price_asc" })" class="sorting-tab @(ViewBag.CurrentSort == "price_asc" ? "active" : "")">
+                        Giá thấp đến cao
+                    </a>
+                    <a href="@Url.Action("List", "Product", new { categoryId = ViewBag.CurrentCategoryId, brandId = ViewBag.CurrentBrandId, priceMin = ViewBag.PriceMin, priceMax = ViewBag.PriceMax, skinType = ViewBag.CurrentSkinType, search = ViewBag.SearchTerm, sort = "price_desc" })" class="sorting-tab @(ViewBag.CurrentSort == "price_desc" ? "active" : "")">
+                        Giá cao đến thấp
+                    </a>
+                </div>
+                <div class="text-muted small">
+                    Hiển thị <strong>@Model.Count()</strong> sản phẩm
+                </div>
+            </div>
+
+            <!-- Product Grid -->
+            @if (Model != null && Model.Any())
+            {
+                var groupedProducts = Model.GroupBy(p => p.Brand != null ? p.Brand.Name : "Thương hiệu khác");
+                foreach (var group in groupedProducts)
+                {
+                    <div class="brand-group-wrapper mb-4 bg-white p-3 rounded border">
+                        <h4 class="fw-bold pb-2 border-bottom text-dark d-flex align-items-center" style="font-size: 16px; color: var(--hasaki-green) !important; border-bottom: 2px solid var(--hasaki-green) !important;">
+                            <i class="bi bi-tag-fill me-2" style="color: var(--hasaki-green);"></i>
+                            @group.Key
+                            <span class="badge bg-secondary ms-2" style="font-size: 11px;">@group.Count() sản phẩm</span>
+                        </h4>
+                        <div class="hasaki-grid mt-3">
+                            @foreach (var item in group)
+                            {
+                                var hasDiscount = item.PromoPrice.HasValue && item.PromoPrice < item.Price;
+                                var discountPercent = hasDiscount ? (int)(100 - (item.PromoPrice.Value / item.Price * 100)) : 0;
+                                
+                                // Reviews rating
+                                var avgRating = item.Reviews.Any() ? Math.Round(item.Reviews.Average(r => r.Rating ?? 5), 1) : 5.0;
+                                var reviewCount = item.Reviews.Count();
+
+                                <div class="hasaki-card">
+                                    <!-- Discount badge if promo price exists -->
+                                    @if (hasDiscount)
+                                    {
+                                        <div class="discount-badge">-@discountPercent%</div>
+                                    }
+
+                                    <!-- Wishlist button (client heart) -->
+                                    <button type="button" class="wishlist-heart-btn" onclick="toggleWishlist(@item.Id, this)" data-prod-id="@item.Id">
+                                        <i class="bi bi-heart-fill"></i>
+                                    </button>
+
+                                    <!-- Image -->
+                                    <a href="@Url.Action("Details", "Product", new { id = item.Id })" class="card-img-area">
+                                        <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "https://placehold.co/300x300?text=No+Image" : item.ImageUrl)" alt="@item.Name" />
+                                    </a>
+
+                                    <!-- Card Body -->
+                                    <div class="card-body-area">
+                                        <div class="card-brand">@(item.Brand?.Name ?? "Cosmetic")</div>
+                                        <a href="@Url.Action("Details", "Product", new { id = item.Id })" class="text-decoration-none">
+                                            <div class="card-title-text" title="@item.Name">@item.Name</div>
+                                        </a>
+
+                                        <!-- Ratings -->
+                                        <div class="rating-area">
+                                            <div class="rating-stars">
+                                                @for (int i = 1; i <= 5; i++)
+                                                {
+                                                    if (i <= Math.Round(avgRating))
+                                                    {
+                                                        <i class="bi bi-star-fill"></i>
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="bi bi-star"></i>
+                                                    }
+                                                }
+                                            </div>
+                                            <span>@avgRating (@reviewCount)</span>
+                                        </div>
+
+                                        <!-- Price -->
+                                        <div class="price-area">
+                                            @if (hasDiscount)
+                                            {
+                                                <span class="promo-price">@String.Format("{0:N0} đ", item.PromoPrice)</span>
+                                                <span class="old-price text-decoration-line-through">@String.Format("{0:N0} đ", item.Price)</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="promo-price">@String.Format("{0:N0} đ", item.Price)</span>
+                                            }
+                                        </div>
+
+                                        <!-- Buy Button -->
+                                        <button type="button" class="btn-buy-now" onclick="addToCart(@item.Id)">
+                                            <i class="bi bi-cart-plus"></i> Thêm vào giỏ
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-center bg-white rounded border py-5 text-muted">
+                    <i class="bi bi-emoji-frown fs-1"></i>
+                    <p class="mt-3">Không tìm thấy sản phẩm nào khớp với bộ lọc của bạn.</p>
+                    <a href="@Url.Action("List", "Product")" class="btn btn-sm btn-success mt-2" style="background-color: var(--hasaki-green);">Đặt lại bộ lọc</a>
+                </div>
+            }
+
+        </div>
+    </div>
+</div>
+
+<script>
+    // Redirect when brand clicked
+    function filterByBrand(brandId, checked) {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (checked) {
+            urlParams.set('brandId', brandId);
+        } else {
+            urlParams.delete('brandId');
+        }
+        window.location.search = urlParams.toString();
+    }
+
+    // Redirect when skin type selected
+    function filterBySkinType(skinType) {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (skinType) {
+            urlParams.set('skinType', skinType);
+        } else {
+            urlParams.delete('skinType');
+        }
+        window.location.search = urlParams.toString();
+    }
+
+    // LocalStorage / DB Wishlist & Cart buttons triggers
+    function toggleWishlist(prodId, btn) {
+        if (typeof window.wishlistObj !== 'undefined' && window.wishlistObj.toggle) {
+            window.wishlistObj.toggle(prodId, btn);
+        } else {
+            // Fallback toggle style
+            btn.classList.toggle('active');
+            let isAct = btn.classList.contains('active');
+            fetch('/Wishlist/' + (isAct ? 'Add' : 'Remove') + '?productId=' + prodId, { method: 'POST' });
+        }
+    }
+
+    function addToCart(prodId) {
+        fetch('/Cart/AddToCart?productId=' + prodId + '&quantity=1', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Đã thêm sản phẩm vào giỏ hàng!');
+                } else {
+                    alert(data.message || 'Lỗi khi thêm sản phẩm vào giỏ.');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Lỗi kết nối máy chủ.');
+            });
+    }
+
+    // Range Slider Functions
+    const sliderOne = document.getElementById("slider-1");
+    const sliderTwo = document.getElementById("slider-2");
+    const displayValOne = document.getElementById("range1");
+    const displayValTwo = document.getElementById("range2");
+    const inputMin = document.getElementById("priceMin");
+    const inputMax = document.getElementById("priceMax");
+    const minGap = 50000; // 50k VND min gap
+    const sliderMaxValue = 3000000; // 3 Million Max
+
+    function slideOne() {
+        if (sliderOne && sliderTwo) {
+            if (parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap) {
+                sliderOne.value = parseInt(sliderTwo.value) - minGap;
+            }
+            if (inputMin) inputMin.value = sliderOne.value;
+            if (displayValOne) displayValOne.textContent = new Intl.NumberFormat('vi-VN').format(sliderOne.value) + " đ";
+            fillColor();
+        }
+    }
+
+    // Assign globally to window so inline oninput can see them
+    window.slideOne = slideOne;
+
+    function slideTwo() {
+        if (sliderOne && sliderTwo) {
+            if (parseInt(sliderTwo.value) - parseInt(sliderOne.value) <= minGap) {
+                sliderTwo.value = parseInt(sliderOne.value) + minGap;
+            }
+            if (inputMax) inputMax.value = sliderTwo.value;
+            if (displayValTwo) displayValTwo.textContent = new Intl.NumberFormat('vi-VN').format(sliderTwo.value) + " đ";
+            fillColor();
+        }
+    }
+
+    // Assign globally to window so inline oninput can see them
+    window.slideTwo = slideTwo;
+
+    function fillColor() {
+        const sliderTrack = document.querySelector(".slider-track");
+        if (sliderOne && sliderTwo && sliderTrack) {
+            const percent1 = (sliderOne.value / sliderMaxValue) * 100;
+            const percent2 = (sliderTwo.value / sliderMaxValue) * 100;
+            sliderTrack.style.background = `linear-gradient(to right, #dadae5 ${percent1}% , var(--hasaki-green) ${percent1}% , var(--hasaki-green) ${percent2}%, #dadae5 ${percent2}%)`;
+        }
+    }
+
+    // Set heart states on load
+    document.addEventListener("DOMContentLoaded", function() {
+        // Initialize range slider text and colors
+        if (sliderOne && sliderTwo) {
+            slideOne();
+            slideTwo();
+        }
+
+        // Query server or local storage for wishlist items to mark heart active
+        fetch('/Wishlist/GetWishlist')
+            .then(res => res.json())
+            .then(ids => {
+                if (ids && Array.isArray(ids)) {
+                    document.querySelectorAll('.wishlist-heart-btn').forEach(btn => {
+                        const id = parseInt(btn.getAttribute('data-prod-id'));
+                        if (ids.includes(id)) {
+                            btn.classList.add('active');
+                        }
+                    });
+                }
+            });
+    });
+</script>

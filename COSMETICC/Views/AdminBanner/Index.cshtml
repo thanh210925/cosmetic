@@ -1,0 +1,88 @@
+@model IEnumerable<COSMETICC.Models.Banner>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Quản lý Banner";
+}
+
+<div class="container-fluid px-4">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="admin-card m-0">
+        <div class="admin-card-title">
+            <span><i class="bi bi-image text-muted me-2"></i> Danh sách Banner quảng cáo</span>
+            <a asp-action="Create" class="btn-action btn-action-primary">
+                <i class="bi bi-plus-lg me-1"></i> Thêm mới Banner
+            </a>
+        </div>
+
+        <div class="admin-table-container">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Hình ảnh</th>
+                        <th>Tiêu đề Banner</th>
+                        <th>Vị trí (Type)</th>
+                        <th>Đường dẫn liên kết</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var banner in Model)
+                        {
+                            var typeLabel = "Banner trang chủ";
+                            if (banner.Type == "FlashSale") typeLabel = "Banner Flash Sale";
+                            else if (banner.Type == "Brand") typeLabel = "Banner thương hiệu";
+                            <tr>
+                                <td>
+                                    <img src="@banner.ImageUrl" class="rounded" style="width: 120px; height: 60px; object-fit: cover; border: 1px solid var(--admin-border-color);" alt="" />
+                                </td>
+                                <td class="fw-bold">@(banner.Title ?? "Không có tiêu đề")</td>
+                                <td><span class="badge bg-dark">@typeLabel</span></td>
+                                <td class="text-truncate" style="max-width: 200px;" title="@banner.LinkUrl">@(banner.LinkUrl ?? "Không có link")</td>
+                                <td>
+                                    @if (banner.IsActive)
+                                    {
+                                        <span class="badge bg-success">Đang hiện</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Đang ẩn</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <a asp-action="Edit" asp-route-id="@banner.Id" class="btn-action btn-action-outline">
+                                            <i class="bi bi-pencil-square"></i> Sửa
+                                        </a>
+                                        <form asp-action="Delete" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa banner này không?');">
+                                            <input type="hidden" name="id" value="@banner.Id" />
+                                            <button type="submit" class="btn-action btn-action-danger">
+                                                <i class="bi bi-trash-fill"></i> Xóa
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-5">Chưa có banner nào được tạo</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

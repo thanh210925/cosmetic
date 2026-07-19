@@ -1,8 +1,375 @@
-﻿@{
+@{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Dashboard";
 }
 
-<h2>Dashboard Admin</h2>
+<!-- Dashboard Grid Stats -->
+<div class="dashboard-grid pt-0 pb-3">
+    
+    <!-- Sales Metric -->
+    <div class="metric-card">
+        <div class="metric-info">
+            <h3>Doanh thu hôm nay</h3>
+            <div class="metric-value text-success">@String.Format("{0:N0} đ", ViewBag.TodaySales)</div>
+            <small class="text-muted">Tổng: @String.Format("{0:N0} đ", ViewBag.TotalSales)</small>
+        </div>
+        <div class="metric-icon-box bg-emerald-light">
+            <i class="bi bi-wallet2"></i>
+        </div>
+    </div>
 
-<p>Xin chào @Context.Session.GetString("AdminName")</p>
+    <!-- Orders Metric -->
+    <div class="metric-card">
+        <div class="metric-info">
+            <h3>Đơn hàng hôm nay</h3>
+            <div class="metric-value">@ViewBag.TodayOrders</div>
+            <small class="text-muted">Tổng tích lũy: @ViewBag.TotalOrders</small>
+        </div>
+        <div class="metric-icon-box bg-blue-light">
+            <i class="bi bi-cart-check-fill"></i>
+        </div>
+    </div>
+
+    <!-- Low Stock Alert Metric -->
+    <div class="metric-card">
+        <div class="metric-info">
+            <h3>Sản phẩm sắp hết</h3>
+            <div class="metric-value @(ViewBag.LowStockCount > 0 ? "text-danger" : "")">@ViewBag.LowStockCount</div>
+            <small class="text-muted">Tổng mã hàng: @ViewBag.TotalProducts</small>
+        </div>
+        <div class="metric-icon-box bg-rose-light">
+            <i class="bi bi-exclamation-octagon-fill"></i>
+        </div>
+    </div>
+
+    <!-- Customers Metric -->
+    <div class="metric-card">
+        <div class="metric-info">
+            <h3>Khách hàng mới (Tuần)</h3>
+            <div class="metric-value">@ViewBag.NewCustomersWeek</div>
+            <small class="text-muted">Tổng khách hàng: @ViewBag.TotalCustomers</small>
+        </div>
+        <div class="metric-icon-box bg-purple-light">
+            <i class="bi bi-people-fill"></i>
+        </div>
+    </div>
+
+</div>
+
+<!-- Expiry date warnings and stock alerts row -->
+@if (ViewBag.LowStockCount > 0 || (ViewBag.ExpiryAlerts != null && ((List<COSMETICC.Models.Product>)ViewBag.ExpiryAlerts).Count > 0))
+{
+    <div class="row px-4 mb-4">
+        <div class="col-12">
+            <div class="admin-card m-0" style="border: 1px solid rgba(220, 53, 69, 0.2); background: rgba(220, 53, 69, 0.02);">
+                <div class="admin-card-title text-danger fs-6 mb-2">
+                    <span><i class="bi bi-bell-fill animate-bounce me-2"></i> CẢNH BÁO HỆ THỐNG</span>
+                </div>
+                <div class="row">
+                    @if (ViewBag.LowStockCount > 0)
+                    {
+                        <div class="col-md-6 mb-2 mb-md-0">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-exclamation-circle text-danger"></i>
+                                <span>Có <strong>@ViewBag.LowStockCount</strong> mặt hàng có lượng tồn kho dưới ngưỡng an toàn (&lt;= 10 sản phẩm).</span>
+                                <a asp-controller="AdminInventory" asp-action="Index" class="small text-danger fw-bold text-decoration-none">Nhập hàng ngay &rarr;</a>
+                            </div>
+                        </div>
+                    }
+                    @if (ViewBag.ExpiryAlerts != null && ((List<COSMETICC.Models.Product>)ViewBag.ExpiryAlerts).Count > 0)
+                    {
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-calendar-x text-warning"></i>
+                                <span>Có sản phẩm sắp hết hạn sử dụng (dưới 6 tháng).</span>
+                                <button type="button" class="btn btn-link text-warning p-0 fw-bold small text-decoration-none" data-bs-toggle="modal" data-bs-target="#expiryModal">Xem danh sách &rarr;</button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Chart & Analytics row -->
+<div class="row px-4 mb-4">
+    
+    <!-- Sales Revenue Chart -->
+    <div class="col-lg-8 mb-4 mb-lg-0">
+        <div class="admin-card m-0 h-100">
+            <div class="admin-card-title">
+                <span><i class="bi bi-graph-up text-muted me-2"></i> Doanh thu 7 ngày gần nhất</span>
+            </div>
+            <div style="height: 300px; position: relative;">
+                <canvas id="salesChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Selling Products -->
+    <div class="col-lg-4">
+        <div class="admin-card m-0 h-100">
+            <div class="admin-card-title">
+                <span><i class="bi bi-trophy text-muted me-2"></i> Bán chạy nhất</span>
+            </div>
+            
+            <div class="py-2">
+                @if (ViewBag.TopSellingNames != null && ((List<string>)ViewBag.TopSellingNames).Count > 0)
+                {
+                    var names = (List<string>)ViewBag.TopSellingNames;
+                    var qtys = (List<int>)ViewBag.TopSellingQtys;
+                    for (int i = 0; i < names.Count; i++)
+                    {
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-gold-light text-warning" style="width: 24px; height: 24px; line-height: 16px;">@(i + 1)</span>
+                                <span class="text-truncate text-dark fw-bold" style="max-width: 180px;" title="@names[i]">@names[i]</span>
+                            </div>
+                            <span class="badge bg-secondary-subtle text-dark fw-bold">@qtys[i] đã bán</span>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center text-muted py-5">Chưa có số liệu bán hàng</div>
+                }
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Recent Orders & Products Split Layout -->
+<div class="row px-4">
+    
+    <!-- Recent Orders Table -->
+    <div class="col-lg-7 col-md-12 mb-4">
+        <div class="admin-card m-0 h-100">
+            <div class="admin-card-title">
+                <span><i class="bi bi-clock-history text-muted me-2"></i> Đơn hàng mới</span>
+                <a asp-controller="AdminOrder" asp-action="Index" class="btn-action btn-action-outline">Xem tất cả</a>
+            </div>
+            
+            <div class="admin-table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Ngày đặt</th>
+                            <th>Tổng tiền</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ViewBag.RecentOrders != null && ((List<COSMETICC.Models.Order>)ViewBag.RecentOrders).Count > 0)
+                        {
+                            foreach (var order in (List<COSMETICC.Models.Order>)ViewBag.RecentOrders)
+                            {
+                                var statusClass = "status-pending";
+                                if (order.Status == "Đang giao") statusClass = "status-shipping";
+                                else if (order.Status == "Hoàn thành" || order.Status == "Đã giao") statusClass = "status-completed";
+                                else if (order.Status == "Hủy" || order.Status == "Đã hủy") statusClass = "status-cancelled";
+
+                                <tr>
+                                    <td>
+                                        <a asp-controller="AdminOrder" asp-action="Details" asp-route-id="@order.Id" class="text-decoration-none fw-bold text-dark">
+                                            #@order.Id
+                                        </a>
+                                    </td>
+                                    <td>@(order.User?.FullName ?? "N/A")</td>
+                                    <td>@(order.OrderDate?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")</td>
+                                    <td class="fw-bold">@String.Format("{0:N0} đ", order.TotalAmount)</td>
+                                    <td>
+                                        <span class="status-badge @statusClass">@(order.Status ?? "Chờ xác nhận")</span>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">Chưa có đơn hàng nào</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Newest Products Table -->
+    <div class="col-lg-5 col-md-12 mb-4">
+        <div class="admin-card m-0 h-100">
+            <div class="admin-card-title">
+                <span><i class="bi bi-stars text-muted me-2"></i> Sản phẩm mới thêm</span>
+                <a asp-controller="AdminProducts" asp-action="Index" class="btn-action btn-action-outline">Quản lý</a>
+            </div>
+            
+            <div class="admin-table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Tên sản phẩm</th>
+                            <th>Giá bán</th>
+                            <th>Tồn</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ViewBag.RecentProducts != null && ((List<COSMETICC.Models.Product>)ViewBag.RecentProducts).Count > 0)
+                        {
+                            foreach (var product in (List<COSMETICC.Models.Product>)ViewBag.RecentProducts)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            @if (!string.IsNullOrEmpty(product.ImageUrl))
+                                            {
+                                                <img src="@product.ImageUrl" class="rounded" style="width: 32px; height: 32px; object-fit: cover;" alt="" />
+                                            }
+                                            <span class="text-truncate" style="max-width: 140px;" title="@product.Name">@product.Name</span>
+                                        </div>
+                                    </td>
+                                    <td class="fw-bold">@String.Format("{0:N0} đ", product.Price)</td>
+                                    <td>@product.Stock</td>
+                                    <td>
+                                        @if (product.IsActive)
+                                        {
+                                            <span class="badge bg-success-subtle text-success" style="font-size:10px;">Hiện</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary-subtle text-secondary" style="font-size:10px;">Ẩn</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">Chưa có sản phẩm nào</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Expiry Products Modal -->
+<div class="modal fade" id="expiryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-calendar-x text-warning me-2"></i> Sản phẩm sắp hết hạn sử dụng (Dưới 6 tháng)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Ảnh</th>
+                                <th>Tên sản phẩm</th>
+                                <th>Thương hiệu</th>
+                                <th>Hạn sử dụng</th>
+                                <th>Tồn kho</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (ViewBag.ExpiryAlerts != null && ((List<COSMETICC.Models.Product>)ViewBag.ExpiryAlerts).Count > 0)
+                            {
+                                foreach (var p in (List<COSMETICC.Models.Product>)ViewBag.ExpiryAlerts)
+                                {
+                                    <tr>
+                                        <td>
+                                            <img src="@p.ImageUrl" class="rounded" style="width: 40px; height: 40px; object-fit: cover;" alt="" />
+                                        </td>
+                                        <td class="fw-bold">@p.Name</td>
+                                        <td>@(p.Brand?.Name ?? "N/A")</td>
+                                        <td class="text-danger fw-bold">@(p.ExpiryDate?.ToString("dd/MM/yyyy") ?? "N/A")</td>
+                                        <td>@p.Stock</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">Không có sản phẩm nào sắp hết hạn</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Load Chart.js from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            
+            // Serialize labels and values from C# arrays
+            const labels = @Html.Raw(Json.Serialize(ViewBag.SalesLabels));
+            const dataValues = @Html.Raw(Json.Serialize(ViewBag.SalesData));
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Doanh thu (đ)',
+                        data: dataValues,
+                        borderColor: '#d4af37', // Gold matching cosmetics theme
+                        backgroundColor: 'rgba(212, 175, 55, 0.08)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#0f172a',
+                        pointBorderColor: '#d4af37',
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString() + ' đ';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+}

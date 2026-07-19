@@ -1,0 +1,83 @@
+@model COSMETICC.Models.Supplier
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = $"Chi tiết Nhà cung cấp #{Model.Id}";
+}
+
+<div class="container-fluid px-4">
+    <div class="mb-4 d-flex justify-content-between align-items-center">
+        <a asp-action="Index" class="btn-action btn-action-outline">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+        </a>
+        <div class="d-flex gap-2">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-action btn-action-outline text-warning">
+                <i class="bi bi-pencil-square me-1"></i> Chỉnh sửa
+            </a>
+        </div>
+    </div>
+
+    <div class="admin-card m-0">
+        <div class="admin-card-title pb-3 border-bottom">
+            <span><i class="bi bi-truck text-muted me-2"></i> Thông tin đối tác Nhà cung cấp</span>
+        </div>
+
+        <div class="row py-3">
+            <!-- Left Info column -->
+            <div class="col-md-6 border-end">
+                <table class="admin-table">
+                    <tbody>
+                        <tr>
+                            <th style="width: 200px;">Mã Nhà cung cấp</th>
+                            <td class="fw-bold">#NCC-@Model.Id</td>
+                        </tr>
+                        <tr>
+                            <th>Tên Nhà cung cấp</th>
+                            <td class="fw-bold fs-5 text-dark">@Model.Name</td>
+                        </tr>
+                        <tr>
+                            <th>Số điện thoại</th>
+                            <td class="fw-bold">@(Model.Phone ?? "Chưa thiết lập")</td>
+                        </tr>
+                        <tr>
+                            <th>Email</th>
+                            <td>
+                                @if (!string.IsNullOrEmpty(Model.Email))
+                                {
+                                    <a href="mailto:@Model.Email" class="text-decoration-none">@Model.Email</a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Chưa thiết lập</span>
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Địa chỉ kho / VP</th>
+                            <td>@(Model.Address ?? "Chưa thiết lập")</td>
+                        </tr>
+                        <tr>
+                            <th>Ngày bắt đầu hợp tác</th>
+                            <td>@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Right Contract column -->
+            <div class="col-md-6 ps-4">
+                <div class="p-3 bg-light rounded" style="border: 1px solid var(--admin-border-color); min-height: 250px;">
+                    <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-file-earmark-text text-muted me-2"></i>Điều khoản Hợp đồng</h5>
+                    @if (!string.IsNullOrEmpty(Model.ContractDetails))
+                    {
+                        <div class="text-wrap" style="white-space: pre-line; line-height: 1.6; font-size: 14px;">@Model.ContractDetails</div>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-5">Chưa lưu thông tin hợp đồng</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

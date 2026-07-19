@@ -5,112 +5,157 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<div class="card shadow border-0">
+<div class="container-fluid px-4">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
 
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-
-        <div>
-            <h3 class="mb-0">📦 Quản lý sản phẩm</h3>
-            <small class="text-muted">
-                Danh sách sản phẩm mỹ phẩm
-            </small>
+    <div class="admin-card m-0">
+        <div class="admin-card-title">
+            <span><i class="bi bi-box-seam text-muted me-2"></i> Danh sách sản phẩm mỹ phẩm</span>
+            <div class="d-flex gap-2">
+                <a asp-action="Create" class="btn-action btn-action-primary">
+                    <i class="bi bi-plus-lg me-1"></i> Thêm sản phẩm mới
+                </a>
+                <div style="width: 200px;">
+                    <input type="text" id="prodSearch" class="form-control-admin" placeholder="Tìm sản phẩm..." onkeyup="filterProducts()" />
+                </div>
+            </div>
         </div>
 
-        <a asp-action="Create" class="btn btn-success">
-            ➕ Thêm sản phẩm
-        </a>
-
-    </div>
-
-    <div class="card-body">
-
-        <table class="table table-hover align-middle">
-
-            <thead class="table-dark">
-
-                <tr>
-                    <th>ID</th>
-                    <th>Ảnh</th>
-                    <th>Tên sản phẩm</th>
-                    <th>Giá</th>
-                    <th>Tồn kho</th>
-                    <th>Vegan</th>
-                    <th width="220">Thao tác</th>
-                </tr>
-
-            </thead>
-
-            <tbody>
-
-                @foreach (var item in Model)
-                {
+        <div class="admin-table-container">
+            <table class="admin-table" id="prodsTable">
+                <thead>
                     <tr>
-
-                        <td>#@item.Id</td>
-
-                        <td>
-                            <img src="@item.ImageUrl"
-                                 width="70"
-                                 height="70"
-                                 style="object-fit:cover;border-radius:10px;" />
-                        </td>
-
-                        <td>
-                            <strong>@item.Name</strong>
-                        </td>
-
-                        <td class="text-danger fw-bold">
-                            @item.Price.ToString("N0") đ
-                        </td>
-
-                        <td>
-                            @item.Stock
-                        </td>
-
-                        <td>
-                            @if (item.IsVegan == true)
-                            {
-                                <span class="badge bg-success">
-                                    Vegan
-                                </span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-secondary">
-                                    Thường
-                                </span>
-                            }
-                        </td>
-
-                        <td>
-
-                            <a asp-action="Details"
-                               asp-route-id="@item.Id"
-                               class="btn btn-info btn-sm">
-                                👁 Xem
-                            </a>
-
-                            <a asp-action="Edit"
-                               asp-route-id="@item.Id"
-                               class="btn btn-warning btn-sm">
-                                ✏ Sửa
-                            </a>
-
-                            <a asp-action="Delete"
-                               asp-route-id="@item.Id"
-                               class="btn btn-danger btn-sm">
-                                🗑 Xóa
-                            </a>
-
-                        </td>
-
+                        <th>Mã SKU</th>
+                        <th>Ảnh</th>
+                        <th>Tên sản phẩm</th>
+                        <th>Thương hiệu</th>
+                        <th>Danh mục</th>
+                        <th>Loại da</th>
+                        <th>Giá bán</th>
+                        <th>Tồn kho</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
                     </tr>
-                }
-
-            </tbody>
-
-        </table>
-
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="fw-bold">#PROD-@item.Id</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                    {
+                                        <img src="@item.ImageUrl" class="rounded" style="width: 48px; height: 48px; object-fit: cover; border: 1px solid var(--admin-border-color);" alt="" />
+                                    }
+                                    else
+                                    {
+                                        <div class="rounded bg-light text-center text-muted" style="width: 48px; height: 48px; line-height: 48px; font-size: 10px;">No Image</div>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="fw-bold">@item.Name</div>
+                                    @if (item.IsVegan == true)
+                                    {
+                                        <span class="badge bg-success-subtle text-success" style="font-size: 10px; padding: 2px 6px;">Vegan</span>
+                                    }
+                                </td>
+                                <td>@(item.Brand?.Name ?? "Không rõ")</td>
+                                <td>@(item.Category?.Name ?? "Không rõ")</td>
+                                <td><span class="badge bg-info-subtle text-info">@(item.SkinType ?? "Mọi loại da")</span></td>
+                                <td>
+                                    @if (item.PromoPrice != null && item.PromoPrice < item.Price)
+                                    {
+                                        <div><span class="text-danger fw-bold">@String.Format("{0:N0} đ", item.PromoPrice)</span></div>
+                                        <div><small class="text-muted text-decoration-line-through">@String.Format("{0:N0} đ", item.Price)</small></div>
+                                    }
+                                    else
+                                    {
+                                        <span class="fw-bold text-dark">@String.Format("{0:N0} đ", item.Price)</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.Stock <= 0)
+                                    {
+                                        <span class="text-danger fw-bold">Hết hàng</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@item.Stock</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.IsActive)
+                                    {
+                                        <span class="badge bg-success-subtle text-success">Đang hiện</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary-subtle text-secondary">Đang ẩn</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn-action btn-action-outline p-1 px-2" title="Xem chi tiết">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action btn-action-outline p-1 px-2 text-warning" title="Sửa">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn-action btn-action-danger p-1 px-2" title="Xóa">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-5">Không tìm thấy sản phẩm nào</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
-
 </div>
+
+@section Scripts {
+    <script>
+        function filterProducts() {
+            const input = document.getElementById("prodSearch");
+            const filter = input.value.toLowerCase();
+            const table = document.getElementById("prodsTable");
+            const tr = table.getElementsByTagName("tr");
+
+            for (let i = 1; i < tr.length; i++) {
+                const tdName = tr[i].getElementsByTagName("td")[2];
+                const tdBrand = tr[i].getElementsByTagName("td")[3];
+                const tdCategory = tr[i].getElementsByTagName("td")[4];
+                
+                if (tdName || tdBrand || tdCategory) {
+                    const textName = tdName.textContent || tdName.innerText;
+                    const textBrand = tdBrand.textContent || tdBrand.innerText;
+                    const textCategory = tdCategory.textContent || tdCategory.innerText;
+                    
+                    if (textName.toLowerCase().indexOf(filter) > -1 || 
+                        textBrand.toLowerCase().indexOf(filter) > -1 ||
+                        textCategory.toLowerCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+    </script>
+}

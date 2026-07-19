@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -29,10 +29,10 @@
             </a>
 
             <!-- SEARCH -->
-            <div class="search-box">
-                <input type="text" placeholder="What are you looking for?" />
-                <span>🔍</span>
-            </div>
+            <form asp-controller="Product" asp-action="List" method="get" class="search-box">
+                <input type="text" name="search" placeholder="Bạn muốn tìm gì hôm nay?" value="@Context.Request.Query["search"]" />
+                <button type="submit" style="background:none; border:none; cursor:pointer;">🔍</button>
+            </form>
 
             <!-- RIGHT -->
             <div class="d-flex align-items-center gap-4">
@@ -64,7 +64,9 @@
                     </a>
                 }
 
-                <span>🛒</span>
+                <a asp-controller="Cart" asp-action="Index" class="text-decoration-none" style="font-size: 20px; color: #333;" title="Giỏ hàng">
+                    🛒
+                </a>
                 <!-- BUTTON MOBILE -->
 
 
@@ -91,11 +93,10 @@
 
                 <div class="mobile-menu">
 
-                    <a href="#">Danh mục nổi bật</a>
-                    <a href="#">Thương hiệu nổi bật</a>
-                    <a href="#" class="Sản phẩm bán chạy">Limited Dea</a>
+                    <a asp-controller="Product" asp-action="List">Danh mục nổi bật</a>
+                    <a asp-controller="Product" asp-action="List" asp-route-sort="bestseller">Sản phẩm bán chạy</a>
                     <a href="#">BLOG làm đẹp</a>
-                    <a href="#">Sản phẩm giảm giá</a>
+                    <a asp-controller="Product" asp-action="List" asp-route-hasPromo="true">Sản phẩm giảm giá</a>
                     <a href="#">About Us</a>
                     <a href="#">Media</a>
                     <a href="#">B2B Inquiry</a>
@@ -107,11 +108,10 @@
 
         <!-- MENU DESKTOP -->
         <div class="menu container d-none d-lg-flex">
-            <a href="#">Danh mục nổi bật</a>
-            <a href="#">Thương hiệu nổi bật</a>
-            <a href="#" class="Sản phẩm bán chạy">Limited Dea</a>
+            <a asp-controller="Product" asp-action="List">Danh mục nổi bật</a>
+            <a asp-controller="Product" asp-action="List" asp-route-sort="bestseller">Sản phẩm bán chạy</a>
             <a href="#">BLOG làm đẹp</a>
-            <a href="#">Sản phẩm giảm giá</a>
+            <a asp-controller="Product" asp-action="List" asp-route-hasPromo="true">Sản phẩm giảm giá</a>
             <a href="#">About Us</a>
             <a href="#">Media</a>
             <a href="#">B2B Inquiry</a>

@@ -1,44 +1,59 @@
 @model COSMETICC.Models.Category
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Chỉnh sửa Danh mục";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h1>Edit</h1>
+<div class="container-fluid px-4" style="max-width: 600px;">
+    
+    <div class="mb-4">
+        <a asp-action="Index" class="btn-action btn-action-outline">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+        </a>
+    </div>
 
-<h4>Category</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="admin-card m-0">
+        <div class="admin-card-title pb-3 border-bottom">
+            <span><i class="bi bi-pencil-square text-muted me-2"></i> Chỉnh sửa thông tin danh mục</span>
+        </div>
+
+        <form asp-action="Edit" method="post" class="py-3">
+            @Html.AntiForgeryToken()
             <input type="hidden" asp-for="Id" />
-            <div class="form-group">
-                <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
+
+            <div class="form-group mb-3">
+                <label asp-for="Name">Tên Danh mục</label>
+                <input asp-for="Name" class="form-control-admin" required />
+                <span asp-validation-for="Name" class="text-danger small"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
-                <span asp-validation-for="Description" class="text-danger"></span>
+
+            <div class="form-group mb-3">
+                <label asp-for="ParentCategoryId">Danh mục cha (nếu có)</label>
+                <select asp-for="ParentCategoryId" class="form-control-admin">
+                    <option value="">-- Là danh mục gốc (Không có cha) --</option>
+                    @foreach (var cat in ViewBag.Categories)
+                    {
+                        <!option value="@cat.Id" @(Model.ParentCategoryId == cat.Id ? "selected" : "")>@cat.Name</!option>
+                    }
+                </select>
+                <span asp-validation-for="ParentCategoryId" class="text-danger small"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="Products" class="control-label"></label>
-                <input asp-for="Products" class="form-control" />
-                <span asp-validation-for="Products" class="text-danger"></span>
+
+            <div class="form-group mb-4">
+                <label asp-for="Description">Mô tả danh mục</label>
+                <textarea asp-for="Description" class="form-control-admin" rows="4"></textarea>
+                <span asp-validation-for="Description" class="text-danger small"></span>
             </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn-action btn-action-primary px-4 py-2">
+                    Lưu thay đổi
+                </button>
+                <a asp-action="Index" class="btn-action btn-action-outline px-4 py-2 text-center">
+                    Hủy bỏ
+                </a>
             </div>
         </form>
     </div>
 </div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
-@section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-}

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -21,6 +21,12 @@ public partial class Review
 
     [Column(TypeName = "datetime")]
     public DateTime? CreatedAt { get; set; }
+
+    public bool IsApproved { get; set; } = true;
+
+    public string? ReplyText { get; set; }
+
+    public bool IsSpam { get; set; } = false;
 
     [ForeignKey("ProductId")]
     [InverseProperty("Reviews")]
