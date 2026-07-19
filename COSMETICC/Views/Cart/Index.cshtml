@@ -306,9 +306,11 @@
 
                 @if (totalCartAmount > 0)
                 {
-                    <a href="#" class="btn-checkout" id="checkoutBtn" onclick="checkoutAlert()">
-                        <i class="bi bi-credit-card-2-front-fill"></i> Tiến hành đặt hàng
-                    </a>
+                    <form asp-controller="Payment" asp-action="CreatePayment" method="post">
+                        <button type="submit" class="btn-checkout" id="checkoutBtn" style="width: 100%;">
+                            <i class="bi bi-credit-card-2-front-fill"></i> Thanh toán qua VNPay
+                        </button>
+                    </form>
                 }
                 else
                 {
@@ -433,7 +435,5 @@
             });
     }
 
-    function checkoutAlert() {
-        alert("Tính năng Đặt hàng đang trong quá trình tích hợp cổng thanh toán. Cảm ơn bạn đã trải nghiệm thử!");
-    }
+
 </script>
