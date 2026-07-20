@@ -1,4 +1,5 @@
 using COSMETICC.Models;
+using COSMETICC.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication;
@@ -541,6 +542,116 @@ namespace Cosmetic.Controllers
 
             TempData["SuccessMessage"] = "Đã đặt địa chỉ làm mặc định.";
             return RedirectToAction("Profile");
+        }
+
+        // ================= MY ORDERS =================
+
+        [HttpGet]
+        public async Task<IActionResult> MyOrders(string? status, string? search, int page = 1)
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+                return RedirectToAction("Login");
+
+            int pageSize = 5;
+
+            var baseQuery = _context.Orders
+                .Include(o => o.OrderDetails)
+                    .ThenInclude(od => od.Product)
+                .Include(o => o.Shippings)
+                .Include(o => o.Payments)
+                .Where(o => o.UserId == userId);
+
+            // Compute counts for tabs
+            ViewBag.AllCount = await baseQuery.CountAsync();
+            ViewBag.PendingCount = await baseQuery.CountAsync(o => o.Status == "Chờ xác nhận" || o.Status == "Pending");
+            ViewBag.ConfirmedCount = await baseQuery.CountAsync(o => o.Status == "Đã xác nhận" || o.Status == "Confirmed" || o.Status == "Đang đóng gói");
+            ViewBag.ShippingCount = await baseQuery.CountAsync(o => o.Status == "Bàn giao cho GHN" || o.Status == "Đang giao hàng" || o.Status == "Shipping");
+            ViewBag.DeliveredCount = await baseQuery.CountAsync(o => o.Status == "Đã giao hàng" || o.Status == "Hoàn thành" || o.Status == "Delivered" || o.Status == "Completed");
+            ViewBag.CancelledCount = await baseQuery.CountAsync(o => o.Status == "Hủy" || o.Status == "Đã hủy" || o.Status == "Cancelled" || o.Status == "Failed");
+
+            var query = baseQuery.AsQueryable();
+
+            if (!string.IsNullOrEmpty(status))
+            {
+                var s = status.Trim().ToUpper();
+                if (s == "PENDING" || s == "CHỜ XÁC NHẬN")
+                {
+                    query = query.Where(o => o.Status == "Chờ xác nhận" || o.Status == "Pending");
+                }
+                else if (s == "CONFIRMED" || s == "ĐÃ XÁC NHẬN")
+                {
+                    query = query.Where(o => o.Status == "Đã xác nhận" || o.Status == "Confirmed" || o.Status == "Đang đóng gói");
+                }
+                else if (s == "SHIPPING" || s == "ĐANG GIAO")
+                {
+                    query = query.Where(o => o.Status == "Bàn giao cho GHN" || o.Status == "Đang giao hàng" || o.Status == "Shipping");
+                }
+                else if (s == "DELIVERED" || s == "ĐÃ GIAO")
+                {
+                    query = query.Where(o => o.Status == "Đã giao hàng" || o.Status == "Hoàn thành" || o.Status == "Delivered" || o.Status == "Completed");
+                }
+                else if (s == "CANCELLED" || s == "HỦY" || s == "ĐÃ HỦY")
+                {
+                    query = query.Where(o => o.Status == "Hủy" || o.Status == "Đã hủy" || o.Status == "Cancelled" || o.Status == "Failed");
+                }
+                else
+                {
+                    query = query.Where(o => o.Status == status);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(o => o.OrderCode != null && o.OrderCode.Contains(search));
+            }
+
+            int total = await query.CountAsync();
+            var orders = await query
+                .OrderByDescending(o => o.OrderDate)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            ViewBag.CurrentStatus = status;
+            ViewBag.Search = search;
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = (int)Math.Ceiling(total / (double)pageSize);
+            ViewBag.TotalOrders = total;
+
+            return View(orders);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelOrder(int orderId)
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+                return RedirectToAction("Login");
+
+            var order = await _context.Orders
+                .FirstOrDefaultAsync(o => o.Id == orderId && o.UserId == userId);
+
+            if (order == null) return NotFound();
+
+            // Only allow cancellation if order is still pending
+            if (order.Status != "Pending" && order.Status != "Chờ xác nhận")
+            {
+                TempData["ErrorMessage"] = "Chỉ có thể hủy đơn hàng ở trạng thái Chờ xác nhận.";
+                return RedirectToAction("MyOrders");
+            }
+
+            order.Status = "Hủy";
+            order.CancelledAt = DateTime.Now;
+            _context.Orders.Update(order);
+            await _context.SaveChangesAsync();
+
+            // Restore product stock and batch remaining quantities
+            await WarehouseHelper.RestoreOrderStockAsync(_context, order.Id);
+
+            TempData["SuccessMessage"] = $"Đã hủy đơn hàng #{order.OrderCode} và hoàn trả số lượng tồn kho thành công.";
+            return RedirectToAction("MyOrders");
         }
     }
 }

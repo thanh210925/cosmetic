@@ -1,4 +1,4 @@
-﻿using COSMETICC.Libraries;
+using COSMETICC.Libraries;
 using COSMETICC.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -106,10 +106,14 @@ namespace COSMETICC.Controllers
             string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
             vnpay.AddRequestData("vnp_IpAddr", ipAddress);
 
-            vnpay.AddRequestData("vnp_Locale", _configuration["VnPay:Locale"]);
+            vnpay.AddRequestData("vnp_Locale", _configuration["VnPay:Locale"] ?? "vn");
             vnpay.AddRequestData("vnp_OrderInfo", $"Thanh toan don hang {order.Id}");
             vnpay.AddRequestData("vnp_OrderType", "other");
-            vnpay.AddRequestData("vnp_ReturnUrl", _configuration["VnPay:ReturnUrl"]);
+            
+            // Dynamic ReturnUrl using current scheme & host to avoid port mismatches
+            string returnUrl = $"{Request.Scheme}://{Request.Host}/Payment/PaymentCallback";
+            vnpay.AddRequestData("vnp_ReturnUrl", returnUrl);
+
             string tick = DateTime.Now.Ticks.ToString();
             vnpay.AddRequestData("vnp_TxnRef", order.Id.ToString() + "_" + tick);
 
@@ -138,7 +142,11 @@ namespace COSMETICC.Controllers
 
             // Lấy chuỗi mã giao dịch về
             string txnRef = vnpay.GetResponseData("vnp_TxnRef");
-            // Cắt theo dấu "_" và chỉ lấy mảng đầu tiên [0] chính là Order.Id
+            if (string.IsNullOrEmpty(txnRef))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             int orderId = Convert.ToInt32(txnRef.Split('_')[0]);
             string vnp_ResponseCode = vnpay.GetResponseData("vnp_ResponseCode");
             string vnp_SecureHash = Request.Query["vnp_SecureHash"];
@@ -154,45 +162,24 @@ namespace COSMETICC.Controllers
                 {
                     if (order != null)
                     {
-                        order.Status = "Completed";
-
-                        // [TODO 1]: Trừ số lượng (Stock) trong bảng Products
-                        // Giả định bạn có bảng OrderDetails chứa các mặt hàng khách đã mua
-                        var orderDetails = await _context.OrderDetails.Where(od => od.OrderId == orderId).ToListAsync();
-                        foreach (var item in orderDetails)
-                        {
-                            var product = await _context.Products.FindAsync(item.ProductId);
-                            if (product != null && product.Stock >= item.Quantity)
-                            {
-                                product.Stock -= item.Quantity;
-                            }
-                        }
-
-                        // [TODO 2]: Xóa dữ liệu bảng CartItems tương ứng với user
-                        var cart = await _context.Carts
-                            .Include(c => c.CartItems)
-                            .FirstOrDefaultAsync(c => c.UserId == order.UserId);
-
-                        if (cart != null && cart.CartItems.Any())
-                        {
-                            _context.CartItems.RemoveRange(cart.CartItems);
-                        }
+                        order.Status = "Chờ xác nhận";
                     }
 
                     if (payment != null)
                     {
-                        payment.PaymentStatus = "Success";
+                        payment.PaymentStatus = "Đã thanh toán";
                         payment.PaymentDate = DateTime.Now;
                     }
 
                     await _context.SaveChangesAsync();
+                    ViewBag.OrderCode = order?.OrderCode ?? orderId.ToString();
                     return View("PaymentSuccess");
                 }
                 else
                 {
                     // Giao dịch thất bại / bị hủy
-                    if (order != null) order.Status = "Failed";
-                    if (payment != null) payment.PaymentStatus = "Failed";
+                    if (order != null) order.Status = "Hủy";
+                    if (payment != null) payment.PaymentStatus = "Thất bại";
 
                     await _context.SaveChangesAsync();
                     return View("PaymentFailed");
@@ -200,7 +187,6 @@ namespace COSMETICC.Controllers
             }
             else
             {
-                // Chữ ký không hợp lệ
                 return View("PaymentError");
             }
         }

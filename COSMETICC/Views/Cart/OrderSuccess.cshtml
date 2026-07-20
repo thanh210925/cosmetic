@@ -1,0 +1,173 @@
+@model COSMETICC.Models.Order
+@{
+    ViewData["Title"] = "Đặt hàng thành công - MeiLing Cosmetics";
+    var shipping = Model.Shippings.FirstOrDefault();
+    var payment = Model.Payments.FirstOrDefault();
+}
+
+<style>
+    .success-card {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+        padding: 40px;
+        text-align: center;
+        max-width: 750px;
+        margin: 0 auto;
+    }
+
+    .success-icon-wrap {
+        width: 90px;
+        height: 90px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        margin: 0 auto 24px;
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @@keyframes popIn {
+        0% { transform: scale(0); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+
+    .order-code-badge {
+        background: #f8fafc;
+        border: 2px dashed #cbd5e1;
+        border-radius: 8px;
+        padding: 10px 20px;
+        display: inline-block;
+        font-family: monospace;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #9b0022;
+    }
+
+    .summary-box {
+        background: #faf6f2;
+        border-radius: 12px;
+        padding: 24px;
+        text-align: left;
+        margin-top: 24px;
+    }
+
+    .btn-action-primary {
+        background: linear-gradient(135deg, #9b0022 0%, #c70d3a 100%);
+        color: #fff;
+        font-weight: 700;
+        padding: 12px 28px;
+        border-radius: 30px;
+        text-decoration: none;
+        box-shadow: 0 4px 15px rgba(155, 0, 34, 0.3);
+        transition: all 0.2s;
+    }
+    .btn-action-primary:hover {
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(155, 0, 34, 0.4);
+    }
+
+    .btn-action-secondary {
+        background: #fff;
+        color: #475569;
+        border: 1px solid #cbd5e1;
+        font-weight: 600;
+        padding: 12px 24px;
+        border-radius: 30px;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    .btn-action-secondary:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+</style>
+
+<div class="container py-5">
+    <div class="success-card">
+        <div class="success-icon-wrap">
+            <i class="bi bi-check-lg"></i>
+        </div>
+
+        <h2 class="fw-bold text-dark mb-2">🎉 Cảm ơn bạn đã đặt hàng!</h2>
+        <p class="text-muted fs-6 mb-4">Đơn hàng của bạn đã được tiếp nhận và đang trong quá trình xử lý.</p>
+
+        <div class="mb-4">
+            <span class="text-muted d-block small mb-1">MÃ ĐƠN HÀNG CỦA BẠN</span>
+            <div class="order-code-badge">#@Model.OrderCode</div>
+        </div>
+
+        <!-- Order Summary Details -->
+        <div class="summary-box">
+            <h6 class="fw-bold text-dark mb-3 border-bottom pb-2">
+                <i class="bi bi-receipt me-2 text-danger"></i> Chi tiết đơn hàng
+            </h6>
+
+            <div class="row g-3 small mb-3">
+                <div class="col-md-6">
+                    <span class="text-muted">Ngày đặt:</span> 
+                    <strong>@Model.OrderDate?.ToString("dd/MM/yyyy HH:mm")</strong>
+                </div>
+                <div class="col-md-6">
+                    <span class="text-muted">Trạng thái:</span> 
+                    <span class="badge bg-warning text-dark">@Model.Status</span>
+                </div>
+                <div class="col-md-6">
+                    <span class="text-muted">Phương thức thanh toán:</span> 
+                    <strong>@(payment?.PaymentMethod ?? "COD")</strong>
+                </div>
+                <div class="col-md-6">
+                    <span class="text-muted">Địa chỉ nhận hàng:</span> 
+                    <strong>@(shipping?.Address ?? "Địa chỉ đã chọn")</strong>
+                </div>
+            </div>
+
+            <!-- Items table -->
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead class="table-light">
+                        <tr class="text-muted">
+                            <th>Sản phẩm</th>
+                            <th class="text-center">Số lượng</th>
+                            <th class="text-end">Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.OrderDetails)
+                        {
+                            var itemTotal = (item.Price ?? 0) * (item.Quantity ?? 1);
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-dark">@(item.Product?.Name ?? "Sản phẩm")</div>
+                                </td>
+                                <td class="text-center">x@(item.Quantity ?? 1)</td>
+                                <td class="text-end fw-bold text-danger">@itemTotal.ToString("N0")₫</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="2" class="text-end fw-bold pt-3">TỔNG THÀNH TIỀN:</td>
+                            <td class="text-end fw-bold text-danger fs-5 pt-3">@((Model.TotalAmount ?? 0).ToString("N0"))₫</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex flex-wrap align-items-center justify-content-center gap-3 mt-4">
+            <a href="@Url.Action("MyOrders", "Account")" class="btn-action-primary">
+                <i class="bi bi-bag-check-fill me-2"></i> Xem đơn hàng của tôi
+            </a>
+            <a href="@Url.Action("List", "Product")" class="btn-action-secondary">
+                <i class="bi bi-arrow-left me-2"></i> Tiếp tục mua sắm
+            </a>
+        </div>
+    </div>
+</div>

@@ -306,11 +306,9 @@
 
                 @if (totalCartAmount > 0)
                 {
-                    <form asp-controller="Payment" asp-action="CreatePayment" method="post">
-                        <button type="submit" class="btn-checkout" id="checkoutBtn" style="width: 100%;">
-                            <i class="bi bi-credit-card-2-front-fill"></i> Thanh toán qua VNPay
-                        </button>
-                    </form>
+                    <a href="@Url.Action("Checkout", "Cart")" class="btn-checkout text-center text-white text-decoration-none d-block w-100 py-3 rounded-3 fw-bold" style="background: linear-gradient(135deg, #9b0022, #c70d3a); box-shadow: 0 4px 15px rgba(155,0,34,0.3);">
+                        <i class="bi bi-bag-check-fill me-2"></i> TIẾN HÀNH ĐẶT HÀNG
+                    </a>
                 }
                 else
                 {

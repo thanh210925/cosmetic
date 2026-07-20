@@ -157,9 +157,9 @@
                 <div class="py-3">
                     @{
                         var badgeClass = "status-pending";
-                        if (Model.Status == "Đang giao" || Model.Status == "Đã xác nhận") badgeClass = "status-shipping";
-                        else if (Model.Status == "Hoàn thành" || Model.Status == "Đã giao") badgeClass = "status-completed";
-                        else if (Model.Status == "Hủy" || Model.Status == "Đã hủy") badgeClass = "status-cancelled";
+                        if (Model.Status == "Đang giao" || Model.Status == "Đang đóng gói" || Model.Status == "Đã xác nhận") badgeClass = "status-shipping";
+                        else if (Model.Status == "Hoàn thành" || Model.Status == "Đã giao" || Model.Status == "Đã hoàn") badgeClass = "status-completed";
+                        else if (Model.Status == "Hủy" || Model.Status == "Đã hủy" || Model.Status == "Giao thất bại" || Model.Status == "Hoàn hàng") badgeClass = "status-cancelled";
                     }
                     <div class="mb-3">
                         <span class="text-muted d-block mb-1">Trạng thái hiện tại:</span>
@@ -168,25 +168,95 @@
                         </span>
                     </div>
 
-                    <!-- Direct buttons for common actions -->
-                    <div class="d-flex gap-2 mb-3">
+                    <!-- Direct buttons for common actions based on current status -->
+                    <div class="d-flex flex-column gap-2 mb-3">
                         @if (Model.Status == "Chờ xác nhận" || string.IsNullOrEmpty(Model.Status))
                         {
                             <form asp-action="UpdateStatus" method="post" class="w-100">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@Model.Id" />
                                 <input type="hidden" name="status" value="Đã xác nhận" />
-                                <button type="submit" class="btn-action btn-action-primary w-100 py-2">Xác nhận đơn</button>
+                                <button type="submit" class="btn-action btn-action-primary w-100 py-2">✔️ Xác nhận đơn</button>
                             </form>
-                        }
-                        
-                        @if (Model.Status != "Hủy" && Model.Status != "Hoàn thành")
-                        {
                             <form asp-action="UpdateStatus" method="post" class="w-100" onsubmit="return confirm('Bạn có chắc muốn hủy đơn hàng này?');">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@Model.Id" />
                                 <input type="hidden" name="status" value="Hủy" />
-                                <button type="submit" class="btn-action btn-action-danger w-100 py-2">Hủy đơn</button>
+                                <button type="submit" class="btn-action btn-action-danger w-100 py-2">❌ Hủy đơn</button>
+                            </form>
+                        }
+                        else if (Model.Status == "Đã xác nhận")
+                        {
+                            <form asp-action="UpdateStatus" method="post" class="w-100">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <input type="hidden" name="status" value="Đang đóng gói" />
+                                <button type="submit" class="btn-action btn-action-primary w-100 py-2">📦 Đã đóng gói</button>
+                            </form>
+                            <form asp-action="UpdateStatus" method="post" class="w-100" onsubmit="return confirm('Bạn có chắc muốn hủy đơn hàng này?');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <input type="hidden" name="status" value="Hủy" />
+                                <button type="submit" class="btn-action btn-action-danger w-100 py-2">❌ Hủy đơn</button>
+                            </form>
+                        }
+                        else if (Model.Status == "Đang đóng gói")
+                        {
+                            <div class="border p-2 rounded bg-light mb-2">
+                                <span class="fw-bold d-block mb-2 text-dark" style="font-size:12.5px;">Bàn giao đơn vị vận chuyển:</span>
+                                <div class="d-flex gap-2">
+                                    <form asp-action="HandoverToCarrier" method="post" class="w-100">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@Model.Id" />
+                                        <input type="hidden" name="carrier" value="GHN" />
+                                        <button type="submit" class="btn btn-warning w-100 text-dark fw-bold btn-sm py-2">🚚 Bàn giao GHN</button>
+                                    </form>
+                                    <form asp-action="HandoverToCarrier" method="post" class="w-100">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@Model.Id" />
+                                        <input type="hidden" name="carrier" value="GHTK" />
+                                        <button type="submit" class="btn btn-success w-100 text-white fw-bold btn-sm py-2">🚚 Bàn giao GHTK</button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                        else if (Model.Status == "Đang giao")
+                        {
+                            <form asp-action="UpdateStatus" method="post" class="w-100">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <input type="hidden" name="status" value="Đã giao" />
+                                <button type="submit" class="btn-action btn-action-primary w-100 py-2">🎉 Giao thành công</button>
+                            </form>
+                            <form asp-action="UpdateStatus" method="post" class="w-100">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <input type="hidden" name="status" value="Giao thất bại" />
+                                <button type="submit" class="btn-action btn-action-danger w-100 py-2">⚠️ Giao thất bại</button>
+                            </form>
+                        }
+                        else if (Model.Status == "Giao thất bại")
+                        {
+                            <form asp-action="UpdateStatus" method="post" class="w-100">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <input type="hidden" name="status" value="Đang giao" />
+                                <button type="submit" class="btn btn-warning w-100 text-dark fw-bold py-2">🔄 Giao lại</button>
+                            </form>
+                            <form asp-action="UpdateStatus" method="post" class="w-100">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <input type="hidden" name="status" value="Hoàn hàng" />
+                                <button type="submit" class="btn-action btn-action-danger w-100 py-2">🔙 Hoàn hàng</button>
+                            </form>
+                        }
+                        else if (Model.Status == "Hoàn hàng")
+                        {
+                            <form asp-action="UpdateStatus" method="post" class="w-100">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <input type="hidden" name="status" value="Đã hoàn" />
+                                <button type="submit" class="btn-action btn-action-primary w-100 py-2">📥 Đã nhận lại hàng hoàn</button>
                             </form>
                         }
                     </div>
@@ -196,7 +266,7 @@
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="id" value="@Model.Id" />
                         <div class="form-group mb-3">
-                            <label for="statusSelect">Cập nhật trạng thái khác:</label>
+                            <label for="statusSelect">Cập nhật trạng thái khác (Ghi đè):</label>
                             <select name="status" id="statusSelect" class="form-control-admin">
                                 <!option value="Chờ xác nhận" @(Model.Status == "Chờ xác nhận" ? "selected" : "")>Chờ xác nhận</!option>
                                 <!option value="Đã xác nhận" @(Model.Status == "Đã xác nhận" ? "selected" : "")>Đã xác nhận</!option>
@@ -204,10 +274,13 @@
                                 <!option value="Đang giao" @(Model.Status == "Đang giao" ? "selected" : "")>Đang giao</!option>
                                 <!option value="Đã giao" @(Model.Status == "Đã giao" ? "selected" : "")>Đã giao</!option>
                                 <!option value="Hoàn thành" @(Model.Status == "Hoàn thành" ? "selected" : "")>Hoàn thành</!option>
+                                <!option value="Giao thất bại" @(Model.Status == "Giao thất bại" ? "selected" : "")>Giao thất bại</!option>
+                                <!option value="Hoàn hàng" @(Model.Status == "Hoàn hàng" ? "selected" : "")>Hoàn hàng</!option>
+                                <!option value="Đã hoàn" @(Model.Status == "Đã hoàn" ? "selected" : "")>Đã hoàn</!option>
                                 <!option value="Hủy" @(Model.Status == "Hủy" ? "selected" : "")>Hủy</!option>
                             </select>
                         </div>
-                        <button type="submit" class="btn-action btn-action-primary w-100 py-2">
+                        <button type="submit" class="btn-action btn-action-outline w-100 py-2">
                             Cập nhật trạng thái
                         </button>
                     </form>
@@ -237,6 +310,27 @@
                         <span class="text-muted d-block small">Địa chỉ nhận hàng:</span>
                         <strong class="text-dark">@(shipping?.Address ?? Model.User?.Address ?? "N/A")</strong>
                     </div>
+                    @if (shipping != null && !string.IsNullOrEmpty(shipping.Carrier))
+                    {
+                        <div class="mb-2 border-top pt-2 mt-2">
+                            <span class="text-muted d-block small">Đơn vị vận chuyển:</span>
+                            <span class="badge bg-info text-dark fw-bold">@shipping.Carrier</span>
+                        </div>
+                    }
+                    @if (shipping != null && !string.IsNullOrEmpty(shipping.TrackingCode))
+                    {
+                        <div class="mb-2">
+                            <span class="text-muted d-block small">Mã vận đơn:</span>
+                            <strong class="text-danger font-monospace">@shipping.TrackingCode</strong>
+                        </div>
+                    }
+                    @if (shipping != null && shipping.EstimatedDeliveryDate.HasValue)
+                    {
+                        <div class="mb-2">
+                            <span class="text-muted d-block small">Dự kiến giao:</span>
+                            <strong class="text-success"><i class="bi bi-calendar-event me-1"></i> @shipping.EstimatedDeliveryDate.Value.ToString("dd/MM/yyyy")</strong>
+                        </div>
+                    }
                 </div>
             </div>
 

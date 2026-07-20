@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -25,6 +25,15 @@ public partial class Shipping
 
     [Column(TypeName = "datetime")]
     public DateTime? ShippingDate { get; set; }
+
+    [StringLength(50)]
+    public string? Carrier { get; set; }
+
+    [StringLength(100)]
+    public string? TrackingCode { get; set; }
+
+    [Column(TypeName = "datetime")]
+    public DateTime? EstimatedDeliveryDate { get; set; }
 
     [ForeignKey("OrderId")]
     [InverseProperty("Shippings")]
