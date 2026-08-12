@@ -1,5 +1,6 @@
 using COSMETICC.Libraries;
 using COSMETICC.Models;
+using COSMETICC.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -190,6 +191,77 @@ namespace COSMETICC.Controllers
                 return View("PaymentError");
             }
         }
-        
+
+        /// <summary>
+        /// Action nhận Callback từ MoMo khi người dùng thanh toán xong (Redirect)
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> MomoReturn()
+        {
+            var momoService = HttpContext.RequestServices.GetRequiredService<IMomoService>();
+            var response = momoService.PaymentExecuteAsync(Request.Query);
+
+            if (string.IsNullOrEmpty(response.OrderId))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            int orderId = Convert.ToInt32(response.OrderId.Split('_')[0]);
+            var order = await _context.Orders.FindAsync(orderId);
+            var payment = await _context.Payments.FirstOrDefaultAsync(p => p.OrderId == orderId);
+
+            if (response.ResultCode == "0") // 0 = Thành công
+            {
+                if (order != null)
+                {
+                    order.Status = "Chờ xác nhận";
+                }
+                if (payment != null)
+                {
+                    payment.PaymentStatus = "Đã thanh toán qua MoMo";
+                    payment.PaymentDate = DateTime.Now;
+                }
+
+                await _context.SaveChangesAsync();
+                ViewBag.OrderCode = order?.OrderCode ?? orderId.ToString();
+                return View("PaymentSuccess");
+            }
+            else
+            {
+                if (order != null) order.Status = "Đã hủy (MoMo thất bại)";
+                if (payment != null) payment.PaymentStatus = "Thất bại";
+
+                await _context.SaveChangesAsync();
+                return View("PaymentFailed");
+            }
+        }
+
+        /// <summary>
+        /// Webhook IPN nhận thông báo từ server MoMo
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> MomoNotify()
+        {
+            var momoService = HttpContext.RequestServices.GetRequiredService<IMomoService>();
+            var response = momoService.PaymentExecuteAsync(Request.Query);
+
+            if (!string.IsNullOrEmpty(response.OrderId) && response.ResultCode == "0")
+            {
+                int orderId = Convert.ToInt32(response.OrderId.Split('_')[0]);
+                var order = await _context.Orders.FindAsync(orderId);
+                var payment = await _context.Payments.FirstOrDefaultAsync(p => p.OrderId == orderId);
+
+                if (order != null) order.Status = "Chờ xác nhận";
+                if (payment != null)
+                {
+                    payment.PaymentStatus = "Đã thanh toán qua MoMo";
+                    payment.PaymentDate = DateTime.Now;
+                }
+
+                await _context.SaveChangesAsync();
+            }
+
+            return NoContent();
+        }
     }
 }

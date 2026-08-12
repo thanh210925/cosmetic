@@ -1,0 +1,157 @@
+@model COSMETICC.Models.FlashSale
+
+@{
+    ViewData["Title"] = "Chi tiết Flash Sale #" + Model.Id;
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var now = DateTime.Now;
+    bool isActive = Model.IsActive && Model.StartTime <= now && Model.EndTime > now;
+    bool isUpcoming = Model.IsActive && Model.StartTime > now;
+
+    int totalAllocated = Model.FlashSaleItems.Sum(i => i.QuantityForSale);
+    int totalSold = Model.FlashSaleItems.Sum(i => i.SoldQuantity);
+    decimal totalRevenue = Model.FlashSaleItems.Sum(i => i.SoldQuantity * i.DiscountPrice);
+}
+
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-bar-chart-line-fill text-warning me-2"></i>Chi tiết Flash Sale: @Model.Title</h2>
+            <p class="text-muted mb-0">Theo dõi tiến độ bán hàng, doanh thu và thống kê cho chiến dịch #@Model.Id</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning fw-bold">
+                <i class="bi bi-pencil me-1"></i> Chỉnh sửa
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Danh sách
+            </a>
+        </div>
+    </div>
+
+    <!-- Header Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
+                <small class="text-muted fw-bold text-uppercase">TRẠNG THÁI</small>
+                <div class="mt-2">
+                    @if (isActive)
+                    {
+                        <span class="badge bg-success fs-6 px-3 py-2">🔥 Đang diễn ra</span>
+                    }
+                    else if (isUpcoming)
+                    {
+                        <span class="badge bg-primary fs-6 px-3 py-2">⏳ Sắp diễn ra</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary fs-6 px-3 py-2">⏹️ Đã kết thúc / Tắt</span>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
+                <small class="text-muted fw-bold text-uppercase">TỔNG SẢN PHẨM ĐÃ BÁN</small>
+                <div class="fs-3 fw-bold text-dark mt-1">@totalSold <span class="fs-6 text-muted">/ @totalAllocated</span></div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
+                <small class="text-muted fw-bold text-uppercase">DOANH THU FLASH SALE</small>
+                <div class="fs-3 fw-bold text-success mt-1">@string.Format("{0:N0}", totalRevenue) đ</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
+                <small class="text-muted fw-bold text-uppercase">KHUNG GIỜ</small>
+                <div class="small fw-bold text-dark mt-1">
+                    <div><i class="bi bi-clock me-1 text-primary"></i> Từ: @Model.StartTime.ToString("dd/MM/yyyy HH:mm")</div>
+                    <div><i class="bi bi-clock-history me-1 text-danger"></i> Đến: @Model.EndTime.ToString("dd/MM/yyyy HH:mm")</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table of Flash Sale Items -->
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+        <div class="card-header bg-white py-3">
+            <h5 class="fw-bold mb-0"><i class="bi bi-list-stars me-2 text-warning"></i>Danh sách sản phẩm và tiến độ bán</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">Sản phẩm</th>
+                        <th>Giá gốc</th>
+                        <th>Giá Flash Sale</th>
+                        <th>Giảm giá</th>
+                        <th>Mở bán</th>
+                        <th>Đã bán</th>
+                        <th style="width: 200px;">Tiến độ</th>
+                        <th>Trạng thái Sp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.FlashSaleItems)
+                    {
+                        var prod = item.Product;
+                        decimal origPrice = prod?.Price ?? 0;
+                        decimal discPrice = item.DiscountPrice;
+                        int discountPct = origPrice > 0 ? (int)((origPrice - discPrice) * 100 / origPrice) : 0;
+                        int pct = item.QuantityForSale > 0 ? (item.SoldQuantity * 100 / item.QuantityForSale) : 0;
+                        bool itemActive = item.IsActive && item.SoldQuantity < item.QuantityForSale;
+
+                        <tr>
+                            <td class="ps-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    @if (!string.IsNullOrEmpty(prod?.ImageUrl))
+                                    {
+                                        <img src="@prod.ImageUrl" width="48" height="48" class="rounded object-fit-cover shadow-sm" />
+                                    }
+                                    <div>
+                                        <div class="fw-bold text-dark">@(prod?.Name ?? "Sản phẩm")</div>
+                                        <small class="text-muted">ID: #@item.ProductId</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-muted text-decoration-line-through">
+                                @string.Format("{0:N0}", origPrice) đ
+                            </td>
+                            <td class="fw-bold text-danger fs-6">
+                                @string.Format("{0:N0}", discPrice) đ
+                            </td>
+                            <td>
+                                <span class="badge bg-danger rounded-pill">-@discountPct%</span>
+                            </td>
+                            <td class="fw-bold">@item.QuantityForSale</td>
+                            <td class="fw-bold text-primary">@item.SoldQuantity</td>
+                            <td>
+                                <div class="d-flex justify-content-between small fw-bold mb-1">
+                                    <span>@pct%</span>
+                                    <span>@item.SoldQuantity/@item.QuantityForSale</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar @(pct >= 100 ? "bg-danger" : "bg-warning")" role="progressbar" style="width: @pct%"></div>
+                                </div>
+                            </td>
+                            <td>
+                                @if (item.SoldQuantity >= item.QuantityForSale)
+                                {
+                                    <span class="badge bg-danger"><i class="bi bi-x-octagon me-1"></i> Đã hết suất sale</span>
+                                }
+                                else if (itemActive)
+                                {
+                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Đang bán sale</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Tắt</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

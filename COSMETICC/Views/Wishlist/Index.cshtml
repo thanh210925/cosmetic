@@ -4,66 +4,7 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<style>
-    body {
-        background-color: #f8fafc;
-    }
-    .wishlist-container {
-        max-width: 1000px;
-        margin: 0 auto;
-    }
-    .wish-card {
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #e2e8f0;
-        overflow: hidden;
-        transition: all 0.3s;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-    }
-    .wish-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-        border-color: #800020;
-    }
-    .wish-img-box {
-        position: relative;
-        height: 180px;
-        background: #f8fafc;
-        overflow: hidden;
-    }
-    .wish-img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.5s;
-    }
-    .wish-card:hover .wish-img {
-        transform: scale(1.08);
-    }
-    .btn-remove-wish {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: white;
-        color: #800020;
-        border: 1px solid #eee;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        transition: all 0.2s;
-        z-index: 10;
-    }
-    .btn-remove-wish:hover {
-        background: #800020;
-        color: white;
-        border-color: #800020;
-    }
-</style>
+
 
 <div class="container py-5 wishlist-container">
     

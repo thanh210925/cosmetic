@@ -1,0 +1,293 @@
+@model IEnumerable<COSMETICC.Models.FlashSale>
+
+@{
+    ViewData["Title"] = "QUẢN LÝ SẢN PHẨM FLASH SALE GIỜ VÀNG";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var allProducts = ViewBag.AllProducts as IEnumerable<COSMETICC.Models.Product> ?? new List<COSMETICC.Models.Product>();
+    var itemsMap = ViewBag.FlashSaleItemsMap as Dictionary<int, COSMETICC.Models.FlashSaleItem> ?? new Dictionary<int, COSMETICC.Models.FlashSaleItem>();
+    int activeCount = ViewBag.ActiveProductCount ?? 0;
+    int totalProductCount = ViewBag.TotalProductCount ?? allProducts.Count();
+}
+
+<link rel="stylesheet" href="~/css/admin-flashsale.css" asp-append-version="true" />
+
+<div class="fs-admin-header d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold m-0 text-dark">
+            ⚡ QUẢN LÝ SẢN PHẨM FLASH SALE GIỜ VÀNG
+        </h4>
+    </div>
+    <a href="/FlashSale" target="_blank" class="btn btn-danger font-weight-bold shadow-sm rounded-pill px-4">
+        <i class="bi bi-box-arrow-up-right me-1"></i> Xem Trang Flash Sale Khách Hàng
+    </a>
+</div>
+
+<div class="container-fluid px-4">
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- STAT OVERVIEW CARDS (MATCHING SCREENSHOT 3) -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="fs-stat-card red-border">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="fs-1 text-danger">⚡</div>
+                    <div>
+                        <div class="text-uppercase text-muted small fw-bold">ĐANG SALE GIỜ VÀNG</div>
+                        <div class="fs-3 fw-bold text-dark">@activeCount Sản phẩm</div>
+                        <small class="text-success fw-bold">🟢 Kích hoạt hiển thị trang chủ & trang sale</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="fs-stat-card gold-border">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="fs-1 text-warning">👑</div>
+                    <div>
+                        <div class="text-uppercase text-muted small fw-bold">TỔNG KHO KINH DOANH</div>
+                        <div class="fs-3 fw-bold text-dark">@totalProductCount Sản phẩm</div>
+                        <small class="text-primary fw-bold">📦 Toàn bộ hệ thống quản lý</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN DATA TABLE CARD (MATCHING SCREENSHOT 3) -->
+    <div class="fs-table-card mb-5">
+        <div class="fs-table-header">
+            <h6 class="fw-bold text-danger m-0">
+                📌 DANH SÁCH TẤT CẢ SẢN PHẨM & CẤP PHÉP GIẢM GIÁ FLASH SALE
+            </h6>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-secondary text-uppercase small">
+                    <tr>
+                        <th class="ps-3 py-3">SẢN PHẨM</th>
+                        <th class="py-3">GIÁ NIÊM YẾT</th>
+                        <th class="py-3">GIÁ FLASH SALE</th>
+                        <th class="py-3">MỨC GIẢM</th>
+                        <th class="py-3">XUẤT SALE / ĐÃ BÁN</th>
+                        <th class="py-3">TRẠNG THÁI FLASH SALE</th>
+                        <th class="text-end pe-3 py-3">HÀNH ĐỘNG ADMIN</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!allProducts.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                Chưa có sản phẩm nào trong cửa hàng.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var p in allProducts)
+                        {
+                            bool hasFs = itemsMap.TryGetValue(p.Id, out var fsItem);
+                            bool isItemActive = hasFs && fsItem.IsActive;
+
+                            decimal origPrice = p.Price;
+                            decimal flashPrice = hasFs ? fsItem.DiscountPrice : (p.PromoPrice ?? origPrice * 0.8m);
+                            int discountPct = origPrice > 0 ? (int)((origPrice - flashPrice) * 100 / origPrice) : 0;
+                            int sold = hasFs ? fsItem.SoldQuantity : 0;
+                            int totalQty = hasFs ? fsItem.QuantityForSale : 50;
+
+                            <tr>
+                                <!-- SẢN PHẨM -->
+                                <td class="ps-3">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <img src="@(string.IsNullOrEmpty(p.ImageUrl) ? "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=200&auto=format&fit=crop" : p.ImageUrl)" class="prod-thumb" alt="@p.Name" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=200&auto=format&fit=crop';" />
+                                        <div>
+                                            <div class="fw-bold text-dark fs-6">@p.Name</div>
+                                            <small class="text-muted">SKU: PROD-@p.Id | @(p.Category?.Name ?? "Mỹ Phẩm")</small>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <!-- GIÁ NIÊM YẾT -->
+                                <td class="fw-semibold text-secondary">
+                                    @string.Format("{0:N0}", origPrice)đ
+                                </td>
+
+                                <!-- GIÁ FLASH SALE -->
+                                <td>
+                                    @if (isItemActive)
+                                    {
+                                        <span class="fw-bold text-danger fs-6">@string.Format("{0:N0}", flashPrice)đ</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+
+                                <!-- MỨC GIẢM -->
+                                <td>
+                                    @if (isItemActive && discountPct > 0)
+                                    {
+                                        <span class="badge bg-danger">⚡-@discountPct%</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+
+                                <!-- XUẤT SALE / ĐÃ BÁN -->
+                                <td class="fw-bold text-dark">
+                                    @if (hasFs)
+                                    {
+                                        <span>@sold / @totalQty suất</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">0 / 20 suất</span>
+                                    }
+                                </td>
+
+                                <!-- TRẠNG THÁI FLASH SALE -->
+                                <td>
+                                    @if (isItemActive)
+                                    {
+                                        <span class="fs-status-pill-active">
+                                            🟢 ĐANG FLASH SALE
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="fs-status-pill-inactive">
+                                            ⚪ Tắt (Đã khóa)
+                                        </span>
+                                    }
+                                </td>
+
+                                <!-- HÀNH ĐỘNG ADMIN -->
+                                <td class="text-end pe-3">
+                                    <div class="d-inline-flex gap-2">
+                                        @if (hasFs)
+                                        {
+                                            <button type="button" class="@(isItemActive ? "btn-toggle-off" : "btn-toggle-on")" onclick="toggleItemStatus(@fsItem.Id)">
+                                                @(isItemActive ? "🔴 Tắt Sale" : "🟢 Bật Sale")
+                                            </button>
+                                        }
+
+                                        <button type="button" class="btn-config-fs" onclick="openConfigModal(@p.Id, '@p.Name.Replace("'", "\\'")', @origPrice, @flashPrice, @totalQty)">
+                                            🛠️ Cài Đặt Sale
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- QUICK CONFIG MODAL -->
+<div class="modal fade" id="quickConfigModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-header bg-danger text-white rounded-top-4">
+                <h5 class="modal-title fw-bold">🛠️ CÀI ĐẶT FLASH SALE GIỜ VÀNG</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="modalProdId" />
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">TÊN SẢN PHẨM</label>
+                    <input type="text" id="modalProdName" class="form-control fw-bold" readonly />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">GIÁ NIÊM YẾT HỆ THỐNG</label>
+                    <input type="text" id="modalOrigPrice" class="form-control" readonly />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-danger small fw-bold">GIÁ BÁN FLASH SALE (VNĐ)</label>
+                    <input type="number" id="modalDiscountPrice" class="form-control border-danger fw-bold" placeholder="Nhập giá giảm..." />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-primary small fw-bold">SỐ LƯỢNG SUẤT KHỐNG CHẾ</label>
+                    <input type="number" id="modalQuantityForSale" class="form-control fw-bold" value="50" />
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Hủy Bỏ</button>
+                <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold" onclick="saveQuickConfig()">Lưu Cài Đặt</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleItemStatus(itemId) {
+            fetch('/AdminFlashSale/ToggleItemStatus/' + itemId, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(err => console.error(err));
+        }
+
+        function openConfigModal(productId, productName, origPrice, flashPrice, quantityForSale) {
+            document.getElementById('modalProdId').value = productId;
+            document.getElementById('modalProdName').value = productName;
+            document.getElementById('modalOrigPrice').value = new Intl.NumberFormat('vi-VN').format(origPrice) + 'đ';
+            document.getElementById('modalDiscountPrice').value = flashPrice;
+            document.getElementById('modalQuantityForSale').value = quantityForSale;
+
+            var modal = new bootstrap.Modal(document.getElementById('quickConfigModal'));
+            modal.show();
+        }
+
+        function saveQuickConfig() {
+            var productId = document.getElementById('modalProdId').value;
+            var discountPrice = document.getElementById('modalDiscountPrice').value;
+            var quantityForSale = document.getElementById('modalQuantityForSale').value;
+
+            if (!discountPrice || discountPrice <= 0) {
+                alert('Vui lòng nhập giá Flash Sale hợp lệ!');
+                return;
+            }
+
+            fetch('/AdminFlashSale/QuickSaveItem', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `productId=${productId}&discountPrice=${discountPrice}&quantityForSale=${quantityForSale}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Có lỗi xảy ra!');
+                }
+            });
+        }
+    </script>
+}

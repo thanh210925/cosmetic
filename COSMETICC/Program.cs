@@ -29,9 +29,19 @@ namespace Cosmetic
             builder.Services.AddScoped<SpamFilterService>();
             builder.Services.AddScoped<ComboSuggestionService>();
             builder.Services.AddScoped<ShippingSyncService>();
+            
+            // ======== GHN SHIPPING SERVICE ========
+            builder.Services.Configure<GhnSettings>(builder.Configuration.GetSection("GHN"));
+            builder.Services.AddHttpClient<IGhnService, GhnService>();
+
+            // ======== MOMO PAYMENT SERVICE ========
+            builder.Services.Configure<MomoOption>(builder.Configuration.GetSection("Momo"));
+            builder.Services.AddScoped<IMomoService, MomoService>();
+
             // ======== BACKGROUND SERVICES ========
             builder.Services.AddHostedService<AutoCancelOrderService>();
             builder.Services.AddHostedService<ReviewReminderService>();
+            builder.Services.AddHostedService<FlashSaleAutoDeactivateService>();
             // IHttpContextAccessor for OtpService
             builder.Services.AddHttpContextAccessor();
 
@@ -47,18 +57,26 @@ namespace Cosmetic
             });
 
             // AUTH
+            // AUTH
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
             })
             .AddCookie(options =>
             {
-                options.LoginPath = "/Account/Login"; // chưa login thì redirect
+                options.LoginPath = "/Account/Login";
+            })
+            .AddGoogle(options =>
+            {
+                options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+                options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+                options.CallbackPath = "/signin-google";
             });
-         
+
             var app = builder.Build();
 
-            // PIPELINE
+          
 
             if (!app.Environment.IsDevelopment())
             {

@@ -223,35 +223,37 @@ body {
 
 /* Tabbed navigation */
 .hasaki-nav-tabs {
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    border-bottom: 2px solid #ddd;
+    position: relative;
+    z-index: 10;
+    border-bottom: 2px solid #e2e8f0;
+    margin-top: 20px;
     margin-bottom: 25px;
     display: flex;
     background: #ffffff;
-    border-radius: 4px;
+    border-radius: 8px;
     overflow-x: auto;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .hasaki-nav-link {
-    padding: 15px 25px;
-    color: #333;
-    font-weight: bold;
+    padding: 14px 24px;
+    color: #475569;
+    font-weight: 700;
     text-decoration: none;
     border-bottom: 3px solid transparent;
-    font-size: 14px;
+    font-size: 14.5px;
     white-space: nowrap;
+    transition: all 0.2s ease;
 }
 
 .hasaki-nav-link.active {
-    color: var(--hasaki-green);
-    border-bottom-color: var(--hasaki-green);
+    color: #9b0022;
+    border-bottom-color: #9b0022;
+    background-color: rgba(155, 0, 34, 0.04);
 }
 
 .hasaki-nav-link:hover {
-    color: var(--hasaki-green);
+    color: #9b0022;
 }
 
 /* Collapse Expand text for Description */

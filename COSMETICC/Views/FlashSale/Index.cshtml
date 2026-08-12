@@ -1,0 +1,241 @@
+@model COSMETICC.Models.FlashSale
+
+@{
+    ViewData["Title"] = "⚡ FLASH SALE GIỜ VÀNG SỨC KHỎE 2026";
+    var allCampaigns = ViewBag.AllCampaigns as IEnumerable<COSMETICC.Models.FlashSale> ?? new List<COSMETICC.Models.FlashSale>();
+    var now = DateTime.Now;
+    bool isCampaignActive = Model != null && Model.StartTime <= now && Model.EndTime > now;
+    bool isCampaignUpcoming = Model != null && Model.StartTime > now;
+}
+
+<link rel="stylesheet" href="~/css/flashsale.css" asp-append-version="true" />
+
+<div class="fs-page-bg">
+    <!-- VIBRANT HERO BANNER (MATCHING SCREENSHOT 2) -->
+    <div class="fs-hero-banner">
+        <div class="container">
+            <span class="fs-hero-badge">⚡ ƯU ĐÃI NỔI BẬT MỸ PHẨM CHÍNH HÃNG 2026</span>
+            <h1 class="fs-hero-title">FLASH SALE GIỜ VÀNG BEAUTY GLOW 2026</h1>
+            <p class="fs-hero-subtitle">Cơ hội duy nhất trong ngày sở hữu Serum, Kem dưỡng & Mỹ phẩm cao cấp với giá ưu đãi chạm đáy!</p>
+
+            @if (Model != null)
+            {
+                <div class="fs-hero-timer-wrap">
+                    <span class="text-white-50">KẾT THÚC TRONG:</span>
+                    <div class="fs-hero-timer-wrap" id="fsCountdownContainer" data-target="@((isCampaignActive ? Model.EndTime : Model.StartTime).ToString("yyyy-MM-ddTHH:mm:ss"))">
+                        <div class="fs-timer-box" id="cdHours">00</div>
+                        <span>:</span>
+                        <div class="fs-timer-box" id="cdMinutes">00</div>
+                        <span>:</span>
+                        <div class="fs-timer-box" id="cdSeconds">00</div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- TIME SLOTS SWITCHER TABS (MATCHING SCREENSHOT 2) -->
+        <div class="fs-time-tabs">
+            @if (allCampaigns.Any())
+            {
+                @foreach (var c in allCampaigns)
+                {
+                    bool isAct = c.StartTime <= now && c.EndTime > now;
+                    bool isSelected = Model != null && Model.Id == c.Id;
+
+                    <a asp-action="Index" asp-route-campaignId="@c.Id" class="fs-tab-pill @(isSelected ? "active" : "")">
+                        <span>@c.StartTime.ToString("HH:mm") - @c.EndTime.ToString("HH:mm")</span>
+                        <small>@(isAct ? "ĐANG DIỄN RA" : (c.StartTime > now ? "SẮP DIỄN RA" : "GIỜ VÀNG ĐỘC QUYỀN"))</small>
+                    </a>
+                }
+            }
+            else
+            {
+                <a href="#" class="fs-tab-pill active">
+                    <span>09:00 - 12:00</span>
+                    <small>ĐANG DIỄN RA</small>
+                </a>
+                <a href="#" class="fs-tab-pill">
+                    <span>12:00 - 15:00</span>
+                    <small>SẮP DIỄN RA</small>
+                </a>
+                <a href="#" class="fs-tab-pill">
+                    <span>20:00 - 23:59</span>
+                    <small>GIỜ VÀNG ĐỘC QUYỀN</small>
+                </a>
+            }
+        </div>
+
+        <!-- PRODUCT GRID (MATCHING SCREENSHOT 2) -->
+        @if (Model == null || !Model.FlashSaleItems.Any())
+        {
+            <div class="text-center py-5 bg-white rounded-4 shadow-sm my-4 p-5">
+                <i class="bi bi-lightning-charge fs-1 text-danger d-block mb-3"></i>
+                <h4 class="fw-bold text-dark">Hiện không có sản phẩm Flash Sale nào đang mở bán</h4>
+                <p class="text-muted">Vui lòng quay lại sau để săn các ưu đãi khủng tiếp theo nhé!</p>
+                <a asp-controller="Product" asp-action="List" class="btn btn-danger rounded-pill px-4 mt-2 fw-bold">
+                    Khám phá tất cả sản phẩm
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var item in Model.FlashSaleItems)
+                {
+                    var p = item.Product;
+                    if (p == null) continue;
+
+                    decimal originalPrice = p.Price;
+                    decimal salePrice = item.DiscountPrice;
+                    int discountPercent = originalPrice > 0 ? (int)((originalPrice - salePrice) * 100 / originalPrice) : 0;
+
+                    int totalQty = item.QuantityForSale;
+                    int soldQty = item.SoldQuantity;
+                    bool isSoldOut = soldQty >= totalQty || !item.IsActive;
+                    int progressPct = totalQty > 0 ? (int)(soldQty * 100 / totalQty) : 100;
+                    if (progressPct > 100) progressPct = 100;
+                    int remainingQty = totalQty - soldQty;
+                    if (remainingQty < 0) remainingQty = 0;
+
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <div class="fs-card">
+                            <!-- Discount Badge -->
+                            @if (discountPercent > 0)
+                            {
+                                <div class="fs-card-badge-discount">
+                                    ⚡-@discountPercent%
+                                </div>
+                            }
+
+                            <button class="fs-card-fav-btn" onclick="toggleWishlist(this, @p.Id)" title="Yêu thích">
+                                <i class="bi bi-heart-fill"></i>
+                            </button>
+
+                            <!-- Image -->
+                            <div class="fs-card-img-wrap">
+                                <a asp-controller="Product" asp-action="Details" asp-route-id="@p.Id">
+                                    <img src="@(string.IsNullOrEmpty(p.ImageUrl) ? "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=300&auto=format&fit=crop" : p.ImageUrl)" alt="@p.Name" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=300&auto=format&fit=crop';" />
+                                </a>
+                            </div>
+
+                            <!-- Body -->
+                            <div class="fs-card-body">
+                                <div class="fs-card-tag">⚡ FLASH SALE HÔM NAY</div>
+                                <h3 class="fs-card-title" title="@p.Name">
+                                    <a asp-controller="Product" asp-action="Details" asp-route-id="@p.Id" class="text-dark text-decoration-none">
+                                        @p.Name
+                                    </a>
+                                </h3>
+
+                                <div class="fs-price-row">
+                                    <span class="fs-price-sale">@string.Format("{0:N0}", salePrice)đ</span>
+                                    @if (originalPrice > salePrice)
+                                    {
+                                        <span class="fs-price-old">@string.Format("{0:N0}", originalPrice)đ</span>
+                                    }
+                                </div>
+
+                                <!-- Stock Progress Bar -->
+                                <div class="fs-stock-tracker">
+                                    <div class="fs-stock-bar-bg">
+                                        <div class="fs-stock-bar-fill" style="width: @progressPct%;"></div>
+                                    </div>
+                                    <div class="fs-stock-info">
+                                        <span>🔥 Đã bán @soldQty/@totalQty suất</span>
+                                        <span>Còn @remainingQty suất</span>
+                                    </div>
+                                </div>
+
+                                <!-- Action Button -->
+                                @if (isSoldOut)
+                                {
+                                    <button class="fs-buy-btn" disabled>
+                                        Đã Hết Suất Sale
+                                    </button>
+                                }
+                                else if (isCampaignUpcoming)
+                                {
+                                    <button class="fs-buy-btn" disabled>
+                                        Sắp Mở Bán
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="fs-buy-btn" onclick="addToCartFS(@p.Id)">
+                                        🛒 Mua Ngay Giá Flash
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function startCountdown() {
+            var container = document.getElementById('fsCountdownContainer');
+            if (!container) return;
+
+            var targetStr = container.getAttribute('data-target');
+            if (!targetStr) return;
+
+            var targetDate = new Date(targetStr).getTime();
+
+            function updateTimer() {
+                var now = new Date().getTime();
+                var diff = targetDate - now;
+
+                if (diff <= 0) {
+                    document.getElementById('cdHours').innerText = "00";
+                    document.getElementById('cdMinutes').innerText = "00";
+                    document.getElementById('cdSeconds').innerText = "00";
+                    return;
+                }
+
+                var hours = Math.floor(diff / (1000 * 60 * 60));
+                var minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                var seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                document.getElementById('cdHours').innerText = hours < 10 ? '0' + hours : hours;
+                document.getElementById('cdMinutes').innerText = minutes < 10 ? '0' + minutes : minutes;
+                document.getElementById('cdSeconds').innerText = seconds < 10 ? '0' + seconds : seconds;
+            }
+
+            updateTimer();
+            setInterval(updateTimer, 1000);
+        }
+
+        startCountdown();
+
+        function addToCartFS(productId) {
+            fetch('/Cart/AddToCart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `productId=${productId}&quantity=1`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.requireLogin) {
+                    window.location.href = '/Account/Login';
+                } else if (data.success) {
+                    alert('Đã thêm sản phẩm Flash Sale vào giỏ hàng!');
+                    if (typeof refreshCartBadge === 'function') refreshCartBadge();
+                } else {
+                    alert(data.message || 'Lỗi thêm sản phẩm!');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Có lỗi xảy ra!');
+            });
+        }
+    </script>
+}

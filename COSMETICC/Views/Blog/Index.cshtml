@@ -1,183 +1,76 @@
 @model IEnumerable<COSMETICC.Models.BlogPost>
 @{
-    ViewData["Title"] = "Cộng đồng làm đẹp & Blog";
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    
+    ViewData["Title"] = "Cộng đồng làm đẹp & Blog";    
     var recentPosts = (List<COSMETICC.Models.BlogPost>)ViewBag.RecentPosts;
     var uniqueTags = (List<string>)ViewBag.UniqueTags;
     int? currentUserId = ViewBag.CurrentUserId as int?;
 }
 
-<style>
-    body {
-        background-color: #f0f2f5;
-        font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
-    }
-    .social-header {
-        background: linear-gradient(135deg, #800020 0%, #4a0012 100%);
-        color: white;
-        padding: 40px 0;
-        text-align: center;
-        margin-bottom: 30px;
-        border-bottom-left-radius: 20px;
-        border-bottom-right-radius: 20px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-    .feed-card {
-        background: white;
-        border-radius: 12px;
-        border: none;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-        margin-bottom: 20px;
-        padding: 16px;
-        text-align: left;
-    }
-    .feed-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        object-fit: cover;
-        background-color: #e4e6eb;
-    }
-    .feed-btn {
-        flex: 1;
-        background: none;
-        border: none;
-        padding: 8px;
-        border-radius: 6px;
-        color: #65676b;
-        font-weight: 600;
-        font-size: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        transition: background-color 0.2s;
-    }
-    .feed-btn:hover {
-        background-color: #f2f3f5;
-        color: #800020;
-    }
-    .feed-btn.liked {
-        color: #e0245e;
-    }
-    .comment-box {
-        background-color: #f0f2f5;
-        border-radius: 18px;
-        padding: 8px 12px;
-        display: inline-block;
-        max-width: 85%;
-    }
-    .comment-avatar {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        object-fit: cover;
-    }
-    .write-comment-input {
-        background-color: #f0f2f5;
-        border: none;
-        border-radius: 20px;
-        padding: 8px 16px;
-        font-size: 14px;
-        width: 100%;
-    }
-    .write-comment-input:focus {
-        outline: none;
-        background-color: #e4e6eb;
-    }
-    .post-btn-submit {
-        background-color: #800020;
-        border: none;
-        color: white;
-        font-weight: 600;
-        border-radius: 20px;
-        padding: 8px 24px;
-        transition: opacity 0.2s;
-    }
-    .post-btn-submit:hover {
-        opacity: 0.9;
-    }
-    .widget-card {
-        background: white;
-        border-radius: 12px;
-        border: none;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-        padding: 16px;
-        margin-bottom: 20px;
-        text-align: left;
-    }
-    .widget-title {
-        font-weight: 700;
-        color: #800020;
-        margin-bottom: 15px;
-        font-size: 16px;
-    }
-    .tag-badge {
-        background: #e4e6eb;
-        color: #050505;
-        font-size: 13px;
-        font-weight: 500;
-        padding: 6px 12px;
-        border-radius: 20px;
-        text-decoration: none;
-        transition: all 0.2s;
-    }
-    .tag-badge:hover, .tag-badge.active {
-        background: #800020;
-        color: white;
-    }
-    .toast-container {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 9999;
-    }
-</style>
+
 
 <div class="social-header">
     <div class="container">
         <h1 class="fw-bold"><i class="bi bi-people-fill me-2"></i>CỘNG ĐỒNG LÀM ĐẸP MEILING</h1>
-        <p class="opacity-75 mb-0">Nơi kết nối đam mê skincare, chia sẻ bí quyết và phong cách sống thuần chay</p>
+        <p class="opacity-75 mb-3">Nơi kết nối đam mê skincare, chia sẻ bí quyết và phong cách sống thuần chay</p>
+        
+        <!-- SEARCH BAR FOR BLOG -->
+        <div class="row justify-content-center mt-3">
+            <div class="col-md-7 col-lg-6">
+                <form asp-controller="Blog" asp-action="Index" method="get" class="d-flex bg-white p-1 rounded-pill shadow">
+                    <input type="text" name="search" class="form-control border-0 rounded-pill px-3 shadow-none text-dark" placeholder="Nhập từ khóa tìm bài viết (skincare, da dầu, mụn, chống nắng...)" value="@ViewBag.SearchQuery" />
+                    <button type="submit" class="btn btn-dark rounded-pill px-4 me-1 fw-bold text-nowrap" style="background:#800020; border:none;">
+                        <i class="bi bi-search me-1"></i> Tìm kiếm
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 
 <div class="container mb-5">
+    
+    <!-- SEARCH & FILTER STATUS NOTICE -->
+    @if (!string.IsNullOrEmpty(ViewBag.SearchQuery as string) || !string.IsNullOrEmpty(ViewBag.CurrentTag as string))
+    {
+        <div class="alert alert-light border shadow-sm rounded-3 d-flex align-items-center justify-content-between mb-4">
+            <div>
+                <i class="bi bi-funnel-fill text-danger me-2"></i>
+                @if (!string.IsNullOrEmpty(ViewBag.SearchQuery as string))
+                {
+                    <span>Kết quả tìm kiếm cho từ khóa: <strong>"@ViewBag.SearchQuery"</strong> (@Model.Count() bài viết)</span>
+                }
+                @if (!string.IsNullOrEmpty(ViewBag.CurrentTag as string))
+                {
+                    <span class="ms-2">Lọc theo thẻ tag: <span class="badge bg-danger">#@ViewBag.CurrentTag</span></span>
+                }
+            </div>
+            <a asp-controller="Blog" asp-action="Index" class="btn btn-sm btn-outline-secondary rounded-pill">
+                <i class="bi bi-x-circle me-1"></i> Xóa bộ lọc
+            </a>
+        </div>
+    }
+
     <div class="row">
         
         <!-- Left: News Feed -->
         <div class="col-lg-8">
             
-            <!-- Create Post Box (FB Style) -->
+            <!-- Create Post Trigger Box -->
             @if (currentUserId != null)
             {
-                <div class="feed-card">
-                    <div class="d-flex align-items-center gap-2 mb-3">
-                        <img src="/images/default-avatar.png" class="feed-avatar" alt="Avatar" />
-                        <span class="fw-bold text-dark">Chia sẻ bí quyết skincare của bạn ngay...</span>
+                <div class="feed-card bg-white p-3 rounded-4 border shadow-sm mb-4">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-3">
+                            <img src="/images/default-avatar.png" class="feed-avatar rounded-circle border" width="45" height="45" alt="Avatar" />
+                            <div>
+                                <h6 class="fw-bold mb-0 text-dark">Chia sẻ bí quyết skincare & làm đẹp</h6>
+                                <span class="text-muted small">Đăng bài viết Blog Làm Đẹp mới với định dạng chuẩn</span>
+                            </div>
+                        </div>
+                        <button type="button" class="btn text-white fw-bold px-4 py-2 rounded-pill shadow-sm d-flex align-items-center gap-2 ms-auto" data-bs-toggle="modal" data-bs-target="#createPostModal" style="background: #007a87; border: none;">
+                            <i class="bi bi-plus-circle-fill"></i> Viết Bài Viết Blog Làm Đẹp Mới
+                        </button>
                     </div>
-                    <form asp-action="CreatePost" method="post">
-                        @Html.AntiForgeryToken()
-                        <div class="mb-2">
-                            <input type="text" name="title" class="form-control" placeholder="Tiêu đề bài viết..." required style="border-radius: 8px; border: 1px solid #ddd; font-size: 14px;" />
-                        </div>
-                        <div class="mb-2">
-                            <textarea name="content" class="form-control" rows="3" placeholder="Bạn đang nghĩ gì? Chia sẻ công thức, review mỹ phẩm..." required style="border-radius: 8px; border: 1px solid #ddd; font-size: 14px; resize: none;"></textarea>
-                        </div>
-                        <div class="row g-2 mb-3">
-                            <div class="col-sm-6">
-                                <input type="url" name="imageUrl" class="form-control form-control-sm" placeholder="Link ảnh minh họa (tùy chọn)..." style="border-radius: 8px;" />
-                            </div>
-                            <div class="col-sm-6">
-                                <input type="text" name="tags" class="form-control form-control-sm" placeholder="Thẻ tag (Ví dụ: Skincare, Vegan)..." style="border-radius: 8px;" />
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-end">
-                            <button type="submit" class="post-btn-submit">
-                                <i class="bi bi-send-fill me-1"></i> Đăng bài viết
-                            </button>
-                        </div>
-                    </form>
                 </div>
             }
             else
@@ -342,6 +235,19 @@
         <!-- Right: Social Sidebar -->
         <div class="col-lg-4 ps-lg-4">
             
+            <!-- Widget: Search Blog -->
+            <div class="widget-card">
+                <h5 class="widget-title"><i class="bi bi-search me-1"></i> Tìm bài viết</h5>
+                <form asp-controller="Blog" asp-action="Index" method="get" class="mt-3">
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control" placeholder="Từ khóa bài viết..." value="@ViewBag.SearchQuery" style="border-radius: 20px 0 0 20px; font-size: 13px;" />
+                        <button type="submit" class="btn btn-dark" style="background:#800020; border:none; border-radius: 0 20px 20px 0;">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
             <!-- Widget: Popular Topics -->
             <div class="widget-card">
                 <h5 class="widget-title">Chủ đề thảo luận hot</h5>
@@ -637,5 +543,144 @@
                 });
             }
         }
+        // WYSIWYG Editor Helpers
+        function execCmd(command) {
+            document.execCommand(command, false, null);
+        }
+
+        function execCmdWithArg(command, arg) {
+            document.execCommand(command, false, arg);
+        }
+
+        function promptLink() {
+            const url = prompt("Nhập liên kết (URL):", "https://");
+            if (url) {
+                document.execCommand("createLink", false, url);
+            }
+        }
+
+        function promptImage() {
+            const url = prompt("Nhập đường dẫn hình ảnh (URL):", "https://");
+            if (url) {
+                document.execCommand("insertImage", false, url);
+            }
+        }
+
+        function syncWysiwygContent() {
+            const html = document.getElementById("editorWysiwyg").innerHTML;
+            document.getElementById("hiddenContentInput").value = html;
+        }
     </script>
 }
+
+<!-- MODAL VIẾT BÀI VIẾT CẨM NANG MỚI (MATCHING SCREENSHOT EXACTLY) -->
+<div class="modal fade" id="createPostModal" tabindex="-1" aria-labelledby="createPostModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px; border: none; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            
+            <!-- Modal Header -->
+            <div class="modal-header border-bottom py-3 px-4" style="background: #ffffff;">
+                <h5 class="modal-title fw-bold d-flex align-items-center gap-2" id="createPostModalLabel" style="color: #0f172a; font-size: 18px;">
+                    <span class="d-inline-flex align-items-center justify-content-center bg-teal text-white rounded-circle" style="width: 28px; height: 28px; background: #007a87;">
+                        <i class="bi bi-plus-lg" style="font-size: 16px;"></i>
+                    </span>
+                    Viết Bài Viết Blog Làm Đẹp Mới
+                </h5>
+                <button type="button" class="btn-close rounded-circle p-2" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form asp-action="CreatePost" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div class="modal-body p-4" style="font-family: 'Segoe UI', system-ui, sans-serif;">
+                    
+                    <!-- Tiêu đề bài viết (*) -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark mb-1" style="font-size: 14px;">Tiêu đề bài viết (*)</label>
+                        <input type="text" name="title" class="form-control py-2 px-3" required placeholder="Ví dụ: Top 5 Bước Chuẩn Skincare Cho Làn Da Dầu Mụn Vào Mùa Hè" style="border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px;" />
+                    </div>
+
+                    <!-- Chuyên mục & Tác giả -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-dark mb-1" style="font-size: 14px;">Chuyên mục</label>
+                            <select name="category" class="form-select py-2 px-3" style="border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px;">
+                                <option value="Dinh Dưỡng Y Khoa">Dinh Dưỡng Y Khoa</option>
+                                <option value="Chăm Sóc Da" selected>Chăm Sóc Da</option>
+                                <option value="Trang Điểm">Trang Điểm</option>
+                                <option value="Chăm Sóc Cơ Thể">Chăm Sóc Cơ Thể</option>
+                                <option value="Phong Cách Sống">Phong Cách Sống</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-dark mb-1" style="font-size: 14px;">Tác giả</label>
+                            <input type="text" name="author" class="form-control py-2 px-3" placeholder="BS. Trần Văn Hùng" value="BS. Trần Văn Hùng" style="border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px;" />
+                        </div>
+                    </div>
+
+                    <!-- Mô tả tóm tắt -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark mb-1" style="font-size: 14px;">Mô tả tóm tắt</label>
+                        <textarea name="summary" class="form-control p-3" rows="2" placeholder="Tóm tắt nội dung bài viết hiển thị ở trang danh sách..." style="border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; resize: vertical;"></textarea>
+                    </div>
+
+                    <!-- Từ khóa chính tìm kiếm -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark mb-1" style="font-size: 14px;">Từ khóa chính tìm kiếm (phân cách bằng dấu phẩy)</label>
+                        <input type="text" name="tags" class="form-control py-2 px-3" placeholder="dinh dưỡng, ăn uống, sức khỏe" value="dinh dưỡng, ăn uống, sức khỏe" style="border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px;" />
+                    </div>
+
+                    <!-- Nội dung chi tiết (Trình soạn thảo WYSIWYG) -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark mb-1" style="font-size: 14px;">Nội dung chi tiết (Trình soạn thảo có định dạng WYSIWYG)</label>
+                        
+                        <div class="border rounded-3 overflow-hidden" style="border-color: #cbd5e1 !important;">
+                            <!-- WYSIWYG Toolbar matching exact icons in screenshot -->
+                            <div class="d-flex align-items-center gap-1 p-2 bg-light border-bottom flex-wrap" style="background-color: #f8fafc !important;">
+                                <select class="form-select form-select-sm w-auto me-2" onchange="execCmdWithArg('formatBlock', this.value)" style="border-radius: 4px; font-size: 13px;">
+                                    <option value="p">Normal</option>
+                                    <option value="h3">Heading 3</option>
+                                    <option value="h4">Heading 4</option>
+                                </select>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 border-0" onclick="execCmd('bold')" title="In đậm"><strong>B</strong></button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 border-0" onclick="execCmd('italic')" title="In nghiêng"><em>I</em></button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 border-0" onclick="execCmd('underline')" title="Gạch chân"><u>U</u></button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 border-0" onclick="execCmd('strikeThrough')" title="Gạch ngang"><s>S</s></button>
+                                <span class="border-end mx-1" style="height: 18px;"></span>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 border-0" onclick="execCmd('insertUnorderedList')" title="Danh sách"><i class="bi bi-list-ul"></i></button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 border-0" onclick="execCmd('insertOrderedList')" title="Số thứ tự"><i class="bi bi-list-ol"></i></button>
+                                <span class="border-end mx-1" style="height: 18px;"></span>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 border-0" onclick="execCmd('justifyLeft')" title="Canh trái"><i class="bi bi-text-left"></i></button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 border-0" onclick="promptLink()" title="Chèn liên kết"><i class="bi bi-link-45deg"></i></button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 border-0" onclick="promptImage()" title="Chèn hình ảnh"><i class="bi bi-image"></i></button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 border-0" onclick="execCmd('removeFormat')" title="Xóa định dạng"><i class="bi bi-type-strikethrough"></i></button>
+                            </div>
+
+                            <!-- Editable editor -->
+                            <div id="editorWysiwyg" contenteditable="true" class="p-3" style="min-height: 160px; max-height: 280px; overflow-y: auto; font-size: 14px; background: white; outline: none;">
+                                <i>Soạn thảo nội dung bài viết cẩm nang y khoa & dinh dưỡng có định dạng (In đậm, nghiêng, danh sách, tiêu đề...)...</i>
+                            </div>
+                            
+                            <textarea name="content" id="hiddenContentInput" style="display:none;"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Ảnh đại diện bài viết -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark mb-1" style="font-size: 14px;">Ảnh đại diện bài viết</label>
+                        <input type="text" name="imageUrl" class="form-control py-2 px-3" placeholder="Nhập liên kết hình ảnh (VD: https://images.unsplash.com/...)" style="border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px;" />
+                    </div>
+
+                </div>
+
+                <!-- Footer buttons matching screenshot -->
+                <div class="modal-footer border-top py-3 px-4 d-flex justify-content-end gap-2" style="background: #ffffff;">
+                    <button type="button" class="btn btn-light border py-2 px-4 fw-semibold" data-bs-dismiss="modal" style="border-radius: 8px; color: #334155; font-size: 14px;">Hủy Bỏ</button>
+                    <button type="submit" onclick="syncWysiwygContent()" class="btn py-2 px-4 fw-bold text-white d-flex align-items-center gap-2" style="background: #007a87; border-radius: 8px; border: none; font-size: 14px;">
+                        <i class="bi bi-send-fill"></i> Đăng Bài Viết
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+

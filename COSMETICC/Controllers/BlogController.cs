@@ -19,7 +19,7 @@ namespace COSMETICC.Controllers
         }
 
         // GET: /Blog
-        public async Task<IActionResult> Index(string? tag)
+        public async Task<IActionResult> Index(string? tag, string? search)
         {
             var userIdStr = HttpContext.Session.GetString("UserId");
             int? currentUserId = null;
@@ -36,6 +36,18 @@ namespace COSMETICC.Controllers
                 .Where(p => p.IsPublished)
                 .OrderByDescending(p => p.CreatedAt)
                 .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var cleanSearch = search.Trim().ToLower();
+                query = query.Where(p =>
+                    p.Title.ToLower().Contains(cleanSearch) ||
+                    (p.Summary != null && p.Summary.ToLower().Contains(cleanSearch)) ||
+                    (p.Content != null && p.Content.ToLower().Contains(cleanSearch)) ||
+                    (p.Tags != null && p.Tags.ToLower().Contains(cleanSearch))
+                );
+                ViewBag.SearchQuery = search;
+            }
 
             if (!string.IsNullOrEmpty(tag))
             {
@@ -77,7 +89,7 @@ namespace COSMETICC.Controllers
         // POST: /Blog/CreatePost
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreatePost(string title, string content, string? imageUrl, string? tags)
+        public async Task<IActionResult> CreatePost(string title, string content, string? imageUrl, string? tags, string? summary, string? category, string? author)
         {
             var userIdStr = HttpContext.Session.GetString("UserId");
             if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
@@ -94,18 +106,23 @@ namespace COSMETICC.Controllers
 
             // Simple slug generation
             string rawSlug = title.ToLower().Trim().Replace(" ", "-").Replace("đ", "d");
-            // Remove special characters
             string cleanSlug = new string(rawSlug.Where(c => char.IsLetterOrDigit(c) || c == '-').ToArray());
             string uniqueSlug = cleanSlug + "-" + DateTime.Now.Ticks.ToString().Substring(12);
+
+            string finalTags = tags;
+            if (!string.IsNullOrWhiteSpace(category))
+            {
+                finalTags = string.IsNullOrWhiteSpace(tags) ? category : $"{category}, {tags}";
+            }
 
             var post = new BlogPost
             {
                 Title = title.Trim(),
                 Slug = uniqueSlug,
                 Content = content.Trim(),
-                Summary = content.Length > 150 ? content.Substring(0, 147) + "..." : content,
+                Summary = !string.IsNullOrWhiteSpace(summary) ? summary.Trim() : (content.Length > 150 ? content.Substring(0, 147) + "..." : content),
                 ImageUrl = string.IsNullOrWhiteSpace(imageUrl) ? null : imageUrl.Trim(),
-                Tags = string.IsNullOrWhiteSpace(tags) ? "Cộng đồng" : tags.Trim(),
+                Tags = string.IsNullOrWhiteSpace(finalTags) ? "Cộng đồng" : finalTags.Trim(),
                 IsPublished = true,
                 CreatedAt = DateTime.Now,
                 UserId = userId,
@@ -117,7 +134,7 @@ namespace COSMETICC.Controllers
             _context.BlogPosts.Add(post);
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = "Đăng bài viết mới thành công!";
+            TempData["SuccessMessage"] = "Đăng bài viết cẩm nang mới thành công!";
             return RedirectToAction(nameof(Index));
         }
 
@@ -308,34 +325,54 @@ namespace COSMETICC.Controllers
             return Json(new { success = true, message = "Đã xóa bài viết thành công!" });
         }
 
-        // GET: /Blog/Details/my-article-slug
-        public async Task<IActionResult> Details(string slug)
+        // GET: /Blog/Details/2 or /Blog/Details/my-article-slug
+        public async Task<IActionResult> Details(string? id, string? slug)
         {
-            if (string.IsNullOrEmpty(slug)) return NotFound();
+            var target = !string.IsNullOrEmpty(id) ? id : slug;
+            if (string.IsNullOrEmpty(target))
+            {
+                return RedirectToAction(nameof(Index));
+            }
 
-            var post = await _context.BlogPosts
-                .Include(p => p.User)
-                .Include(p => p.BlogPostLikes)
-                .Include(p => p.BlogPostComments)
-                    .ThenInclude(c => c.User)
-                .FirstOrDefaultAsync(p => p.Slug == slug && p.IsPublished);
+            BlogPost? post = null;
+
+            if (int.TryParse(target, out int numericId))
+            {
+                post = await _context.BlogPosts
+                    .Include(p => p.User)
+                    .Include(p => p.BlogPostLikes)
+                    .Include(p => p.BlogPostComments)
+                        .ThenInclude(c => c.User)
+                    .FirstOrDefaultAsync(p => p.Id == numericId);
+            }
 
             if (post == null)
             {
-                if (int.TryParse(slug, out int id))
-                {
-                    post = await _context.BlogPosts
-                        .Include(p => p.User)
-                        .Include(p => p.BlogPostLikes)
-                        .Include(p => p.BlogPostComments)
-                            .ThenInclude(c => c.User)
-                        .FirstOrDefaultAsync(p => p.Id == id);
-                }
+                post = await _context.BlogPosts
+                    .Include(p => p.User)
+                    .Include(p => p.BlogPostLikes)
+                    .Include(p => p.BlogPostComments)
+                        .ThenInclude(c => c.User)
+                    .FirstOrDefaultAsync(p => p.Slug == target);
             }
 
-            if (post == null || !post.IsPublished)
+            // Fallback: If requested post ID/slug does not exist in DB, load the latest published post
+            if (post == null)
             {
-                return NotFound();
+                post = await _context.BlogPosts
+                    .Include(p => p.User)
+                    .Include(p => p.BlogPostLikes)
+                    .Include(p => p.BlogPostComments)
+                        .ThenInclude(c => c.User)
+                    .Where(p => p.IsPublished)
+                    .OrderByDescending(p => p.CreatedAt)
+                    .FirstOrDefaultAsync();
+            }
+
+            if (post == null)
+            {
+                TempData["ErrorMessage"] = "Chưa có bài viết nào trong hệ thống!";
+                return RedirectToAction(nameof(Index));
             }
 
             var userIdStr = HttpContext.Session.GetString("UserId");

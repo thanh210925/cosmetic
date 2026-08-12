@@ -11,10 +11,12 @@ namespace Cosmetic.Controllers
     public class AccountController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly EmailService _emailService;
 
-        public AccountController(AppDbContext context)
+        public AccountController(AppDbContext context, EmailService emailService)
         {
             _context = context;
+            _emailService = emailService;
         }
 
         // ================= REGISTER =================
@@ -70,6 +72,115 @@ namespace Cosmetic.Controllers
             }
 
             ViewBag.Error = "Sai thông tin đăng nhập";
+            return View();
+        }
+
+        // ================= FORGOT & RESET PASSWORD =================
+
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ForgotPassword(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                ViewBag.Error = "Vui lòng nhập Email hoặc Số điện thoại.";
+                return View();
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u =>
+                u.Email == input || u.Phone == input || u.Username == input);
+
+            if (user == null)
+            {
+                ViewBag.Error = "Không tìm thấy tài khoản liên kết với Email hoặc SĐT này.";
+                return View();
+            }
+
+            // Generate 6-digit OTP
+            string otp = new Random().Next(100000, 999999).ToString();
+            HttpContext.Session.SetString("ResetOtp", otp);
+            HttpContext.Session.SetString("ResetUserId", user.Id.ToString());
+            HttpContext.Session.SetString("ResetEmail", user.Email ?? input);
+
+            // Send real email OTP via EmailService
+            if (!string.IsNullOrEmpty(user.Email))
+            {
+                await _emailService.SendOtpAsync(user.Email, user.FullName ?? user.Username, otp, "đặt lại mật khẩu tài khoản MeiLing Cosmetics");
+            }
+
+            TempData["SuccessAlert"] = $"Mã OTP xác thực đã được gửi tới Email {user.Email}! (Mã xác thực thử nghiệm: {otp})";
+            return RedirectToAction("ResetPassword");
+        }
+
+        [HttpGet]
+        public IActionResult ResetPassword()
+        {
+            var userIdStr = HttpContext.Session.GetString("ResetUserId");
+            if (string.IsNullOrEmpty(userIdStr))
+            {
+                return RedirectToAction("ForgotPassword");
+            }
+            ViewBag.Email = HttpContext.Session.GetString("ResetEmail");
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ResetPassword(string otpInput, string newPassword, string confirmPassword)
+        {
+            var sessionOtp = HttpContext.Session.GetString("ResetOtp");
+            var userIdStr = HttpContext.Session.GetString("ResetUserId");
+
+            if (string.IsNullOrEmpty(userIdStr) || string.IsNullOrEmpty(sessionOtp))
+            {
+                ViewBag.Error = "Phiên làm việc đã hết hạn. Vui lòng thử lại từ đầu.";
+                return RedirectToAction("ForgotPassword");
+            }
+
+            if (otpInput != sessionOtp)
+            {
+                ViewBag.Error = "Mã OTP xác thực không đúng. Vui lòng kiểm tra lại.";
+                ViewBag.Email = HttpContext.Session.GetString("ResetEmail");
+                return View();
+            }
+
+            if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 6)
+            {
+                ViewBag.Error = "Mật khẩu mới phải có ít nhất 6 ký tự.";
+                ViewBag.Email = HttpContext.Session.GetString("ResetEmail");
+                return View();
+            }
+
+            if (newPassword != confirmPassword)
+            {
+                ViewBag.Error = "Xác nhận mật khẩu mới không khớp.";
+                ViewBag.Email = HttpContext.Session.GetString("ResetEmail");
+                return View();
+            }
+
+            if (int.TryParse(userIdStr, out int userId))
+            {
+                var user = await _context.Users.FindAsync(userId);
+                if (user != null)
+                {
+                    user.Password = newPassword;
+                    await _context.SaveChangesAsync();
+
+                    // Clear session reset info
+                    HttpContext.Session.Remove("ResetOtp");
+                    HttpContext.Session.Remove("ResetUserId");
+                    HttpContext.Session.Remove("ResetEmail");
+
+                    TempData["SuccessAlert"] = "Đổi mật khẩu thành công! Vui lòng đăng nhập với mật khẩu mới.";
+                    return RedirectToAction("Login");
+                }
+            }
+
+            ViewBag.Error = "Có lỗi xảy ra trong quá trình đặt lại mật khẩu.";
             return View();
         }
 

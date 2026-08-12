@@ -42,18 +42,36 @@ namespace COSMETICC.Controllers
                 .Take(4)
                 .ToListAsync();
 
-            // 4. Flash Sale Product (Sale item with the lowest stock)
-            viewModel.FlashSaleProduct = await _context.Products
-                .Include(p => p.Brand)
-                .Where(p => p.IsActive && p.PromoPrice.HasValue && p.PromoPrice < p.Price && p.Stock.HasValue && p.Stock > 0)
-                .OrderBy(p => p.Stock)
-                .FirstOrDefaultAsync();
+            // 4. Flash Sale Product (Prioritize real active Flash Sale campaign)
+            var now = DateTime.Now;
+            try
+            {
+                var activeFsItem = await _context.FlashSaleItems
+                    .Include(fsi => fsi.Product)
+                        .ThenInclude(p => p!.Brand)
+                    .Include(fsi => fsi.FlashSale)
+                    .Where(fsi => fsi.IsActive && fsi.SoldQuantity < fsi.QuantityForSale &&
+                                  fsi.FlashSale != null && fsi.FlashSale.IsActive &&
+                                  fsi.FlashSale.StartTime <= now && fsi.FlashSale.EndTime > now)
+                    .OrderByDescending(fsi => fsi.FlashSale!.EndTime)
+                    .FirstOrDefaultAsync();
+
+                if (activeFsItem != null && activeFsItem.Product != null)
+                {
+                    activeFsItem.Product.PromoPrice = activeFsItem.DiscountPrice;
+                    viewModel.FlashSaleProduct = activeFsItem.Product;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("FlashSale query exception: " + ex.Message);
+            }
 
             if (viewModel.FlashSaleProduct == null)
             {
                 viewModel.FlashSaleProduct = await _context.Products
                     .Include(p => p.Brand)
-                    .Where(p => p.IsActive && p.Stock.HasValue && p.Stock > 0)
+                    .Where(p => p.IsActive && p.PromoPrice.HasValue && p.PromoPrice < p.Price && p.Stock.HasValue && p.Stock > 0)
                     .OrderBy(p => p.Stock)
                     .FirstOrDefaultAsync();
             }
@@ -61,11 +79,11 @@ namespace COSMETICC.Controllers
             // 5. Brands
             viewModel.Brands = await _context.Brands.Take(12).ToListAsync();
 
-            // 6. Blog Posts
+            // 6. Blog Posts (Max 6 posts displayed fully)
             viewModel.BlogPosts = await _context.BlogPosts
                 .Where(b => b.IsPublished)
                 .OrderByDescending(b => b.CreatedAt)
-                .Take(3)
+                .Take(6)
                 .ToListAsync();
 
             // 7. Featured Reviews (Fetched from Blog Post Comments)

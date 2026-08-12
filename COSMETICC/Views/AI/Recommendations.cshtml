@@ -5,63 +5,7 @@
     string reason = ViewBag.Reason ?? "Sản phẩm phổ biến nhất";
 }
 
-<style>
-    .rec-hero {
-        background: linear-gradient(135deg, #1a0a2e 0%, #16213e 100%);
-        padding: 50px 0 40px;
-        text-align: center;
-        position: relative;
-    }
-    .rec-hero h1 {
-        font-size: 2.2rem; font-weight: 900;
-        background: linear-gradient(90deg, #f9a8d4, #c084fc);
-        -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-    }
-    .rec-reason {
-        display: inline-flex; align-items: center; gap: 8px;
-        background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.3);
-        color: #c084fc; padding: 8px 18px; border-radius: 30px; font-size: 13px;
-        margin-top: 8px;
-    }
-    .product-grid-ai {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-        gap: 20px;
-        padding: 40px 0;
-    }
-    .ai-product-card {
-        background: white;
-        border-radius: 14px;
-        border: 1px solid #f1f5f9;
-        overflow: hidden;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    }
-    .ai-product-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 16px 40px rgba(124,58,237,0.12);
-        border-color: rgba(124,58,237,0.2);
-    }
-    .ai-product-card img {
-        width: 100%; aspect-ratio: 1; object-fit: cover;
-        background: #f8fafc;
-    }
-    .ai-card-body { padding: 16px; }
-    .ai-card-brand { font-size: 11px; color: #800020; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-    .ai-card-name { font-size: 14px; font-weight: 600; color: #1e293b; margin: 4px 0 8px; line-height: 1.4; }
-    .ai-card-price { font-size: 16px; font-weight: 800; color: #800020; }
-    .ai-card-promo { font-size: 12px; text-decoration: line-through; color: #94a3b8; margin-left: 6px; }
-    .ai-badge-pill {
-        position: absolute; top: 10px; left: 10px;
-        background: linear-gradient(90deg, #7c3aed, #db2777);
-        color: white; font-size: 10px; font-weight: 700;
-        padding: 3px 8px; border-radius: 20px;
-    }
-    .empty-state {
-        text-align: center; padding: 80px 20px; color: #64748b;
-    }
-    .empty-state i { font-size: 64px; color: #c084fc; margin-bottom: 20px; display: block; }
-</style>
+
 
 <div class="rec-hero">
     <div class="container">

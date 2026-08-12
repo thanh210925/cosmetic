@@ -1,0 +1,135 @@
+/* ================= WISHLIST STYLES ================= */
+.wishlist-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+.wish-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    transition: all 0.3s;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+}
+.wish-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    border-color: #800020;
+}
+.wish-img-box {
+    position: relative;
+    height: 180px;
+    background: #f8fafc;
+    overflow: hidden;
+}
+.wish-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s;
+}
+.wish-card:hover .wish-img {
+    transform: scale(1.08);
+}
+.btn-remove-wish {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: white;
+    color: #800020;
+    border: 1px solid #eee;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s;
+    z-index: 10;
+}
+.btn-remove-wish:hover {
+    background: #800020;
+    color: white;
+    border-color: #800020;
+}
+
+/* ================= COMPARE STYLES ================= */
+.compare-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+.compare-header {
+    background: linear-gradient(135deg, #800020 0%, #5c0017 100%);
+    color: white;
+    padding: 40px 0;
+    text-align: center;
+    border-radius: 12px;
+    margin-bottom: 30px;
+}
+.compare-table {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+}
+.compare-table th {
+    background: #f8fafc;
+    font-weight: 700;
+    color: #475569;
+    text-align: left;
+    width: 20%;
+    vertical-align: middle;
+    border-right: 1px solid #edf2f7;
+}
+.compare-table td {
+    width: 40%;
+    vertical-align: top;
+    border-right: 1px solid #edf2f7;
+    padding: 20px;
+}
+.compare-table td:last-child {
+    border-right: none;
+}
+.compare-select {
+    height: 42px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    font-weight: 500;
+}
+.vs-badge {
+    background: #e2e8f0;
+    color: #475569;
+    font-weight: 800;
+    padding: 10px 15px;
+    border-radius: 50%;
+    font-size: 14px;
+}
+.compare-img {
+    max-height: 180px;
+    object-fit: contain;
+    margin-bottom: 15px;
+}
+.compare-placeholder {
+    background: #f8fafc;
+    border: 2px dashed #cbd5e1;
+    border-radius: 8px;
+    height: 250px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #64748b;
+}
+.better-price-badge {
+    background: #d1fae5;
+    color: #065f46;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    display: inline-block;
+    margin-top: 5px;
+}

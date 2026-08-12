@@ -8,10 +8,12 @@ namespace COSMETICC.Controllers
     public class AdminOrderController : AdminBaseController
     {
         private readonly AppDbContext _context;
+        private readonly IGhnService _ghnService;
 
-        public AdminOrderController(AppDbContext context)
+        public AdminOrderController(AppDbContext context, IGhnService ghnService)
         {
             _context = context;
+            _ghnService = ghnService;
         }
 
         // GET: AdminOrder
@@ -189,6 +191,59 @@ namespace COSMETICC.Controllers
             await _context.SaveChangesAsync();
 
             TempData["SuccessMessage"] = $"Đơn hàng đã được bàn giao cho {carrier}. Mã vận đơn tự sinh: {shipping.TrackingCode}";
+            return RedirectToAction(nameof(Details), new { id = id });
+        }
+
+        // POST: AdminOrder/CreateGhnOrder/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateGhnOrder(int id, int districtId = 1442, string wardCode = "20101")
+        {
+            var order = await _context.Orders
+                .Include(o => o.User)
+                .Include(o => o.Shippings)
+                .Include(o => o.Payments)
+                .FirstOrDefaultAsync(o => o.Id == id);
+
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+            var shipping = order.Shippings.FirstOrDefault();
+            string receiverName = order.User?.FullName ?? "Khách hàng";
+            string receiverPhone = shipping?.Phone ?? order.User?.Phone ?? "0900000000";
+            string address = shipping?.Address ?? order.User?.Address ?? "123 Đường chính";
+            
+            bool isCod = order.Payments.Any(p => p.PaymentMethod == "COD" && (p.PaymentStatus ?? "").ToLower() != "completed");
+            decimal codAmount = isCod ? (order.TotalAmount ?? 0m) : 0m;
+
+            var result = await _ghnService.CreateOrderAsync(order.Id, receiverName, receiverPhone, address, wardCode, districtId, codAmount);
+
+            if (result.Success)
+            {
+                if (shipping == null)
+                {
+                    shipping = new Shipping { OrderId = id };
+                    _context.Shippings.Add(shipping);
+                }
+
+                shipping.Carrier = "Giao Hàng Nhanh (GHN)";
+                shipping.TrackingCode = result.OrderCode;
+                shipping.ShippingStatus = "Đang giao";
+                shipping.ShippingDate = DateTime.Now;
+                shipping.EstimatedDeliveryDate = DateTime.Now.AddDays(3);
+
+                order.Status = "Đang giao";
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = $"Đã tạo vận đơn GHN thành công! Mã vận đơn GHN: {result.OrderCode}";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = $"Lỗi khi tạo vận đơn GHN: {result.Message}";
+            }
+
             return RedirectToAction(nameof(Details), new { id = id });
         }
     }

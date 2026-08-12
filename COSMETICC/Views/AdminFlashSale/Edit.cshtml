@@ -1,0 +1,164 @@
+@model COSMETICC.Models.FlashSale
+
+@{
+    ViewData["Title"] = "Chỉnh sửa Flash Sale";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var availableProducts = ViewBag.AvailableProducts as IEnumerable<COSMETICC.Models.Product>;
+}
+
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-pencil-square text-warning me-2"></i>Chỉnh sửa Flash Sale #@Model.Id</h2>
+            <p class="text-muted mb-0">Cập nhật khung giờ, số lượng mở bán và sản phẩm tham gia.</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại
+        </a>
+    </div>
+
+    <form asp-action="Edit" asp-route-id="@Model.Id" method="post" id="editFlashSaleForm">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4"></div>
+
+        <div class="row g-4">
+            <!-- Campaign Info -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-3 p-4 mb-4">
+                    <h5 class="fw-bold mb-3 border-bottom pb-2"><i class="bi bi-gear-fill text-primary me-2"></i>Cấu hình chương trình</h5>
+
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label fw-bold">Tên chương trình <span class="text-danger">*</span></label>
+                        <input asp-for="Title" class="form-control" required />
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="StartTime" class="form-label fw-bold">Thời gian bắt đầu <span class="text-danger">*</span></label>
+                        <input asp-for="StartTime" type="datetime-local" class="form-control" value="@Model.StartTime.ToString("yyyy-MM-ddTHH:mm")" required />
+                        <span asp-validation-for="StartTime" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="EndTime" class="form-label fw-bold">Thời gian kết thúc <span class="text-danger">*</span></label>
+                        <input asp-for="EndTime" type="datetime-local" class="form-control" value="@Model.EndTime.ToString("yyyy-MM-ddTHH:mm")" required />
+                        <span asp-validation-for="EndTime" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3 form-check form-switch">
+                        <input asp-for="IsActive" class="form-check-input" type="checkbox" id="IsActive" />
+                        <label class="form-check-label fw-bold" for="IsActive">Kích hoạt chương trình này</label>
+                    </div>
+
+                    <hr />
+
+                    <button type="submit" class="btn btn-warning btn-lg w-100 fw-bold shadow-sm">
+                        <i class="bi bi-save me-1"></i> Lưu Cập Nhật Flash Sale
+                    </button>
+                </div>
+            </div>
+
+            <!-- Products List -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm rounded-3 p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-box-seam text-warning me-2"></i>Danh sách Sản Phẩm Flash Sale</h5>
+                        <input type="text" id="searchProductInput" class="form-control form-control-sm w-50" placeholder="🔍 Tìm sản phẩm..." onkeyup="filterProducts()" />
+                    </div>
+
+                    <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th width="40" class="text-center">Chọn</th>
+                                    <th>Sản phẩm</th>
+                                    <th>Giá gốc</th>
+                                    <th width="140">Giá Flash Sale (VNĐ)</th>
+                                    <th width="110">Số lượng Sale</th>
+                                    <th width="100">Đã bán</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (availableProducts != null)
+                                {
+                                    foreach (var p in availableProducts)
+                                    {
+                                        var existingItem = Model.FlashSaleItems.FirstOrDefault(i => i.ProductId == p.Id);
+                                        bool isChecked = existingItem != null;
+
+                                        <tr class="product-row @(isChecked ? "table-warning" : "")" data-name="@p.Name.ToLower()">
+                                            <td class="text-center">
+                                                <input type="checkbox" class="form-check-input product-check" name="productIds" value="@p.Id" @(isChecked ? "checked" : "") onchange="toggleProductRow(this)" />
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    @if (!string.IsNullOrEmpty(p.ImageUrl))
+                                                    {
+                                                        <img src="@p.ImageUrl" width="40" height="40" class="rounded object-fit-cover" />
+                                                    }
+                                                    <div>
+                                                        <div class="fw-bold text-dark small" style="max-width: 200px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">@p.Name</div>
+                                                        <small class="text-muted">Kho: @p.Stock</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-muted text-decoration-line-through">
+                                                @string.Format("{0:N0}", p.Price) đ
+                                            </td>
+                                            <td>
+                                                <input type="number" class="form-control form-control-sm discount-price-input" name="discountPrices" value="@(isChecked ? existingItem.DiscountPrice : (p.Price * 0.8m))" min="1" step="1000" @(isChecked ? "" : "disabled") required />
+                                            </td>
+                                            <td>
+                                                <input type="number" class="form-control form-control-sm qty-input" name="quantityForSales" value="@(isChecked ? existingItem.QuantityForSale : 10)" min="1" max="@p.Stock" @(isChecked ? "" : "disabled") required />
+                                            </td>
+                                            <td>
+                                                <input type="number" class="form-control form-control-sm sold-input bg-light" name="soldQuantities" value="@(isChecked ? existingItem.SoldQuantity : 0)" min="0" @(isChecked ? "" : "disabled") readonly />
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        function filterProducts() {
+            var input = document.getElementById('searchProductInput').value.toLowerCase();
+            var rows = document.querySelectorAll('.product-row');
+            rows.forEach(function (row) {
+                var name = row.getAttribute('data-name');
+                if (name.includes(input)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function toggleProductRow(checkbox) {
+            var row = checkbox.closest('tr');
+            var priceInput = row.querySelector('.discount-price-input');
+            var qtyInput = row.querySelector('.qty-input');
+            var soldInput = row.querySelector('.sold-input');
+
+            if (checkbox.checked) {
+                priceInput.removeAttribute('disabled');
+                qtyInput.removeAttribute('disabled');
+                soldInput.removeAttribute('disabled');
+                row.classList.add('table-warning');
+            } else {
+                priceInput.setAttribute('disabled', 'disabled');
+                qtyInput.setAttribute('disabled', 'disabled');
+                soldInput.setAttribute('disabled', 'disabled');
+                row.classList.remove('table-warning');
+            }
+        }
+    </script>
+}

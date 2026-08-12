@@ -8,46 +8,7 @@
     var payment = Model.Payments?.FirstOrDefault();
 }
 
-@section Styles {
-    <style>
-        @@media print {
-            /* Hide sidebar, content header, buttons, alerts, status boxes, etc. */
-            .sidebar, .content-header, .btn-action, .alert, .status-modify-box, .no-print, .btn-close {
-                display: none !important;
-            }
-            .content {
-                margin-left: 0 !important;
-                padding: 0 !important;
-            }
-            .py-4 {
-                padding: 0 !important;
-            }
-            .admin-card {
-                border: none !important;
-                box-shadow: none !important;
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-            .print-invoice-title {
-                display: block !important;
-                text-align: center;
-                margin-bottom: 25px;
-            }
-            /* Make layout full width for print */
-            .col-lg-8, .col-lg-4 {
-                width: 100% !important;
-                flex: 0 0 100% !important;
-                max-width: 100% !important;
-            }
-            .row {
-                display: block !important;
-            }
-        }
-        .print-invoice-title {
-            display: none;
-        }
-    </style>
-}
+
 
 <div class="container-fluid px-4">
 
@@ -204,12 +165,19 @@
                         {
                             <div class="border p-2 rounded bg-light mb-2">
                                 <span class="fw-bold d-block mb-2 text-dark" style="font-size:12.5px;">Bàn giao đơn vị vận chuyển:</span>
+                                <form asp-action="CreateGhnOrder" method="post" class="w-100 mb-2">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@Model.Id" />
+                                    <button type="submit" class="btn btn-danger w-100 text-white fw-bold btn-sm py-2 shadow-sm" style="background-color: #f26522; border-color: #f26522;">
+                                        <i class="bi bi-box-seam me-1"></i> 🚀 Tạo vận đơn GHN Express API
+                                    </button>
+                                </form>
                                 <div class="d-flex gap-2">
                                     <form asp-action="HandoverToCarrier" method="post" class="w-100">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@Model.Id" />
                                         <input type="hidden" name="carrier" value="GHN" />
-                                        <button type="submit" class="btn btn-warning w-100 text-dark fw-bold btn-sm py-2">🚚 Bàn giao GHN</button>
+                                        <button type="submit" class="btn btn-warning w-100 text-dark fw-bold btn-sm py-2">🚚 Bàn giao GHN thủ công</button>
                                     </form>
                                     <form asp-action="HandoverToCarrier" method="post" class="w-100">
                                         @Html.AntiForgeryToken()

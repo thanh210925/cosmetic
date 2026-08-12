@@ -1,56 +1,77 @@
-﻿@{
-    ViewData["Title"] = "Đăng nhập";
+@{
+    ViewData["Title"] = "Đăng Nhập - MeiLing Cosmetics";
 }
 
-<div class="container d-flex justify-content-center align-items-center" style="height:80vh;">
-    <div class="card shadow p-4" style="width:380px; border-radius:15px;">
+<div class="container d-flex justify-content-center align-items-center py-5" style="min-height: 80vh;">
+    <div class="card shadow-lg border-0 p-4 p-md-5" style="width: 420px; border-radius: 20px; background: #ffffff;">
 
-        <h3 class="text-center mb-4">Đăng nhập</h3>
+        <div class="text-center mb-4">
+            <h3 class="fw-bold mb-1" style="color: #7a001a;">ĐĂNG NHẬP</h3>
+            <p class="text-muted small">Chào mừng bạn quay trở lại với MeiLing Cosmetics</p>
+        </div>
+
+        @if (TempData["SuccessAlert"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show p-3 mb-4 text-center rounded-3 small fw-bold" role="alert">
+                <i class="bi bi-check-circle-fill me-1"></i> @TempData["SuccessAlert"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show p-3 mb-4 text-center rounded-3 small fw-bold" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i> @ViewBag.Error
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
 
         <form asp-action="Login" method="post">
             @Html.AntiForgeryToken()
 
             <!-- Email / Phone -->
             <div class="mb-3">
-                <label class="form-label">Email hoặc SĐT</label>
-                <input name="input" class="form-control" placeholder="Nhập email hoặc số điện thoại" required />
+                <label class="form-label fw-semibold text-secondary small">Email hoặc Số điện thoại</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-person"></i></span>
+                    <input name="input" class="form-control bg-light border-start-0 ps-0" placeholder="Nhập email hoặc SĐT" required />
+                </div>
             </div>
 
             <!-- Password -->
-            <div class="mb-3">
-                <label class="form-label">Mật khẩu</label>
-                <input name="password" type="password" class="form-control" placeholder="Nhập mật khẩu" required />
+            <div class="mb-2">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label fw-semibold text-secondary small mb-0">Mật khẩu</label>
+                    <a asp-action="ForgotPassword" class="text-decoration-none small text-danger fw-semibold">Quên mật khẩu?</a>
+                </div>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-lock"></i></span>
+                    <input name="password" type="password" class="form-control bg-light border-start-0 ps-0" placeholder="Nhập mật khẩu" required />
+                </div>
             </div>
 
             <!-- Login button -->
-            <button class="btn btn-dark w-100">Đăng nhập</button>
+            <button type="submit" class="btn w-100 py-2.5 mt-3 fw-bold text-white shadow-sm" style="background: #7a001a; border-radius: 12px; transition: all 0.2s;">
+                ĐĂNG NHẬP
+            </button>
         </form>
 
-        <!-- Error -->
-        @if (ViewBag.Error != null)
-        {
-            <div class="alert alert-danger mt-3 text-center p-2">
-                @ViewBag.Error
-            </div>
-        }
-
         <!-- Divider -->
-        <div class="text-center my-3">
-            <small>Hoặc</small>
+        <div class="position-relative text-center my-4">
+            <hr class="text-muted opacity-25" />
+            <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted small">Hoặc</span>
         </div>
 
         <!-- Google login -->
-        <a asp-action="LoginGoogle" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2">
-            <img src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" width="18" />
-            Đăng nhập với Google
+        <a asp-action="LoginGoogle" class="btn btn-outline-secondary w-100 py-2.5 d-flex align-items-center justify-content-center gap-2 rounded-3 small fw-semibold">
+            <img src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" width="18" alt="Google" />
+            Đăng nhập bằng Google
         </a>
 
         <!-- Register -->
-        <div class="text-center mt-3">
-            <small>
-                Chưa có tài khoản?
-                <a asp-action="Register">Đăng ký</a>
-            </small>
+        <div class="text-center mt-4 pt-2">
+            <span class="text-muted small">Chưa có tài khoản?</span>
+            <a asp-action="Register" class="text-decoration-none fw-bold ms-1" style="color: #7a001a;">Đăng ký ngay</a>
         </div>
 
     </div>

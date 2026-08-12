@@ -79,6 +79,10 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<BlogPostComment> BlogPostComments { get; set; }
 
+    public virtual DbSet<FlashSale> FlashSales { get; set; }
+
+    public virtual DbSet<FlashSaleItem> FlashSaleItems { get; set; }
+
 //    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 //#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
 //        => optionsBuilder.UseSqlServer("Server=localhost\\BANGTHANHSSMS22;Database=CosmeticsDB;User Id=sa;Password=Bt@0923113;TrustServerCertificate=True;");
@@ -250,6 +254,23 @@ public partial class AppDbContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.Wishlists)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Wishlist__UserId__5070F446");
+        });
+
+        modelBuilder.Entity<FlashSale>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
+        });
+
+        modelBuilder.Entity<FlashSaleItem>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(d => d.FlashSale).WithMany(p => p.FlashSaleItems)
+                .HasForeignKey(d => d.FlashSaleId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(d => d.Product).WithMany(p => p.FlashSaleItems)
+                .HasForeignKey(d => d.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         OnModelCreatingPartial(modelBuilder);

@@ -20,88 +20,7 @@
     }
 }
 
-<style>
-    body {
-        background-color: #f8fafc;
-    }
-    .compare-container {
-        max-width: 1000px;
-        margin: 0 auto;
-    }
-    .compare-header {
-        background: linear-gradient(135deg, #800020 0%, #5c0017 100%);
-        color: white;
-        padding: 40px 0;
-        text-align: center;
-        border-radius: 12px;
-        margin-bottom: 30px;
-    }
-    .compare-table {
-        background: white;
-        border-radius: 12px;
-        overflow: hidden;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-    }
-    .compare-table th {
-        background: #f8fafc;
-        font-weight: 700;
-        color: #475569;
-        text-align: left;
-        width: 20%;
-        vertical-align: middle;
-        border-right: 1px solid #edf2f7;
-    }
-    .compare-table td {
-        width: 40%;
-        vertical-align: top;
-        border-right: 1px solid #edf2f7;
-        padding: 20px;
-    }
-    .compare-table td:last-child {
-        border-right: none;
-    }
-    .compare-select {
-        height: 42px;
-        border-radius: 6px;
-        border: 1px solid #cbd5e1;
-        font-weight: 500;
-    }
-    .vs-badge {
-        background: #e2e8f0;
-        color: #475569;
-        font-weight: 800;
-        padding: 10px 15px;
-        border-radius: 50%;
-        font-size: 14px;
-    }
-    .compare-img {
-        max-height: 180px;
-        object-fit: contain;
-        margin-bottom: 15px;
-    }
-    .compare-placeholder {
-        background: #f8fafc;
-        border: 2px dashed #cbd5e1;
-        border-radius: 8px;
-        height: 250px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        color: #64748b;
-    }
-    .better-price-badge {
-        background: #d1fae5;
-        color: #065f46;
-        font-size: 11px;
-        padding: 3px 8px;
-        border-radius: 4px;
-        font-weight: bold;
-        display: inline-block;
-        margin-top: 5px;
-    }
-</style>
+
 
 <div class="container py-5 compare-container text-start">
     
@@ -114,12 +33,19 @@
     <!-- Product selectors row -->
     <div class="row g-3 align-items-center mb-4 p-4 bg-white rounded border shadow-sm mx-0">
         <div class="col-md-5">
-            <label class="form-label small fw-bold text-dark">Sản phẩm thứ nhất (A):</label>
+            <label class="form-label small fw-bold text-dark"><i class="bi bi-search me-1"></i> Tìm sản phẩm A (Tên / Barcode / SKU):</label>
+            <div class="input-group mb-2">
+                <span class="input-group-text bg-light"><i class="bi bi-upc-scan text-danger"></i></span>
+                <input type="text" id="searchProd1" class="form-control" placeholder="Gõ tên, mã vạch Barcode..." oninput="filterCompareOptions('searchProd1', 'selectProd1')" />
+            </div>
             <select id="selectProd1" class="form-select compare-select" onchange="updateCompare()">
                 <option value="">-- Chọn sản phẩm A --</option>
                 @foreach (var p in allProducts)
                 {
-                    <option value="@p.Id" selected="@(p1?.Id == p.Id ? "selected" : null)">[@(p.Brand?.Name ?? "Hãng khác")] - @p.Name</option>
+                    var barcodeInfo = !string.IsNullOrEmpty(p.Barcode) ? $" [Mã vạch: {p.Barcode}]" : (!string.IsNullOrEmpty(p.SKU) ? $" [{p.SKU}]" : "");
+                    <option value="@p.Id" data-search="@($"{p.Name} {p.Barcode} {p.SKU} {p.Brand?.Name}".ToLower())" selected="@(p1?.Id == p.Id ? "selected" : null)">
+                        [@(p.Brand?.Name ?? "MeiLing")] - @p.Name@barcodeInfo
+                    </option>
                 }
             </select>
         </div>
@@ -127,12 +53,19 @@
             <span class="vs-badge">VS</span>
         </div>
         <div class="col-md-5">
-            <label class="form-label small fw-bold text-dark">Sản phẩm thứ hai (B):</label>
+            <label class="form-label small fw-bold text-dark"><i class="bi bi-search me-1"></i> Tìm sản phẩm B (Tên / Barcode / SKU):</label>
+            <div class="input-group mb-2">
+                <span class="input-group-text bg-light"><i class="bi bi-upc-scan text-danger"></i></span>
+                <input type="text" id="searchProd2" class="form-control" placeholder="Gõ tên, mã vạch Barcode..." oninput="filterCompareOptions('searchProd2', 'selectProd2')" />
+            </div>
             <select id="selectProd2" class="form-select compare-select" onchange="updateCompare()">
                 <option value="">-- Chọn sản phẩm B --</option>
                 @foreach (var p in allProducts)
                 {
-                    <option value="@p.Id" selected="@(p2?.Id == p.Id ? "selected" : null)">[@(p.Brand?.Name ?? "Hãng khác")] - @p.Name</option>
+                    var barcodeInfo = !string.IsNullOrEmpty(p.Barcode) ? $" [Mã vạch: {p.Barcode}]" : (!string.IsNullOrEmpty(p.SKU) ? $" [{p.SKU}]" : "");
+                    <option value="@p.Id" data-search="@($"{p.Name} {p.Barcode} {p.SKU} {p.Brand?.Name}".ToLower())" selected="@(p2?.Id == p.Id ? "selected" : null)">
+                        [@(p.Brand?.Name ?? "MeiLing")] - @p.Name@barcodeInfo
+                    </option>
                 }
             </select>
         </div>
@@ -420,6 +353,35 @@
 </div>
 
 <script>
+    function filterCompareOptions(inputId, selectId) {
+        const query = document.getElementById(inputId).value.trim().toLowerCase();
+        const select = document.getElementById(selectId);
+        const options = select.getElementsByTagName('option');
+
+        let firstMatchIndex = -1;
+        let matchCount = 0;
+
+        for (let i = 0; i < options.length; i++) {
+            const opt = options[i];
+            if (!opt.value) continue; // Skip default "-- Chọn --" option
+
+            const searchKey = (opt.getAttribute('data-search') || opt.text).toLowerCase();
+            if (!query || searchKey.includes(query)) {
+                opt.style.display = '';
+                matchCount++;
+                if (firstMatchIndex === -1) firstMatchIndex = i;
+            } else {
+                opt.style.display = 'none';
+            }
+        }
+
+        // If user typed exact match or pressed Enter on single result
+        if (query && matchCount === 1 && firstMatchIndex !== -1) {
+            select.selectedIndex = firstMatchIndex;
+            updateCompare();
+        }
+    }
+
     function updateCompare() {
         const id1 = document.getElementById('selectProd1').value;
         const id2 = document.getElementById('selectProd2').value;

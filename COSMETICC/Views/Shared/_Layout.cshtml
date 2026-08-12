@@ -18,26 +18,86 @@
     }
 }
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - MeiLing Cosmetics</title>
-    <meta name="description" content="@(ViewData["MetaDescription"] ?? "Mỹ phẩm thuần chay MeiLing - Cung cấp sản phẩm dưỡng da, trị mụn, làm sạch sâu từ thiên nhiên an toàn và hiệu quả.")" />
+    <title>@ViewData["Title"] - MeiLing Cosmetics | Mỹ Phẩm Chính Hãng High-End</title>
+    <meta name="description" content="@(ViewData["MetaDescription"] ?? "MeiLing Cosmetics - Hệ thống mỹ phẩm chính hàng cao cấp, cung cấp nước tẩy trang, sữa rửa mặt, tinh chất serum, kem dưỡng ẩm & son môi chính hãng 100%. Giao hàng nhanh 2H, đổi trả 7 ngày.")" />
+    <meta name="keywords" content="@(ViewData["MetaKeywords"] ?? "mỹ phẩm chính hãng, chăm sóc da, serum dưỡng ẩm, sữa rửa mặt, son môi, kem chống nắng, meiling cosmetics")" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="referrer" content="no-referrer" />
-    <script type="importmap"></script>
+
+    <!-- Open Graph / Facebook SEO -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="MeiLing Cosmetics" />
+    <meta property="og:title" content="@(ViewData["Title"] ?? "MeiLing Cosmetics | Mỹ Phẩm Chính Hãng High-End")" />
+    <meta property="og:description" content="@(ViewData["MetaDescription"] ?? "Cung cấp mỹ phẩm chính hãng cao cấp, dưỡng da & trang điểm từ các thương hiệu uy tín thế giới.")" />
+    <meta property="og:image" content="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=1200&auto=format&fit=crop" />
+
+    <!-- Twitter Cards SEO -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="@(ViewData["Title"] ?? "MeiLing Cosmetics")" />
+    <meta name="twitter:description" content="@(ViewData["MetaDescription"] ?? "Mỹ phẩm chính hãng cao cấp - Giao hàng nhanh 2H.")" />
+
+    <!-- Schema.org JSON-LD Structured Data for Google Search Rich Snippets -->
+    <script type="application/ld+json">
+    {
+      "@@context": "https://schema.org",
+      "@@type": "CosmeticStore",
+      "name": "MeiLing Cosmetics",
+      "url": "https://meilingcosmetics.com",
+      "logo": "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=300&auto=format&fit=crop",
+      "description": "Hệ thống mỹ phẩm chính hãng cao cấp, dưỡng da & làm đẹp chuyên sâu.",
+      "telephone": "+84900000000",
+      "priceRange": "100000VND - 5000000VND",
+      "address": {
+        "@@type": "PostalAddress",
+        "streetAddress": "123 Nguyễn Trãi, Quận 1",
+        "addressLocality": "Hồ Chí Minh",
+        "addressCountry": "VN"
+      }
+    }
+    </script>
+
+    <!-- Google Fonts: Plus Jakarta Sans & Be Vietnam Pro (High-End Beauty & Full Vietnamese Support) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/cart-checkout.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/blog.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/wishlist-compare.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/account.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/ai-skincare.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/COSMETICC.styles.css" asp-append-version="true" />
 
 </head>
 <body>
     <header class="header">
+        <!-- TOP ANNOUNCEMENT BAR -->
+        <div class="top-announcement">
+            <div class="custom-container d-flex justify-content-between align-items-center flex-wrap">
+                <div class="d-flex gap-4 flex-wrap">
+                    <span><i class="bi bi-truck me-1 text-warning"></i> FREESHIP cho đơn từ 299.000đ</span>
+                    <span><i class="bi bi-shield-check me-1 text-warning"></i> 100% SẢN PHẨM CHÍNH HÃNG</span>
+                    <span><i class="bi bi-arrow-repeat me-1 text-warning"></i> ĐỔI TRẢ TRONG 7 NGÀY</span>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span><i class="bi bi-telephone-fill me-1 text-warning"></i> Hotline: <strong>1900 6868</strong></span>
+                    <div class="social-icons d-none d-md-inline-flex gap-2">
+                        <a href="#" class="text-white text-decoration-none me-1"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="text-white text-decoration-none me-1"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="text-white text-decoration-none me-1"><i class="bi bi-tiktok"></i></a>
+                        <a href="#" class="text-white text-decoration-none"><i class="bi bi-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <!-- TOP -->
-
-        <div class="custom-container d-flex align-items-center justify-content-between py-3">
+        <div class="custom-container d-flex align-items-center justify-content-between py-2">
             <button class="btn btn-outline-light d-lg-none m-2"
                     type="button"
                     data-bs-toggle="offcanvas"
@@ -45,9 +105,12 @@
                 ☰ Menu
             </button>
             <!-- LOGO -->
-            <a asp-controller="Home" asp-action="Index" class="logo">
-                <h2 class="mb-0">MeiLing</h2>
-                <small>Tỏa sáng rạng rỡ</small>
+            <a asp-controller="Home" asp-action="Index" class="logo d-flex align-items-center gap-2">
+                <img src="~/images/meiling-logo.png" alt="MeiLing Logo" class="header-logo-img" style="height: 60px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 10px rgba(0,0,0,0.35));" />
+                <div class="d-flex flex-column justify-content-center">
+                    <h2 class="mb-0">MeiLing</h2>
+                    <small>Tỏa sáng rạng rỡ</small>
+                </div>
             </a>
 
             <!-- SEARCH -->
@@ -156,6 +219,7 @@
 
             <div class="offcanvas-body d-flex flex-column justify-content-between">
                 <div class="mobile-menu">
+                    <a asp-controller="FlashSale" asp-action="Index" class="@MenuActive("FlashSale","Index") text-danger fw-bold"><i class="bi bi-lightning-fill me-2 text-warning"></i> FLASH SALE</a>
                     <a asp-controller="Product" asp-action="List" class="@MenuActive("Product","List")"><i class="bi bi-grid-fill me-2"></i> Danh mục nổi bật</a>
                     <a asp-controller="Product" asp-action="List" asp-route-sort="bestseller" class="@MenuActive("Product","List",sort:"bestseller")"><i class="bi bi-fire me-2"></i> Sản phẩm bán chạy</a>
                     <a asp-controller="Blog" asp-action="Index" class="@MenuActive("Blog","Index")"><i class="bi bi-journal-richtext me-2"></i> BLOG làm đẹp</a>
@@ -182,6 +246,10 @@
 
         <!-- MENU DESKTOP -->
         <div class="menu custom-container d-none d-lg-flex">
+            <a asp-controller="FlashSale" asp-action="Index" class="@MenuActive("FlashSale","Index")"
+               style="background:linear-gradient(135deg,#ef4444,#dc2626); color:white !important; padding:5px 14px; border-radius:20px; font-weight:700; font-size:13px; letter-spacing:0.3px; box-shadow:0 2px 10px rgba(239,68,68,0.4); transition:all 0.2s;"
+               onmouseover="this.style.boxShadow='0 4px 18px rgba(239,68,68,0.6)'; this.style.transform='translateY(-1px)'"
+               onmouseout="this.style.boxShadow='0 2px 10px rgba(239,68,68,0.4)'; this.style.transform='translateY(0)'">🔥 Flash Sale</a>
             <a asp-controller="Product" asp-action="List" class="@MenuActive("Product","List")">Danh mục nổi bật</a>
             <a asp-controller="Product" asp-action="List" asp-route-sort="bestseller" class="@MenuActive("Product","List",sort:"bestseller")">Sản phẩm bán chạy</a>
             <a asp-controller="Blog" asp-action="Index" class="@MenuActive("Blog","Index")">BLOG làm đẹp</a>
@@ -202,9 +270,62 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - COSMETICC - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <footer class="site-footer">
+        <div class="custom-container">
+            <div class="row g-4">
+                <!-- COL 1: COMPANY INFO -->
+                <div class="col-lg-4 col-md-6">
+                    <h6>CÔNG TY CỔ PHẦN MEILING COSMETICS</h6>
+                    <p>Trang web mỹ phẩm hàng đầu Việt Nam cung cấp các sản phẩm và giải pháp chăm sóc da toàn diện cho cộng đồng.</p>
+                    <p class="mb-1"><i class="bi bi-geo-alt-fill text-warning me-2"></i><strong>Địa chỉ:</strong> 123 Nguyễn Trãi, Phường 2, Quận 1, TP. Hồ Chí Minh</p>
+                    <p class="mb-1"><i class="bi bi-telephone-fill text-warning me-2"></i><strong>Điện thoại / Fax:</strong> (028) 6296 6789</p>
+                    <p class="mb-0"><i class="bi bi-envelope-fill text-warning me-2"></i><strong>Email:</strong> contact@meilingcosmetics.com</p>
+                </div>
+
+                <!-- COL 2: ABOUT US -->
+                <div class="col-lg-2 col-md-6">
+                    <h6>VỀ CHÚNG TÔI</h6>
+                    <ul>
+                        <li><a asp-controller="Home" asp-action="About">Giới thiệu thương hiệu</a></li>
+                        <li><a href="#">Đội ngũ chuyên gia da liễu</a></li>
+                        <li><a href="#">Hệ thống cửa hàng</a></li>
+                        <li><a href="#">Tuyển dụng nhân sự</a></li>
+                        <li><a href="#">Liên hệ & Góp ý</a></li>
+                    </ul>
+                </div>
+
+                <!-- COL 3: POLICIES -->
+                <div class="col-lg-3 col-md-6">
+                    <h6>CHÍNH SÁCH HỖ TRỢ</h6>
+                    <ul>
+                        <li><a href="#">Hướng dẫn mua hàng online</a></li>
+                        <li><a href="#">Chính sách đổi trả & bảo hành</a></li>
+                        <li><a href="#">Chính sách vận chuyển 24h</a></li>
+                        <li><a asp-controller="Home" asp-action="Privacy">Bảo mật thông tin khách hàng</a></li>
+                        <li><a href="#">Đăng ký đại lý phân phối</a></li>
+                    </ul>
+                </div>
+
+                <!-- COL 4: ONLINE ADVISORY & HOTLINE -->
+                <div class="col-lg-3 col-md-6">
+                    <h6>TƯ VẤN TRỰC TUYẾN</h6>
+                    <div class="footer-hotline-box">
+                        <div class="footer-hotline-label">Hotline / Zalo hỗ trợ:</div>
+                        <div class="footer-hotline-num">1900 6868</div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="#" class="footer-social-icon" title="Facebook"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="footer-social-icon" title="Youtube"><i class="bi bi-youtube"></i></a>
+                        <a href="#" class="footer-social-icon" title="Tiktok"><i class="bi bi-tiktok"></i></a>
+                        <a href="#" class="footer-social-icon" title="Instagram"><i class="bi bi-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COPYRIGHT BAR -->
+            <div class="footer-copyright">
+                © 2026 CÔNG TY CỔ PHẦN MEILING COSMETICS. Bản quyền thuộc về meilingcosmetics.com
+            </div>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
@@ -212,6 +333,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/cart-checkout.js" asp-append-version="true"></script>
+    <script src="~/js/blog.js" asp-append-version="true"></script>
+    <script src="~/js/ai-skincare.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 
     <!-- ====== AI CHATBOT BUBBLE ====== -->
@@ -255,14 +379,7 @@
         <span id="aiUnreadBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:#ef4444;color:white;font-size:10px;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;">1</span>
     </button> *@
 
-    <style>
-        @@keyframes chatPop { from { opacity:0; transform:scale(0.9) translateY(20px); } to { opacity:1; transform:scale(1) translateY(0); } }
-        #aiBotBubble:hover { transform:scale(1.1); box-shadow:0 12px 32px rgba(124,58,237,0.6); }
-        #aiMessages::-webkit-scrollbar { width:4px; }
-        #aiMessages::-webkit-scrollbar-track { background:transparent; }
-        #aiMessages::-webkit-scrollbar-thumb { background:rgba(124,58,237,0.4); border-radius:2px; }
-        #aiChatInput::placeholder { color:rgba(255,255,255,0.4); }
-    </style>
+
 
     <script>
         var chatOpen = false;
@@ -439,12 +556,12 @@
 
 
     <div id="cartToastWrap" aria-live="polite" aria-atomic="true"
-         style="position:fixed; bottom:28px; right:24px; z-index:99999; min-width:290px;">
+         style="position:fixed; top:90px; right:24px; z-index:99999; min-width:300px; max-width:400px;">
         <div id="cartToast" class="toast align-items-center text-white border-0 shadow-lg"
-             role="alert" style="background:#800020; border-radius:12px;">
+             role="alert" style="background:linear-gradient(135deg, #800020, #9b0022); border-radius:12px;">
             <div class="d-flex">
                 <div class="toast-body d-flex align-items-center gap-2" style="font-size:14px; font-weight:500;">
-                    <i class="bi bi-cart-check-fill" style="font-size:20px;"></i>
+                    <i class="bi bi-cart-check-fill fs-5"></i>
                     <span id="cartToastMsg">Đã thêm vào giỏ hàng!</span>
                 </div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
@@ -452,40 +569,7 @@
         </div>
     </div>
 
-    <style>
-        /* Cart icon badge */
-        .cart-icon-btn {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            color: white !important;
-            padding: 4px;
-        }
-        .cart-icon-btn:hover { color: #ffd6db !important; }
-        .cart-badge {
-            position: absolute;
-            top: -6px;
-            right: -8px;
-            background: #ff4d4f;
-            color: white;
-            font-size: 10px;
-            font-weight: 700;
-            min-width: 18px;
-            height: 18px;
-            border-radius: 9px;
-            display: flex !important;
-            align-items: center;
-            justify-content: center;
-            padding: 0 4px;
-            border: 2px solid #800020;
-            animation: badgePop 0.25s ease;
-        }
-        @@keyframes badgePop {
-            0% { transform: scale(0.5); opacity:0; }
-            70% { transform: scale(1.25); }
-            100% { transform: scale(1); opacity:1; }
-        }
-    </style>
+
 
     <script>
         // ======== GLOBAL CART BADGE & TOAST ========
@@ -518,7 +602,7 @@
         document.addEventListener('DOMContentLoaded', refreshCartBadge);
     </script>
     <!-- ====== CUSTOMER CHAT WIDGET ====== -->
-    <div id="customerChatWidget" style="position: fixed; bottom: 24px; right: 24px; z-index: 9999;">
+    <div id="customerChatWidget" style="position: fixed; bottom: 85px; right: 24px; z-index: 9999;">
         <!-- Chat Bubble Button -->
         <button id="chatBubbleBtn" onclick="toggleChatWindow()" 
                 style="background: #800020; color: white; border: none; width: 56px; height: 56px; border-radius: 50%; box-shadow: 0 4px 15px rgba(128,0,32,0.25); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; outline:none;">
@@ -561,22 +645,33 @@
         </div>
     </div>
 
-    <style>
-        @@keyframes pulseChat {
-            0% { transform: scale(0.9); opacity: 0.5; }
-            50% { transform: scale(1.1); opacity: 1; }
-            100% { transform: scale(0.9); opacity: 0.5; }
-        }
-        #chatBubbleBtn:hover {
-            transform: scale(1.08);
-            background: #66001a !important;
-        }
-        #chatInputText:focus {
-            border-color: #800020 !important;
-        }
-    </style>
+    <!-- ====== BACK TO TOP BUTTON ====== -->
+    <button id="backToTopBtn" onclick="scrollToTop()" title="Quay lại đầu trang"
+            style="position: fixed; bottom: 24px; right: 28px; z-index: 9990; width: 48px; height: 48px; border-radius: 50%; background: #800020; color: white; border: 2px solid #ffffff; box-shadow: 0 4px 15px rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; opacity: 0; visibility: hidden; transform: translateY(20px);">
+        <i class="bi bi-chevron-up" style="font-size: 20px; -webkit-text-stroke: 1px white;"></i>
+    </button>
+
+
 
     <script>
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        window.addEventListener('scroll', function() {
+            const btn = document.getElementById('backToTopBtn');
+            if (btn) {
+                if (window.scrollY > 250) {
+                    btn.style.opacity = '1';
+                    btn.style.visibility = 'visible';
+                    btn.style.transform = 'translateY(0)';
+                } else {
+                    btn.style.opacity = '0';
+                    btn.style.visibility = 'hidden';
+                    btn.style.transform = 'translateY(20px)';
+                }
+            }
+        });
         let isChatOpen = false;
         let chatPollInterval = null;
 

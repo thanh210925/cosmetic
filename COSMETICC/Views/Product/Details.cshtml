@@ -96,7 +96,8 @@
                             <div class="variant-pills-container" data-type="@group.Key">
                                 @foreach (var v in group)
                                 {
-                                    <button class="variant-pill-btn" onclick="selectVariant(this, '@group.Key', '@v.Value', @v.PriceAdjustment)">
+                                    var adjStr = v.PriceAdjustment.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                                    <button class="variant-pill-btn" onclick="selectVariant(this, '@group.Key', '@v.Value', @adjStr)">
                                         @v.Value
                                     </button>
                                 }
@@ -473,7 +474,7 @@
 @section Scripts {
 <script>
     let selectedVariants = {};
-    const basePrice = @((hasDiscount ? Model.PromoPrice : Model.Price) ?? 0);
+    const basePrice = @(((hasDiscount ? Model.PromoPrice : Model.Price) ?? 0).ToString(System.Globalization.CultureInfo.InvariantCulture));
 
     // Select dynamic variant button
     function selectVariant(btn, type, val, priceAdjustment) {
@@ -484,12 +485,9 @@
         selectedVariants[type] = val;
 
         // Recalculate dynamic pricing
-        if (priceAdjustment !== 0) {
-            const displayPrice = basePrice + priceAdjustment;
-            document.getElementById("displayPrice").innerText = new Intl.NumberFormat('vi-VN').format(displayPrice) + " đ";
-        } else {
-            document.getElementById("displayPrice").innerText = new Intl.NumberFormat('vi-VN').format(basePrice) + " đ";
-        }
+        const adj = parseFloat(priceAdjustment) || 0;
+        const displayPrice = basePrice + adj;
+        document.getElementById("displayPrice").innerText = new Intl.NumberFormat('vi-VN').format(displayPrice) + " đ";
     }
 
     // Adjust purchase quantity
@@ -513,9 +511,15 @@
                         window.location.href = '/Cart';
                     } else {
                         alert('Đã thêm sản phẩm vào giỏ hàng thành công!');
+                        if (typeof refreshCartBadge === 'function') refreshCartBadge();
                     }
                 } else {
-                    alert(data.message || 'Lỗi khi thêm sản phẩm.');
+                    if (data.requireLogin) {
+                        alert(data.message || 'Vui lòng đăng nhập!');
+                        window.location.href = '/Account/Login';
+                    } else {
+                        alert(data.message || 'Lỗi khi thêm sản phẩm.');
+                    }
                 }
             })
             .catch(err => {

@@ -103,4 +103,7 @@ public partial class Product
 
     [InverseProperty("Product")]
     public virtual ICollection<ProductBatch> ProductBatches { get; set; } = new List<ProductBatch>();
+
+    [InverseProperty("Product")]
+    public virtual ICollection<FlashSaleItem> FlashSaleItems { get; set; } = new List<FlashSaleItem>();
 }

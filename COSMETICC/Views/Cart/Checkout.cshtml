@@ -7,197 +7,10 @@
     var defaultAddress = addresses.FirstOrDefault(a => a.IsDefault) ?? addresses.FirstOrDefault();
 
     decimal subtotal = Model.CartItems.Sum(ci => (ci.Product.PromoPrice ?? ci.Product.Price) * (ci.Quantity ?? 1));
-    decimal shippingFee = subtotal >= 299000m ? 0m : 30000m;
+    decimal shippingFee = ViewBag.InitialShippingFee != null ? (decimal)ViewBag.InitialShippingFee : (subtotal >= 299000m ? 0m : 30000m);
 }
 
-<style>
-    :root {
-        --brand-red: #9b0022;
-        --brand-red-dark: #660016;
-        --brand-gold: #dfba6b;
-        --brand-cream: #faf6f2;
-    }
 
-    body { background-color: #f5f5f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-
-    /* Shopee style Address Bar */
-    .shopee-address-card {
-        background: #fff;
-        border-radius: 6px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-        position: relative;
-        overflow: hidden;
-        margin-bottom: 20px;
-    }
-    .shopee-address-card::before {
-        content: "";
-        height: 3px;
-        width: 100%;
-        position: absolute;
-        top: 0; left: 0;
-        background-position: 0 0;
-        background-size: 116px 3px;
-        background-image: repeating-linear-gradient(45deg, #465efb, #465efb 33px, transparent 0, transparent 41px, #ee4d2d 0, #ee4d2d 74px, transparent 0, transparent 82px);
-    }
-    .shopee-address-header {
-        color: var(--brand-red);
-        font-weight: 700;
-        font-size: 1.1rem;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    /* Checkout Card Section */
-    .checkout-section {
-        background: #fff;
-        border-radius: 6px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-        padding: 20px;
-        margin-bottom: 20px;
-    }
-
-    .checkout-section-title {
-        font-weight: 700;
-        font-size: 1.05rem;
-        color: #222;
-        padding-bottom: 12px;
-        border-bottom: 1px solid #eee;
-        margin-bottom: 16px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    /* Item row */
-    .item-img {
-        width: 60px;
-        height: 60px;
-        object-fit: cover;
-        border-radius: 6px;
-        border: 1px solid #eee;
-    }
-
-    /* Voucher Card in Modal */
-    .voucher-card-item {
-        display: flex;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        overflow: hidden;
-        margin-bottom: 12px;
-        background: #fff;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    .voucher-card-item:hover {
-        border-color: var(--brand-red);
-        box-shadow: 0 4px 12px rgba(155, 0, 34, 0.12);
-        transform: translateY(-1px);
-    }
-    .voucher-card-left {
-        background: linear-gradient(135deg, var(--brand-red) 0%, #c70d3a 100%);
-        color: #fff;
-        width: 100px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 10px;
-        position: relative;
-    }
-    .voucher-card-left::after {
-        content: "";
-        position: absolute;
-        right: -5px; top: 0; bottom: 0;
-        width: 10px;
-        background-image: radial-gradient(circle, #fff 4px, transparent 5px);
-        background-size: 10px 14px;
-    }
-    .voucher-card-right {
-        flex: 1;
-        padding: 12px 16px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    /* Payment Method selector */
-    .payment-option-card {
-        border: 2px solid #e2e8f0;
-        border-radius: 8px;
-        padding: 14px 18px;
-        cursor: pointer;
-        transition: all 0.2s;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 10px;
-    }
-    .payment-option-card:hover {
-        border-color: var(--brand-red);
-        background: #fffbfb;
-    }
-    .payment-option-card.selected {
-        border-color: var(--brand-red);
-        background: #fff5f6;
-    }
-    .payment-option-card input[type="radio"] {
-        accent-color: var(--brand-red);
-        width: 18px;
-        height: 18px;
-    }
-
-    /* Summary Sidebox */
-    .sticky-summary {
-        position: sticky;
-        top: 90px;
-    }
-    .summary-row {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 10px;
-        font-size: 0.95rem;
-        color: #555;
-    }
-    .summary-row.total {
-        font-size: 1.25rem;
-        font-weight: 800;
-        color: var(--brand-red);
-        border-top: 1px dashed #ddd;
-        padding-top: 12px;
-        margin-top: 12px;
-    }
-
-    .btn-place-order {
-        background: linear-gradient(135deg, #9b0022 0%, #c70d3a 100%);
-        color: #fff;
-        font-weight: 700;
-        font-size: 1.1rem;
-        padding: 14px;
-        border-radius: 8px;
-        border: none;
-        width: 100%;
-        box-shadow: 0 4px 15px rgba(155, 0, 34, 0.3);
-        transition: all 0.3s;
-    }
-    .btn-place-order:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(155, 0, 34, 0.4);
-        color: #fff;
-    }
-
-    .address-item-radio {
-        border: 1px solid #e2e8f0;
-        border-radius: 6px;
-        padding: 12px;
-        margin-bottom: 8px;
-        cursor: pointer;
-    }
-    .address-item-radio.active {
-        border-color: var(--brand-red);
-        background: #fff8f9;
-    }
-</style>
 
 <div class="container py-4">
 
@@ -215,6 +28,7 @@
 
         <input type="hidden" name="discountId" id="discountIdInput" value="" />
         <input type="hidden" name="voucherCode" id="voucherCodeInput" value="" />
+        <input type="hidden" name="selectedIds" id="selectedIdsInput" value="@(ViewBag.SelectedIds ?? "")" />
 
         <div class="row g-4">
             
@@ -227,12 +41,9 @@
                         <div class="shopee-address-header">
                             <i class="bi bi-geo-alt-fill text-danger fs-4"></i> Địa Chỉ Nhận Hàng
                         </div>
-                        @if (addresses.Any())
-                        {
-                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addressModal">
-                                <i class="bi bi-arrow-repeat me-1"></i> Thay đổi địa chỉ
-                            </button>
-                        }
+                        <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addressModal">
+                            <i class="bi bi-journals me-1"></i> Sổ địa chỉ (@addresses.Count)
+                        </button>
                     </div>
 
                     <div id="selectedAddressDisplay">
@@ -241,10 +52,7 @@
                             <div class="d-flex align-items-baseline gap-2 flex-wrap mb-1">
                                 <strong class="fs-6 text-dark" id="displayReceiverName">@defaultAddress.ReceiverName</strong>
                                 <span class="fw-bold text-secondary" id="displayReceiverPhone">(+84) @defaultAddress.ReceiverPhone</span>
-                                @if (defaultAddress.IsDefault)
-                                {
-                                    <span class="badge bg-danger ms-2" style="font-size: 0.75rem;">Mặc định</span>
-                                }
+                                <span class="badge bg-danger ms-2" id="displayDefaultBadge" style="font-size: 0.75rem; display: @(defaultAddress.IsDefault ? "inline-block" : "none");">Mặc định</span>
                             </div>
                             <div class="text-muted" id="displayFullAddress">
                                 @defaultAddress.SpecificAddress, @defaultAddress.City
@@ -253,7 +61,7 @@
                         else
                         {
                             <div class="alert alert-warning py-2 mb-2">
-                                <i class="bi bi-exclamation-triangle-fill me-1"></i> Chưa có địa chỉ mặc định. Vui lòng nhập thông tin nhận hàng bên dưới:
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i> Nhập thông tin nhận hàng bên dưới và bấm <strong>"Lưu địa chỉ mặc định"</strong> để tự động lưu vào sổ địa chỉ:
                             </div>
                         }
                     </div>
@@ -263,35 +71,68 @@
                     <input type="hidden" name="receiverPhone" id="inputReceiverPhone" value="@(defaultAddress?.ReceiverPhone ?? user?.Phone ?? "")" required />
                     <input type="hidden" name="specificAddress" id="inputSpecificAddress" value="@(defaultAddress?.SpecificAddress ?? user?.Address ?? "")" required />
                     <input type="hidden" name="city" id="inputCity" value="@(defaultAddress?.City ?? "Hồ Chí Minh")" required />
+                    <input type="hidden" name="ghnDistrictId" id="inputGhnDistrictId" value="1442" />
+                    <input type="hidden" name="ghnWardCode" id="inputGhnWardCode" value="20101" />
 
-                    <!-- Quick Inline Edit Form (Shown when user wants to input directly) -->
-                    <div class="mt-3 pt-3 border-top" id="inlineAddressForm" style="@(defaultAddress != null ? "display: none;" : "")">
-                        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-pencil-square me-1"></i> Nhập địa chỉ mới</h6>
+                    <!-- Single Unified Address & Delivery Form -->
+                    <div class="mt-3 p-3 bg-light rounded border">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h6 class="fw-bold text-dark mb-0"><i class="bi bi-geo-alt-fill text-danger me-1"></i> Thông tin giao hàng & Tính phí GHN</h6>
+                            <span class="badge bg-danger">GHN Express API v2</span>
+                        </div>
+
+                        <!-- Receiver Name & Phone -->
                         <div class="row g-2 mb-2">
                             <div class="col-md-6">
-                                <label class="form-label small text-muted mb-1">Họ và tên người nhận</label>
-                                <input type="text" class="form-control form-control-sm" id="editName" value="@(defaultAddress?.ReceiverName ?? user?.FullName ?? "")" placeholder="Nguyễn Văn A" oninput="syncInlineAddress()" />
+                                <label class="form-label small text-muted mb-1">Họ và tên người nhận <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-sm" id="editName" value="@(defaultAddress?.ReceiverName ?? user?.FullName ?? "")" placeholder="Nguyễn Văn A" oninput="syncInlineAddress()" required />
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small text-muted mb-1">Số điện thoại</label>
-                                <input type="text" class="form-control form-control-sm" id="editPhone" value="@(defaultAddress?.ReceiverPhone ?? user?.Phone ?? "")" placeholder="0901234567" oninput="syncInlineAddress()" />
+                                <label class="form-label small text-muted mb-1">Số điện thoại <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-sm" id="editPhone" value="@(defaultAddress?.ReceiverPhone ?? user?.Phone ?? "")" placeholder="0901234567" oninput="syncInlineAddress()" required />
                             </div>
                         </div>
+
+                        <!-- GHN Dropdowns: Tỉnh/Thành, Quận/Huyện, Phường/Xã -->
                         <div class="row g-2 mb-2">
-                            <div class="col-md-8">
-                                <label class="form-label small text-muted mb-1">Địa chỉ chi tiết (Số nhà, Tên đường, Phường/Xã)</label>
-                                <input type="text" class="form-control form-control-sm" id="editAddress" value="@(defaultAddress?.SpecificAddress ?? user?.Address ?? "")" placeholder="123 Nguyễn Huệ, Phường Bến Nghé" oninput="syncInlineAddress()" />
+                            <div class="col-md-4">
+                                <label class="form-label small text-muted mb-1">Tỉnh / Thành phố <span class="text-danger">*</span></label>
+                                <select class="form-select form-select-sm" id="ghnProvinceSelect" onchange="onGhnProvinceChange()">
+                                    <option value="">-- Chọn Tỉnh / Thành --</option>
+                                </select>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label small text-muted mb-1">Tỉnh / Thành phố</label>
-                                <input type="text" class="form-control form-control-sm" id="editCity" value="@(defaultAddress?.City ?? "TP. Hồ Chí Minh")" placeholder="Hồ Chí Minh" oninput="syncInlineAddress()" />
+                                <label class="form-label small text-muted mb-1">Quận / Huyện <span class="text-danger">*</span></label>
+                                <select class="form-select form-select-sm" id="ghnDistrictSelect" onchange="onGhnDistrictChange()" disabled>
+                                    <option value="">-- Chọn Quận / Huyện --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small text-muted mb-1">Phường / Xã <span class="text-danger">*</span></label>
+                                <select class="form-select form-select-sm" id="ghnWardSelect" onchange="onGhnWardChange()" disabled>
+                                    <option value="">-- Chọn Phường / Xã --</option>
+                                </select>
                             </div>
                         </div>
-                        <div class="form-check mt-2">
-                            <input class="form-check-input" type="checkbox" name="saveAddress" value="true" id="saveAddressCheck" checked>
-                            <label class="form-check-label small text-muted" for="saveAddressCheck">
-                                Lưu địa chỉ này vào sổ địa chỉ cá nhân
-                            </label>
+
+                        <!-- Specific Address: Số nhà, Tên đường -->
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-12">
+                                <label class="form-label small text-muted mb-1">Địa chỉ chi tiết (Số nhà, Tên đường) <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-sm" id="editAddress" value="@(defaultAddress?.SpecificAddress ?? user?.Address ?? "")" placeholder="Ví dụ: 123 Nguyễn Huệ" oninput="syncInlineAddress()" required />
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3 pt-2 border-top">
+                            <div class="small text-muted d-flex align-items-center gap-1" id="ghnFeeNotice">
+                                <i class="bi bi-truck text-danger"></i> <span id="ghnNoticeText">Vui lòng chọn địa chỉ để tính phí ship GHN.</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <input type="hidden" name="saveAddress" value="true" />
+                                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill fw-bold" id="btnSaveDefaultAddress" onclick="saveCurrentAddressAsDefault()">
+                                    <i class="bi bi-bookmark-plus me-1"></i> Lưu địa chỉ mặc định
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -405,6 +246,17 @@
                                 Thanh toán qua VNPAY (QR / ATM / Internet Banking)
                             </div>
                             <small class="text-muted">Chuyển hướng sang cổng VNPAY an toàn để quét mã QR hoặc dùng thẻ ngân hàng.</small>
+                        </div>
+                    </div>
+
+                    <div class="payment-option-card mt-2" id="cardMoMo" onclick="selectPaymentMethod('MoMo')">
+                        <input type="radio" name="paymentMethod" value="MoMo" id="payMoMo" />
+                        <div class="flex-grow-1">
+                            <div class="fw-bold text-dark">
+                                <img src="https://upload.wikimedia.org/wikipedia/vi/fe/MoMo_Logo.png" alt="MoMo" style="height: 24px; border-radius: 4px;" class="me-2" onerror="this.src='https://placehold.co/60x24?text=MoMo'" />
+                                Ví Điện Tử MoMo (Quét mã QR / Ví MoMo)
+                            </div>
+                            <small class="text-muted">Chuyển hướng sang ứng dụng MoMo an toàn để quét mã QR hoặc dùng ví điện tử.</small>
                         </div>
                     </div>
 
@@ -551,7 +403,7 @@
                         @foreach (var addr in addresses)
                         {
                             <div class="address-item-radio @(addr.Id == defaultAddress?.Id ? "active" : "")" 
-                                 onclick="chooseAddress(@addr.Id, '@addr.ReceiverName', '@addr.ReceiverPhone', '@addr.SpecificAddress', '@addr.City')">
+                                 onclick="chooseAddress(@addr.Id, '@addr.ReceiverName', '@addr.ReceiverPhone', '@addr.SpecificAddress', '@addr.City', @(addr.IsDefault ? "true" : "false"))">
                                 <div class="d-flex align-items-center justify-content-between">
                                     <div class="fw-bold text-dark">
                                         @addr.ReceiverName <span class="text-muted fw-normal">(@addr.ReceiverPhone)</span>
@@ -578,19 +430,21 @@
 </div>
 
 <script>
-    let subtotalVal = @subtotal;
-    let shippingFeeVal = @shippingFee;
+    let subtotalVal = @subtotal.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    let shippingFeeVal = @shippingFee.ToString(System.Globalization.CultureInfo.InvariantCulture);
     let discountVal = 0;
 
     function selectPaymentMethod(method) {
-        document.getElementById('payCOD').checked = (method === 'COD');
-        document.getElementById('payVNPay').checked = (method === 'VNPay');
+        if (document.getElementById('payCOD')) document.getElementById('payCOD').checked = (method === 'COD');
+        if (document.getElementById('payVNPay')) document.getElementById('payVNPay').checked = (method === 'VNPay');
+        if (document.getElementById('payMoMo')) document.getElementById('payMoMo').checked = (method === 'MoMo');
         
-        document.getElementById('cardCOD').classList.toggle('selected', method === 'COD');
-        document.getElementById('cardVNPay').classList.toggle('selected', method === 'VNPay');
+        if (document.getElementById('cardCOD')) document.getElementById('cardCOD').classList.toggle('selected', method === 'COD');
+        if (document.getElementById('cardVNPay')) document.getElementById('cardVNPay').classList.toggle('selected', method === 'VNPay');
+        if (document.getElementById('cardMoMo')) document.getElementById('cardMoMo').classList.toggle('selected', method === 'MoMo');
     }
 
-    function chooseAddress(id, name, phone, address, city) {
+    function chooseAddress(id, name, phone, address, city, isDefault) {
         document.getElementById('inputReceiverName').value = name;
         document.getElementById('inputReceiverPhone').value = phone;
         document.getElementById('inputSpecificAddress').value = address;
@@ -600,12 +454,20 @@
         document.getElementById('displayReceiverPhone').textContent = '(+84) ' + phone;
         document.getElementById('displayFullAddress').textContent = address + ', ' + city;
 
+        const defaultBadge = document.getElementById('displayDefaultBadge');
+        if (defaultBadge) {
+            defaultBadge.style.display = isDefault ? 'inline-block' : 'none';
+        }
+
         document.getElementById('editName').value = name;
         document.getElementById('editPhone').value = phone;
         document.getElementById('editAddress').value = address;
         document.getElementById('editCity').value = city;
 
         document.getElementById('inlineAddressForm').style.display = 'none';
+
+        // Dynamically fetch shipping fee based on Admin rules for selected city
+        fetchShippingFeeForCity(city);
 
         closeModalById('addressModal');
     }
@@ -629,6 +491,96 @@
         document.getElementById('displayReceiverName').textContent = name || 'Chưa nhập tên';
         document.getElementById('displayReceiverPhone').textContent = phone ? '(+84) ' + phone : '';
         document.getElementById('displayFullAddress').textContent = (address || '') + (city ? ', ' + city : '');
+
+        const defaultBadge = document.getElementById('displayDefaultBadge');
+        if (defaultBadge) defaultBadge.style.display = 'none';
+
+        if (city && city.trim().length >= 2) {
+            fetchShippingFeeForCity(city);
+        }
+    }
+
+    function saveCurrentAddressAsDefault() {
+        const name = document.getElementById('editName').value.trim();
+        const phone = document.getElementById('editPhone').value.trim();
+        const specific = document.getElementById('editAddress').value.trim();
+        const city = document.getElementById('inputCity').value.trim();
+
+        if (!name || !phone || !specific) {
+            alert('Vui lòng nhập đầy đủ Họ tên, Số điện thoại và Địa chỉ chi tiết!');
+            return;
+        }
+
+        const btn = document.getElementById('btnSaveDefaultAddress');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Đang lưu...';
+        }
+
+        fetch('/Cart/SaveNewAddress', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `receiverName=${encodeURIComponent(name)}&receiverPhone=${encodeURIComponent(phone)}&specificAddress=${encodeURIComponent(specific)}&city=${encodeURIComponent(city)}&isDefault=true`
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-bookmark-check-fill me-1"></i> Đã lưu mặc định!';
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="bi bi-bookmark-plus me-1"></i> Lưu địa chỉ mặc định';
+                }, 3000);
+            }
+
+            if (data.success) {
+                const nameDisplay = document.getElementById('displayReceiverName');
+                if (nameDisplay) nameDisplay.textContent = data.receiverName;
+
+                const phoneDisplay = document.getElementById('displayReceiverPhone');
+                if (phoneDisplay) phoneDisplay.textContent = '(+84) ' + data.receiverPhone;
+
+                const fullAddrDisplay = document.getElementById('displayFullAddress');
+                if (fullAddrDisplay) fullAddrDisplay.textContent = data.specificAddress + ', ' + data.city;
+
+                const badge = document.getElementById('displayDefaultBadge');
+                if (badge) badge.style.display = 'inline-block';
+
+                if (typeof showCartToast === 'function') {
+                    showCartToast('✅ Đã lưu địa chỉ làm mặc định thành công!');
+                }
+            } else {
+                alert(data.message || 'Lỗi khi lưu địa chỉ.');
+            }
+        })
+        .catch(err => {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-bookmark-plus me-1"></i> Lưu địa chỉ mặc định';
+            }
+            alert('Lỗi kết nối máy chủ.');
+        });
+    }
+
+    function fetchShippingFeeForCity(city) {
+        fetch(`/Cart/GetShippingFee?city=${encodeURIComponent(city)}&subtotal=${subtotalVal}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    shippingFeeVal = data.fee;
+                    const feeSpan = document.getElementById('displayShippingFee');
+                    if (feeSpan) {
+                        if (data.isFree) {
+                            feeSpan.className = 'text-success fw-bold';
+                            feeSpan.textContent = 'Miễn phí';
+                        } else {
+                            feeSpan.className = 'text-dark';
+                            feeSpan.textContent = data.fee.toLocaleString('vi-VN') + '₫';
+                        }
+                    }
+                    recalculateTotal();
+                }
+            })
+            .catch(err => console.error('Get shipping fee error:', err));
     }
 
     // INSTANT FAILSAFE VOUCHER SELECTION
@@ -672,8 +624,9 @@
 
         const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
         const token = tokenInput ? tokenInput.value : '';
+        const selectedIds = document.getElementById('selectedIdsInput') ? document.getElementById('selectedIdsInput').value : '';
 
-        fetch(`/Cart/ApplyVoucher?code=${encodeURIComponent(code)}&subtotal=${subtotalVal}`, {
+        fetch(`/Cart/ApplyVoucher?code=${encodeURIComponent(code)}&subtotal=${subtotalVal}&selectedIds=${encodeURIComponent(selectedIds)}`, {
             method: 'GET',
             headers: {
                 'RequestVerificationToken': token
@@ -721,27 +674,27 @@
         const modalEl = document.getElementById(modalId);
         if (!modalEl) return;
 
-        // Method 1: Click close button inside modal
-        const closeBtn = modalEl.querySelector('.btn-close');
-        if (closeBtn) {
-            closeBtn.click();
-            return;
-        }
-
-        // Method 2: Bootstrap JS API
-        if (window.bootstrap && bootstrap.Modal) {
-            const modal = bootstrap.Modal.getInstance(modalEl) || bootstrap.Modal.getOrCreateInstance(modalEl);
-            if (modal) {
-                modal.hide();
-                return;
+        try {
+            if (window.bootstrap && bootstrap.Modal) {
+                const modal = bootstrap.Modal.getInstance(modalEl) || bootstrap.Modal.getOrCreateInstance(modalEl);
+                if (modal) modal.hide();
             }
+        } catch (e) {
+            console.warn('Bootstrap modal hide error:', e);
         }
 
-        // Method 3: DOM Fallback
-        modalEl.classList.remove('show');
-        modalEl.style.display = 'none';
-        document.body.classList.remove('modal-open');
-        const backdrop = document.querySelector('.modal-backdrop');
-        if (backdrop) backdrop.remove();
+        // Forceful Failsafe Cleanup: remove all backdrops & unfreeze body
+        setTimeout(() => {
+            document.querySelectorAll('.modal-backdrop').forEach(bd => bd.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            if (modalEl) {
+                modalEl.classList.remove('show');
+                modalEl.style.display = 'none';
+                modalEl.removeAttribute('aria-modal');
+                modalEl.setAttribute('aria-hidden', 'true');
+            }
+        }, 100);
     }
 </script>

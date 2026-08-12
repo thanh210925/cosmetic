@@ -63,7 +63,7 @@ namespace COSMETICC.Controllers
             var userIdStr = HttpContext.Session.GetString("UserId");
             if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
             {
-                return Json(new { success = false, message = "Vui lòng đăng nhập để thực hiện tính năng này!" });
+                return Json(new { success = false, requireLogin = true, message = "Vui lòng đăng nhập để thực hiện tính năng này!" });
             }
 
             var product = await _context.Products.FindAsync(productId);
@@ -112,11 +112,28 @@ namespace COSMETICC.Controllers
 
         // POST: /Cart/UpdateQuantity
         [HttpPost]
-        public async Task<IActionResult> UpdateQuantity(int cartItemId, int quantity)
+        public async Task<IActionResult> UpdateQuantity(int cartItemId, int quantity, int? productId)
         {
-            var cartItem = await _context.CartItems
-                .Include(ci => ci.Product)
-                .FirstOrDefaultAsync(ci => ci.Id == cartItemId);
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            int.TryParse(userIdStr, out int userId);
+
+            CartItem? cartItem = null;
+            if (cartItemId > 0)
+            {
+                cartItem = await _context.CartItems
+                    .Include(ci => ci.Product)
+                    .FirstOrDefaultAsync(ci => ci.Id == cartItemId);
+            }
+            else if (productId.HasValue && productId.Value > 0 && userId > 0)
+            {
+                var cart = await _context.Carts.FirstOrDefaultAsync(c => c.UserId == userId);
+                if (cart != null)
+                {
+                    cartItem = await _context.CartItems
+                        .Include(ci => ci.Product)
+                        .FirstOrDefaultAsync(ci => ci.CartId == cart.Id && ci.ProductId == productId.Value);
+                }
+            }
 
             if (cartItem == null)
             {
@@ -130,7 +147,7 @@ namespace COSMETICC.Controllers
                 return Json(new { success = true, message = "Đã xóa mặt hàng khỏi giỏ hàng." });
             }
 
-            if (cartItem.Product.Stock < quantity)
+            if (cartItem.Product != null && cartItem.Product.Stock < quantity)
             {
                 return Json(new { success = false, message = $"Không đủ số lượng tồn kho (Còn {cartItem.Product.Stock} sản phẩm)!" });
             }
@@ -140,6 +157,36 @@ namespace COSMETICC.Controllers
             await _context.SaveChangesAsync();
 
             return Json(new { success = true, message = "Cập nhật số lượng thành công!" });
+        }
+
+        // POST: /Cart/RemoveFromCart
+        [HttpPost]
+        public async Task<IActionResult> RemoveFromCart(int? productId, int? cartItemId)
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            int.TryParse(userIdStr, out int userId);
+
+            CartItem? cartItem = null;
+            if (cartItemId.HasValue && cartItemId.Value > 0)
+            {
+                cartItem = await _context.CartItems.FindAsync(cartItemId.Value);
+            }
+            else if (productId.HasValue && productId.Value > 0 && userId > 0)
+            {
+                var cart = await _context.Carts.FirstOrDefaultAsync(c => c.UserId == userId);
+                if (cart != null)
+                {
+                    cartItem = await _context.CartItems.FirstOrDefaultAsync(ci => ci.CartId == cart.Id && ci.ProductId == productId.Value);
+                }
+            }
+
+            if (cartItem != null)
+            {
+                _context.CartItems.Remove(cartItem);
+                await _context.SaveChangesAsync();
+            }
+
+            return Json(new { success = true, message = "Đã xóa mặt hàng khỏi giỏ hàng thành công!" });
         }
 
         // POST: /Cart/RemoveItem
@@ -254,7 +301,7 @@ namespace COSMETICC.Controllers
 
         // GET: /Cart/Checkout
         [HttpGet]
-        public async Task<IActionResult> Checkout()
+        public async Task<IActionResult> Checkout(string? selectedIds)
         {
             var userIdStr = HttpContext.Session.GetString("UserId");
             if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
@@ -278,6 +325,26 @@ namespace COSMETICC.Controllers
                 return RedirectToAction("Index");
             }
 
+            // Filter cart items if selectedIds is provided
+            if (!string.IsNullOrWhiteSpace(selectedIds))
+            {
+                var selectedIdList = selectedIds.Split(',')
+                    .Select(s => int.TryParse(s.Trim(), out int id) ? id : 0)
+                    .Where(id => id > 0)
+                    .ToList();
+
+                if (selectedIdList.Any())
+                {
+                    cart.CartItems = cart.CartItems.Where(ci => selectedIdList.Contains(ci.Id)).ToList();
+                }
+            }
+
+            if (!cart.CartItems.Any())
+            {
+                TempData["ErrorMessage"] = "Không có sản phẩm nào được chọn để thanh toán!";
+                return RedirectToAction("Index");
+            }
+
             // Load user addresses to let them choose (Shopee style)
             var addresses = await _context.UserAddresses
                 .Where(a => a.UserId == userId)
@@ -296,13 +363,77 @@ namespace COSMETICC.Controllers
             ViewBag.User = user;
             ViewBag.Addresses = addresses;
             ViewBag.Vouchers = availableVouchers;
+            ViewBag.SelectedIds = selectedIds ?? "";
+
+            // Calculate initial shipping fee based on default address city & Admin config rules
+            decimal initialShippingFee = 30000m;
+            var defaultAddr = addresses.FirstOrDefault(a => a.IsDefault) ?? addresses.FirstOrDefault();
+            string userCity = defaultAddr?.City ?? user?.Address ?? "";
+
+            if (!string.IsNullOrWhiteSpace(userCity))
+            {
+                decimal initialSubtotal = cart.CartItems.Sum(ci => (ci.Product.PromoPrice ?? ci.Product.Price) * (ci.Quantity ?? 1));
+                var cleanCity = userCity.Trim().ToLower();
+                var feeRules = await _context.ShippingFees.ToListAsync();
+                var match = feeRules.FirstOrDefault(f => 
+                    !string.IsNullOrWhiteSpace(f.Region) && 
+                    (cleanCity.Contains(f.Region.Trim().ToLower()) || f.Region.Trim().ToLower().Contains(cleanCity)));
+
+                if (match != null)
+                {
+                    initialShippingFee = (match.MinAmountForFreeShipping.HasValue && initialSubtotal >= match.MinAmountForFreeShipping.Value) ? 0m : match.Fee;
+                }
+                else if (initialSubtotal >= 299000m)
+                {
+                    initialShippingFee = 0m;
+                }
+            }
+            ViewBag.InitialShippingFee = initialShippingFee;
+
             return View(cart);
+        }
+
+        // GET: /Cart/GetShippingFee
+        [HttpGet]
+        public async Task<IActionResult> GetShippingFee(string? city, decimal subtotal)
+        {
+            decimal fee = 30000m;
+            if (!string.IsNullOrWhiteSpace(city))
+            {
+                var cleanCity = city.Trim().ToLower();
+                var feeRules = await _context.ShippingFees.ToListAsync();
+                var match = feeRules.FirstOrDefault(f => 
+                    !string.IsNullOrWhiteSpace(f.Region) && 
+                    (cleanCity.Contains(f.Region.Trim().ToLower()) || f.Region.Trim().ToLower().Contains(cleanCity)));
+
+                if (match != null)
+                {
+                    if (match.MinAmountForFreeShipping.HasValue && subtotal >= match.MinAmountForFreeShipping.Value)
+                    {
+                        fee = 0m;
+                    }
+                    else
+                    {
+                        fee = match.Fee;
+                    }
+                }
+                else if (subtotal >= 299000m)
+                {
+                    fee = 0m;
+                }
+            }
+            else if (subtotal >= 299000m)
+            {
+                fee = 0m;
+            }
+
+            return Json(new { success = true, fee = fee, isFree = (fee == 0) });
         }
 
         // GET & POST: /Cart/ApplyVoucher (AJAX)
         [HttpGet]
         [HttpPost]
-        public async Task<IActionResult> ApplyVoucher(string code, decimal? subtotal)
+        public async Task<IActionResult> ApplyVoucher(string code, decimal? subtotal, string? selectedIds)
         {
             if (string.IsNullOrWhiteSpace(code))
             {
@@ -326,7 +457,19 @@ namespace COSMETICC.Controllers
 
                 if (cart != null && cart.CartItems.Any())
                 {
-                    cartSubtotal = cart.CartItems.Sum(ci => (ci.Product.PromoPrice ?? ci.Product.Price) * (ci.Quantity ?? 1));
+                    var items = cart.CartItems.AsEnumerable();
+                    if (!string.IsNullOrWhiteSpace(selectedIds))
+                    {
+                        var selectedIdList = selectedIds.Split(',')
+                            .Select(s => int.TryParse(s.Trim(), out int id) ? id : 0)
+                            .Where(id => id > 0)
+                            .ToList();
+                        if (selectedIdList.Any())
+                        {
+                            items = items.Where(ci => selectedIdList.Contains(ci.Id));
+                        }
+                    }
+                    cartSubtotal = items.Sum(ci => (ci.Product.PromoPrice ?? ci.Product.Price) * (ci.Quantity ?? 1));
                 }
             }
 
@@ -334,7 +477,7 @@ namespace COSMETICC.Controllers
             var now = DateTime.Now;
 
             var discount = await _context.Discounts
-                .FirstOrDefaultAsync(d => d.Code != null && d.Code.ToLower() == cleanCode);
+                .FirstOrDefaultAsync(d => d.Code != null && d.Code.Trim().ToLower() == cleanCode);
 
             if (discount == null)
             {
@@ -370,6 +513,57 @@ namespace COSMETICC.Controllers
             });
         }
 
+        // POST: /Cart/SaveNewAddress
+        [HttpPost]
+        public async Task<IActionResult> SaveNewAddress(string receiverName, string receiverPhone, string specificAddress, string city, bool isDefault = true)
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+            {
+                return Json(new { success = false, message = "Vui lòng đăng nhập để thực hiện tính năng này!" });
+            }
+
+            if (string.IsNullOrWhiteSpace(receiverName) || string.IsNullOrWhiteSpace(receiverPhone) || string.IsNullOrWhiteSpace(specificAddress))
+            {
+                return Json(new { success = false, message = "Vui lòng nhập đầy đủ Tên, SĐT và Địa chỉ!" });
+            }
+
+            var userAddresses = await _context.UserAddresses.Where(a => a.UserId == userId).ToListAsync();
+
+            if (isDefault)
+            {
+                foreach (var addr in userAddresses)
+                {
+                    addr.IsDefault = false;
+                }
+            }
+
+            var newAddress = new UserAddress
+            {
+                UserId = userId,
+                ReceiverName = receiverName.Trim(),
+                ReceiverPhone = receiverPhone.Trim(),
+                SpecificAddress = specificAddress.Trim(),
+                City = string.IsNullOrWhiteSpace(city) ? "TP. Hồ Chí Minh" : city.Trim(),
+                IsDefault = isDefault || !userAddresses.Any()
+            };
+
+            _context.UserAddresses.Add(newAddress);
+            await _context.SaveChangesAsync();
+
+            return Json(new
+            {
+                success = true,
+                addressId = newAddress.Id,
+                receiverName = newAddress.ReceiverName,
+                receiverPhone = newAddress.ReceiverPhone,
+                specificAddress = newAddress.SpecificAddress,
+                city = newAddress.City,
+                isDefault = newAddress.IsDefault,
+                message = "Đã lưu địa chỉ mới làm địa chỉ mặc định thành công!"
+            });
+        }
+
         // POST: /Cart/PlaceOrder
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -382,6 +576,7 @@ namespace COSMETICC.Controllers
             string paymentMethod, 
             string? voucherCode,
             int? discountId,
+            string? selectedIds,
             bool saveAddress = false)
         {
             var userIdStr = HttpContext.Session.GetString("UserId");
@@ -404,8 +599,41 @@ namespace COSMETICC.Controllers
                 return RedirectToAction("Index");
             }
 
+            // Filter cart items if selectedIds is provided
+            if (!string.IsNullOrWhiteSpace(selectedIds))
+            {
+                var selectedIdList = selectedIds.Split(',')
+                    .Select(s => int.TryParse(s.Trim(), out int id) ? id : 0)
+                    .Where(id => id > 0)
+                    .ToList();
+
+                if (selectedIdList.Any())
+                {
+                    cart.CartItems = cart.CartItems.Where(ci => selectedIdList.Contains(ci.Id)).ToList();
+                }
+            }
+
+            if (!cart.CartItems.Any())
+            {
+                TempData["ErrorMessage"] = "Không có sản phẩm nào được chọn!";
+                return RedirectToAction("Index");
+            }
+
+            var now = DateTime.Now;
+            var activeFsItems = await _context.FlashSaleItems
+                .Include(fsi => fsi.FlashSale)
+                .Where(fsi => fsi.IsActive && fsi.SoldQuantity < fsi.QuantityForSale &&
+                              fsi.FlashSale != null && fsi.FlashSale.IsActive &&
+                              fsi.FlashSale.StartTime <= now && fsi.FlashSale.EndTime > now)
+                .ToListAsync();
+
             // Subtotal
-            decimal subtotal = cart.CartItems.Sum(ci => (ci.Product.PromoPrice ?? ci.Product.Price) * (ci.Quantity ?? 1));
+            decimal subtotal = cart.CartItems.Sum(ci =>
+            {
+                var fsItem = activeFsItems.FirstOrDefault(f => f.ProductId == ci.ProductId);
+                decimal p = fsItem != null ? fsItem.DiscountPrice : (ci.Product.PromoPrice ?? ci.Product.Price);
+                return p * (ci.Quantity ?? 1);
+            });
 
             // Validate Voucher & Calculate Discount
             decimal discountAmount = 0;
@@ -417,27 +645,59 @@ namespace COSMETICC.Controllers
             }
             else if (!string.IsNullOrWhiteSpace(voucherCode))
             {
-                activeDiscount = await _context.Discounts.FirstOrDefaultAsync(d => d.Code == voucherCode.Trim());
+                var cleanCode = voucherCode.Trim().ToLower();
+                activeDiscount = await _context.Discounts.FirstOrDefaultAsync(d => d.Code != null && d.Code.Trim().ToLower() == cleanCode);
             }
 
             if (activeDiscount != null && 
                 (activeDiscount.ExpiryDate == null || activeDiscount.ExpiryDate >= DateTime.Now) &&
+                (activeDiscount.StartDate == null || activeDiscount.StartDate <= DateTime.Now) &&
                 (activeDiscount.UsageLimit == null || activeDiscount.UsedCount < activeDiscount.UsageLimit))
             {
                 int percentage = activeDiscount.Percentage ?? 0;
                 discountAmount = Math.Round(subtotal * percentage / 100m);
             }
 
-            // Shipping Fee calculation (Free if subtotal >= 299,000đ)
-            decimal shippingFee = subtotal >= 299000m ? 0m : 30000m;
+            // Shipping Fee calculation (Based on Admin configuration rules for destination city)
+            decimal shippingFee = 30000m;
+            if (!string.IsNullOrWhiteSpace(city))
+            {
+                var cleanCity = city.Trim().ToLower();
+                var feeRules = await _context.ShippingFees.ToListAsync();
+                var match = feeRules.FirstOrDefault(f => 
+                    !string.IsNullOrWhiteSpace(f.Region) && 
+                    (cleanCity.Contains(f.Region.Trim().ToLower()) || f.Region.Trim().ToLower().Contains(cleanCity)));
+
+                if (match != null)
+                {
+                    shippingFee = (match.MinAmountForFreeShipping.HasValue && subtotal >= match.MinAmountForFreeShipping.Value) ? 0m : match.Fee;
+                }
+                else if (subtotal >= 299000m)
+                {
+                    shippingFee = 0m;
+                }
+            }
+            else if (subtotal >= 299000m)
+            {
+                shippingFee = 0m;
+            }
+
             decimal finalTotal = Math.Max(0, subtotal + shippingFee - discountAmount);
 
             // Save new address to UserAddresses if requested
             if (saveAddress && !string.IsNullOrWhiteSpace(specificAddress))
             {
-                bool exists = await _context.UserAddresses.AnyAsync(a => a.UserId == userId && a.SpecificAddress == specificAddress);
-                if (!exists)
+                var existingAddrs = await _context.UserAddresses.Where(a => a.UserId == userId).ToListAsync();
+                var exists = existingAddrs.FirstOrDefault(a => a.SpecificAddress == specificAddress && a.ReceiverName == receiverName);
+                
+                if (exists == null)
                 {
+                    bool makeDefault = !existingAddrs.Any(a => a.IsDefault);
+                    if (makeDefault)
+                    {
+                        foreach (var a in existingAddrs) { a.IsDefault = false; }
+                    }
+
                     var newAddr = new UserAddress
                     {
                         UserId = userId,
@@ -445,7 +705,7 @@ namespace COSMETICC.Controllers
                         ReceiverPhone = receiverPhone,
                         SpecificAddress = specificAddress,
                         City = city,
-                        IsDefault = false
+                        IsDefault = makeDefault
                     };
                     _context.UserAddresses.Add(newAddr);
                     await _context.SaveChangesAsync();
@@ -535,7 +795,19 @@ namespace COSMETICC.Controllers
                 {
                     var product = cartItem.Product;
                     int qtyOrdered = cartItem.Quantity ?? 1;
-                    decimal price = product.PromoPrice ?? product.Price;
+
+                    var fsItem = activeFsItems.FirstOrDefault(f => f.ProductId == cartItem.ProductId);
+                    decimal price = fsItem != null ? fsItem.DiscountPrice : (product.PromoPrice ?? product.Price);
+
+                    if (fsItem != null)
+                    {
+                        fsItem.SoldQuantity += qtyOrdered;
+                        if (fsItem.SoldQuantity >= fsItem.QuantityForSale)
+                        {
+                            fsItem.IsActive = false;
+                        }
+                        _context.FlashSaleItems.Update(fsItem);
+                    }
 
                     itemsSummaryHtml += $"• {product.Name} (x{qtyOrdered}) - {price:N0}₫<br/>";
 
@@ -647,6 +919,23 @@ namespace COSMETICC.Controllers
 
                     string paymentUrl = vnpay.CreateRequestUrl(vnpayConfig["VnPay:BaseUrl"], vnpayConfig["VnPay:HashSecret"]);
                     return Redirect(paymentUrl);
+                }
+                else if (paymentMethod == "MoMo")
+                {
+                    var momoService = HttpContext.RequestServices.GetRequiredService<Services.IMomoService>();
+                    string returnUrl = $"{Request.Scheme}://{Request.Host}/Payment/MomoReturn";
+                    string ipnUrl = $"{Request.Scheme}://{Request.Host}/Payment/MomoNotify";
+
+                    var momoResponse = await momoService.CreatePaymentAsync(order, returnUrl, ipnUrl);
+                    if (momoResponse != null && !string.IsNullOrEmpty(momoResponse.PayUrl))
+                    {
+                        return Redirect(momoResponse.PayUrl);
+                    }
+                    else
+                    {
+                        TempData["ErrorMessage"] = momoResponse?.Message ?? "Không thể kết nối cổng thanh toán MoMo!";
+                        return RedirectToAction("OrderSuccess", new { id = order.Id });
+                    }
                 }
 
                 // 9. COD Order Notifications
