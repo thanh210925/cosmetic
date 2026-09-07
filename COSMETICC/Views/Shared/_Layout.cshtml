@@ -105,11 +105,11 @@
                 ☰ Menu
             </button>
             <!-- LOGO -->
-            <a asp-controller="Home" asp-action="Index" class="logo d-flex align-items-center gap-2">
-                <img src="~/images/meiling-logo.png" alt="MeiLing Logo" class="header-logo-img" style="height: 60px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 10px rgba(0,0,0,0.35));" />
-                <div class="d-flex flex-column justify-content-center">
-                    <h2 class="mb-0">MeiLing</h2>
-                    <small>Tỏa sáng rạng rỡ</small>
+            <a asp-controller="Home" asp-action="Index" class="logo d-flex align-items-center gap-1">
+                <img src="~/images/meiling-logo.png" alt="MeiLing Logo" class="header-logo-img" style="height: 52px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 10px rgba(0,0,0,0.35)); margin-right: -4px;" />
+                <div class="d-flex flex-column justify-content-center" style="margin-left: 0;">
+                    <h2 class="mb-0" style="letter-spacing: -0.5px; font-weight: 900;">MeiLing</h2>
+                    <small style="margin-top: -3px; color: #ffd6db;">Tỏa sáng rạng rỡ</small>
                 </div>
             </a>
 
@@ -137,6 +137,12 @@
                            class="text-decoration-none small fw-bold"
                            style="color:rgba(255,255,255,0.85);">
                             <i class="bi bi-bag-check me-1"></i>Đơn hàng
+                        </a>
+
+                        <a asp-controller="AI"
+                           asp-action="MyAppointments"
+                           class="text-decoration-none text-warning small fw-bold">
+                            <i class="bi bi-calendar-check-fill me-1"></i>Lịch hẹn Bác sĩ
                         </a>
 
                         <a asp-controller="Account"
@@ -584,39 +590,22 @@
             const badge = document.getElementById('cartBadge');
             if (!badge) return;
             if (count > 0) {
-                badge.textContent = count > 99 ? '99+' : count;
-                badge.style.display = 'flex';
-            } else {
-                badge.style.display = 'none';
-            }
-        }
-
-        function refreshCartBadge() {
-            fetch('/Cart/GetCartCount', { method: 'GET' })
-                .then(r => r.ok ? r.json() : null)
-                .then(data => { if (data != null) updateCartBadge(data.count ?? 0); })
-                .catch(() => {});
-        }
-
-        // Init badge on page load
-        document.addEventListener('DOMContentLoaded', refreshCartBadge);
-    </script>
-    <!-- ====== CUSTOMER CHAT WIDGET ====== -->
-    <div id="customerChatWidget" style="position: fixed; bottom: 85px; right: 24px; z-index: 9999;">
+                bad    <!-- ====== CUSTOMER CHAT WIDGET ====== -->
+    <div id="customerChatWidget" style="position: fixed; bottom: 24px; right: 24px; z-index: 9999;">
         <!-- Chat Bubble Button -->
         <button id="chatBubbleBtn" onclick="toggleChatWindow()" 
-                style="background: #800020; color: white; border: none; width: 56px; height: 56px; border-radius: 50%; box-shadow: 0 4px 15px rgba(128,0,32,0.25); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; outline:none;">
+                style="background: #800020; color: white; border: none; width: 56px; height: 56px; border-radius: 50%; box-shadow: 0 4px 15px rgba(128,0,32,0.3); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; outline:none;">
             <i class="bi bi-chat-dots-fill" id="chatIcon" style="font-size: 24px;"></i>
         </button>
 
         <!-- Chat Window -->
         <div id="chatWindow" class="d-none" 
-             style="position: absolute; bottom: 70px; right: 0; width: 330px; height: 425px; background: white; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid #eef0f3; display: flex; flex-direction: column; overflow: hidden; transition: all 0.3s;">
+             style="position: absolute; bottom: 70px; right: 0; width: 340px; height: 450px; background: white; border-radius: 16px; box-shadow: 0 12px 35px rgba(0,0,0,0.2); border: 1px solid #eef0f3; display: flex; flex-direction: column; overflow: hidden; transition: all 0.3s;">
             <!-- Header -->
             <div style="background: #800020; color: white; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;">
                 <div class="d-flex align-items-center gap-2">
                     <div style="width: 10px; height: 10px; background: #2ecc71; border-radius: 50%; animation: pulseChat 1.5s infinite;"></div>
-                    <span style="font-weight: 600; font-size: 14.5px;">Hỗ trợ trực tuyến MeiLing</span>
+                    <span style="font-weight: 700; font-size: 14px;">Hỗ trợ trực tuyến MeiLing</span>
                 </div>
                 <button onclick="toggleChatWindow()" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer; padding: 0; display:flex; align-items:center;">
                     <i class="bi bi-dash-lg"></i>
@@ -627,16 +616,26 @@
             <div id="chatMessagesArea" style="flex-grow: 1; padding: 15px; overflow-y: auto; background: #f8fafc; display: flex; flex-direction: column; gap: 10px; font-size: 13px; line-height:1.5;">
                 <!-- Welcoming auto message -->
                 <div class="d-flex gap-2 align-items-start">
-                    <div style="background: #e2e8f0; color: #333; padding: 8px 12px; border-radius: 4px 12px 12px 12px; max-width: 85%;">
-                        Xin chào! Cảm ơn bạn đã ghé thăm MeiLing. Bạn cần tư vấn về sản phẩm hay soi da có thể gửi tin nhắn tại đây nhé!
+                    <div style="background: #e2e8f0; color: #333; padding: 10px 14px; border-radius: 4px 14px 14px 14px; max-width: 88%;">
+                        💕 Xin chào! Cảm ơn bạn đã ghé thăm MeiLing Cosmetics. Bạn cần tư vấn về sản phẩm hay soi da có thể chọn gợi ý bên dưới hoặc gửi tin nhắn tại đây nhé!
                     </div>
                 </div>
+            </div>
+
+            <!-- Quick Suggestions Chips Bar -->
+            <div id="chatSuggestionsBar" style="padding: 8px 10px; background: #ffffff; border-top: 1px solid #edf2f7; display: flex; gap: 6px; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; font-size: 11px;">
+                <button type="button" onclick="sendSuggestionMsg('👩‍⚕️ Đặt lịch Bác sĩ', 'appointment')" class="btn btn-sm rounded-pill py-1 px-2 text-nowrap" style="background:#fff0f3; border: 1px solid rgba(128,0,32,0.2); color: #800020; font-size: 11px; font-weight: 700;">👩‍⚕️ Đặt lịch Bác sĩ</button>
+                <button type="button" onclick="sendSuggestionMsg('💄 Chọn Son môi', 'lipstick')" class="btn btn-sm rounded-pill py-1 px-2 text-nowrap" style="background:#fff0f3; border: 1px solid rgba(128,0,32,0.2); color: #800020; font-size: 11px; font-weight: 700;">💄 Chọn Son</button>
+                <button type="button" onclick="sendSuggestionMsg('🎯 Trị Mụn & Thâm', 'acne')" class="btn btn-sm rounded-pill py-1 px-2 text-nowrap" style="background:#fff0f3; border: 1px solid rgba(128,0,32,0.2); color: #800020; font-size: 11px; font-weight: 700;">🎯 Trị Mụn</button>
+                <button type="button" onclick="sendSuggestionMsg('📦 Kiểm tra đơn hàng', 'orders')" class="btn btn-sm rounded-pill py-1 px-2 text-nowrap" style="background:#fff0f3; border: 1px solid rgba(128,0,32,0.2); color: #800020; font-size: 11px; font-weight: 700;">📦 Đơn hàng</button>
+                <button type="button" onclick="sendSuggestionMsg('🚚 Phí giao hàng & Freeship', 'shipping')" class="btn btn-sm rounded-pill py-1 px-2 text-nowrap" style="background:#fff0f3; border: 1px solid rgba(128,0,32,0.2); color: #800020; font-size: 11px; font-weight: 700;">🚚 Freeship</button>
+                <button type="button" onclick="sendSuggestionMsg('🔄 Chính sách đổi trả', 'return')" class="btn btn-sm rounded-pill py-1 px-2 text-nowrap" style="background:#fff0f3; border: 1px solid rgba(128,0,32,0.2); color: #800020; font-size: 11px; font-weight: 700;">🔄 Đổi trả 7 ngày</button>
             </div>
 
             <!-- Input Area -->
             <form id="chatInputForm" onsubmit="sendChatMessage(event)" 
                   style="border-top: 1px solid #edf2f7; display: flex; padding: 10px 14px; background: white; align-items: center; gap: 8px;">
-                <input type="text" id="chatInputText" placeholder="Nhập tin nhắn của bạn..." 
+                <input type="text" id="chatInputText" placeholder="Nhập tin nhắn..." 
                        style="flex-grow: 1; border: 1px solid #cbd5e1; padding: 8px 14px; border-radius: 20px; font-size: 13px; outline: none; transition: border 0.2s;" required />
                 <button type="submit" style="background: #800020; color: white; border: none; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s;">
                     <i class="bi bi-send-fill" style="font-size: 14px;"></i>
@@ -645,9 +644,9 @@
         </div>
     </div>
 
-    <!-- ====== BACK TO TOP BUTTON ====== -->
+    <!-- ====== BACK TO TOP BUTTON (FLOATING ABOVE CHAT BUTTON) ====== -->
     <button id="backToTopBtn" onclick="scrollToTop()" title="Quay lại đầu trang"
-            style="position: fixed; bottom: 24px; right: 28px; z-index: 9990; width: 48px; height: 48px; border-radius: 50%; background: #800020; color: white; border: 2px solid #ffffff; box-shadow: 0 4px 15px rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; opacity: 0; visibility: hidden; transform: translateY(20px);">
+            style="position: fixed; bottom: 90px; right: 28px; z-index: 9990; width: 48px; height: 48px; border-radius: 50%; background: #800020; color: white; border: 2px solid #ffffff; box-shadow: 0 4px 15px rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; opacity: 0; visibility: hidden; transform: translateY(20px);">
         <i class="bi bi-chevron-up" style="font-size: 20px; -webkit-text-stroke: 1px white;"></i>
     </button>
 
@@ -696,6 +695,53 @@
             }
         }
 
+        function sendSuggestionMsg(text, typeKey) {
+            const input = document.getElementById('chatInputText');
+            if (input) input.value = text;
+
+            // Submit customer question
+            const form = document.getElementById('chatInputForm');
+            if (form) {
+                sendChatMessage(new Event('submit'));
+            }
+
+            // Trigger instant automated bot response with rich HTML links
+            setTimeout(() => {
+                let botReply = '';
+                if (typeKey === 'appointment') {
+                    botReply = "Dạ! MeiLing có dịch vụ <b>Soi Da 3D VISIA & Tư Vấn 1:1 với Bác sĩ CKI Da liễu</b> hoàn toàn miễn phí! 👩‍⚕️✨<br><br>👉 Bạn có thể <a href='/AI/BookAppointment' style='color:#800020; font-weight:bold; text-decoration:underline;'>Click vào đây để Đặt Lịch Hẹn Ngay</a> hoặc xem <a href='/AI/MyAppointments' style='color:#800020; font-weight:bold; text-decoration:underline;'>Lịch hẹn của tôi</a> nhé!";
+                } else if (typeKey === 'lipstick') {
+                    botReply = "Dạ, MeiLing có sẵn hàng trăm mẫu <b>Son Môi High-End chính hãng 100%</b> (Romand, 3CE, Dior, YSL...) với đầy đủ bảng màu hot nhất! 💄✨<br><br>👉 <a href='/Product/List?search=Son' style='color:#800020; font-weight:bold; text-decoration:underline;'>Xem ngay Danh Sách Son Môi Hot Tại Đây!</a>";
+                } else if (typeKey === 'acne') {
+                    botReply = "Dạ với làn da mụn & thâm, Bác sĩ MeiLing khuyên dùng combo <b>Salicylic Acid (BHA) + Niacinamide</b> kết hợp Kem chống nắng kiềm dầu! 🎯<br><br>👉 Bạn có thể <a href='/AI/SkinAnalysis' style='color:#800020; font-weight:bold; text-decoration:underline;'>Phân tích da qua ảnh chụp AI</a> hoặc <a href='/AI/Ingredients?q=Salicylic' style='color:#800020; font-weight:bold; text-decoration:underline;'>Tra cứu thành phần y khoa</a> nhé!";
+                } else if (typeKey === 'orders') {
+                    botReply = "Dạ bạn có thể kiểm tra nhanh tiến trình giao hàng và thông tin các đơn hàng đã đặt tại: <a href='/Account/MyOrders' style='color:#800020; font-weight:bold; text-decoration:underline;'>Lịch sử đơn hàng của tôi 📦</a> ạ!";
+                } else if (typeKey === 'shipping') {
+                    botReply = "Dạ MeiLing miễn phí giao hàng <b>FREESHIP</b> cho mọi đơn từ 299.000đ và giao hỏa tốc 2H tại TP.HCM! 🚚💨";
+                } else if (typeKey === 'return') {
+                    botReply = "Dạ MeiLing áp dụng chính sách <b>đổi trả 100% miễn phí trong vòng 7 ngày</b> nếu sản phẩm lỗi hoặc không hài lòng. Hotline hỗ trợ: 1900 6868! 🔄";
+                } else {
+                    botReply = "Cảm ơn bạn đã nhắn tin! Tư vấn viên MeiLing sẽ phản hồi ngay trong giây lát. 💕";
+                }
+
+                appendAutoBotMsg(botReply);
+            }, 400);
+        }
+
+        function appendAutoBotMsg(htmlContent) {
+            const area = document.getElementById('chatMessagesArea');
+            if (!area) return;
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'd-flex gap-2 align-items-start mt-2';
+            msgDiv.innerHTML = `
+                <div style="background: #ffffff; color: #333; padding: 10px 14px; border-radius: 4px 14px 14px 14px; max-width: 88%; border: 1px solid #edf2f7; box-shadow: 0 2px 6px rgba(0,0,0,0.04); font-size: 13px; line-height: 1.5;">
+                    ${htmlContent}
+                </div>
+            `;
+            area.appendChild(msgDiv);
+            scrollChatToBottom();
+        }
+
         function loadChatMessages() {
             fetch('/Chat/GetMessages')
                 .then(r => r.ok ? r.json() : [])
@@ -704,8 +750,8 @@
                     
                     let html = `
                         <div class="d-flex gap-2 align-items-start">
-                            <div style="background: #e2e8f0; color: #333; padding: 8px 12px; border-radius: 4px 12px 12px 12px; max-width: 85%;">
-                                Xin chào! Cảm ơn bạn đã ghé thăm MeiLing. Bạn cần tư vấn về sản phẩm hay soi da có thể gửi tin nhắn tại đây nhé!
+                            <div style="background: #e2e8f0; color: #333; padding: 10px 14px; border-radius: 4px 14px 14px 14px; max-width: 88%;">
+                                💕 Xin chào! Cảm ơn bạn đã ghé thăm MeiLing Cosmetics. Bạn cần tư vấn về sản phẩm hay soi da có thể chọn gợi ý bên dưới hoặc gửi tin nhắn tại đây nhé!
                             </div>
                         </div>
                     `;
@@ -743,7 +789,7 @@
         }
 
         function sendChatMessage(e) {
-            e.preventDefault();
+            if (e && e.preventDefault) e.preventDefault();
             const input = document.getElementById('chatInputText');
             const message = input.value.trim();
             if (!message) return;
@@ -759,8 +805,6 @@
             .then(data => {
                 if (data.success) {
                     loadChatMessages();
-                } else {
-                    alert(data.message || 'Lỗi gửi tin nhắn.');
                 }
             });
         }
@@ -771,7 +815,6 @@
                 area.scrollTop = area.scrollHeight;
             }
         }
-
     </script>
 </body>
 </html>

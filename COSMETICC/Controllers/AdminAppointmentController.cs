@@ -77,6 +77,29 @@ namespace COSMETICC.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // POST: AdminAppointment/UpdateDoctorAndNotes
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateDoctorAndNotes(int id, string? doctorName, string? notes)
+        {
+            var appointment = await _context.Appointments.FindAsync(id);
+            if (appointment == null)
+            {
+                TempData["ErrorMessage"] = "Không tìm thấy lịch hẹn!";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (!string.IsNullOrWhiteSpace(doctorName))
+            {
+                appointment.DoctorName = doctorName;
+            }
+            appointment.Notes = notes;
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = $"Đã cập nhật thông tin Bác sĩ / Ghi chú cho lịch hẹn #APT-{appointment.Id:D5}!";
+            return RedirectToAction(nameof(Index));
+        }
+
         // POST: AdminAppointment/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]

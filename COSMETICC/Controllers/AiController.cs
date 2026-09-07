@@ -628,6 +628,34 @@ Khi gợi ý sản phẩm, hãy đề cập tên sản phẩm cụ thể từ da
 
             return View(appointments);
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelAppointment(int id)
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+            {
+                TempData["ErrorMessage"] = "Vui lòng đăng nhập!";
+                return RedirectToAction("Login", "Account");
+            }
+
+            var appointment = await _context.Appointments.FirstOrDefaultAsync(a => a.Id == id && a.UserId == userId);
+            if (appointment != null)
+            {
+                if (appointment.Status == "Chờ xác nhận")
+                {
+                    appointment.Status = "Đã hủy";
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = $"Đã hủy lịch hẹn #APT-{appointment.Id:D5} thành công!";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Chỉ có thể hủy lịch hẹn ở trạng thái \"Chờ xác nhận\"!";
+                }
+            }
+            return RedirectToAction(nameof(MyAppointments));
+        }
     }
 
     public class ChatRequest

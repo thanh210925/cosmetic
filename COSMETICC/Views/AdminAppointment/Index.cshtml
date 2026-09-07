@@ -142,7 +142,11 @@
                                 <div class="badge bg-light text-dark border">@item.TimeSlot</div>
                             </td>
                             <td>
-                                <div class="small text-dark fw-bold">@(string.IsNullOrEmpty(item.DoctorName) ? "Chưa chọn bác sĩ" : item.DoctorName)</div>
+                                <div class="small text-dark fw-bold">@(string.IsNullOrEmpty(item.DoctorName) ? "Chưa phân công" : item.DoctorName)</div>
+                                <button type="button" class="btn btn-link btn-sm p-0 text-primary extra-small text-decoration-none" 
+                                        onclick="openEditDoctorModal(@item.Id, '@(item.DoctorName ?? "")', `@(item.Notes ?? "")`)">
+                                    <i class="bi bi-pencil-square me-1"></i>Đổi BS / Ghi chú
+                                </button>
                             </td>
                             <td>
                                 <span class="badge rounded-pill px-2.5 py-1.5 small @badgeBg">@item.Status</span>
@@ -155,6 +159,7 @@
                                     <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
                                         <li>
                                             <form asp-action="UpdateStatus" method="post">
+                                                @Html.AntiForgeryToken()
                                                 <input type="hidden" name="id" value="@item.Id" />
                                                 <input type="hidden" name="status" value="Chờ xác nhận" />
                                                 <button class="dropdown-item small" type="submit">⏳ Chờ xác nhận</button>
@@ -162,6 +167,7 @@
                                         </li>
                                         <li>
                                             <form asp-action="UpdateStatus" method="post">
+                                                @Html.AntiForgeryToken()
                                                 <input type="hidden" name="id" value="@item.Id" />
                                                 <input type="hidden" name="status" value="Đã xác nhận" />
                                                 <button class="dropdown-item small text-primary fw-bold" type="submit">✔ Duyệt (Đã xác nhận)</button>
@@ -169,6 +175,7 @@
                                         </li>
                                         <li>
                                             <form asp-action="UpdateStatus" method="post">
+                                                @Html.AntiForgeryToken()
                                                 <input type="hidden" name="id" value="@item.Id" />
                                                 <input type="hidden" name="status" value="Đã khám" />
                                                 <button class="dropdown-item small text-success fw-bold" type="submit">✅ Hoàn thành (Đã khám)</button>
@@ -177,6 +184,7 @@
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
                                             <form asp-action="UpdateStatus" method="post">
+                                                @Html.AntiForgeryToken()
                                                 <input type="hidden" name="id" value="@item.Id" />
                                                 <input type="hidden" name="status" value="Đã hủy" />
                                                 <button class="dropdown-item small text-danger" type="submit">❌ Hủy lịch hẹn</button>
@@ -185,6 +193,7 @@
                                     </ul>
 
                                     <form asp-action="Delete" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa lịch hẹn này?');">
+                                        @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@item.Id" />
                                         <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa lịch hẹn"><i class="bi bi-trash-fill"></i></button>
                                     </form>
@@ -197,3 +206,54 @@
         </table>
     </div>
 </div>
+
+<!-- MODAL PHÂN CÔNG BÁC SĨ & GHI CHÚ -->
+<div class="modal fade" id="editDoctorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <form asp-action="UpdateDoctorAndNotes" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header bg-dark text-white py-3">
+                    <h5 class="modal-title fw-bold fs-6 mb-0"><i class="bi bi-person-badge-fill text-warning me-2"></i> Phân Công Bác Sĩ & Ghi Chú Admin</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" name="id" id="editAptId" />
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark small">Tên Bác Sĩ / Chuyên Gia Phụ Trách</label>
+                        <select name="doctorName" id="editDoctorSelect" class="form-select rounded-3">
+                            <option value="BS. CKI Nguyễn Thanh Hà (Trị mụn & Trẻ hóa)">BS. CKI Nguyễn Thanh Hà (Trị mụn & Trẻ hóa)</option>
+                            <option value="BS. CKI Trần Minh Tuấn (Nám & Sắc tố)">BS. CKI Trần Minh Tuấn (Nám & Sắc tố)</option>
+                            <option value="ThS. Lê Hoài Phương (Skincare Routine Advisor)">ThS. Lê Hoài Phương (Skincare Routine Advisor)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark small">Ghi Chú Admin / Phác Đồ Ban Đầu</label>
+                        <textarea name="notes" id="editAptNotes" class="form-control rounded-3" rows="3" placeholder="Ghi chú thêm từ quản trị viên..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0 py-3">
+                    <button type="button" class="btn btn-secondary rounded-pill btn-sm px-3" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-primary rounded-pill btn-sm px-4 fw-bold">Lưu Cập Nhật</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openEditDoctorModal(id, doctorName, notes) {
+        document.getElementById('editAptId').value = id;
+        
+        const docSelect = document.getElementById('editDoctorSelect');
+        if (doctorName && doctorName !== '') {
+            docSelect.value = doctorName;
+        }
+        document.getElementById('editAptNotes').value = notes || '';
+
+        const modal = new bootstrap.Modal(document.getElementById('editDoctorModal'));
+        modal.show();
+    }
+</script>

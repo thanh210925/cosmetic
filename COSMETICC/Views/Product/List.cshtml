@@ -14,6 +14,31 @@
     <span class="text-dark fw-bold">@ViewBag.PageTitle</span>
 </div>
 
+<div class="custom-container mb-4">
+    <!-- FEATURED CATEGORIES BANNER SECTION (MATCHING REFERENCE IMAGE LAYOUT) -->
+    <div class="featured-cat-section" id="featured-categories">
+        <div class="featured-cat-header">
+            <h2>DANH MỤC SẢN PHẨM MỸ PHẨM CAO CẤP</h2>
+            <p>100% Mỹ phẩm chính hãng, thuần chay & chăm sóc da chuyên sâu đạt chuẩn y khoa</p>
+        </div>
+        <div class="featured-cat-pills">
+            <a href="@Url.Action("List", "Product")" class="cat-pill-item @(ViewBag.CurrentCategoryId == null && string.IsNullOrEmpty(ViewBag.SearchTerm) ? "active" : "")">
+                <i class="bi bi-grid-fill me-1"></i> Tất Cả Sản Phẩm
+            </a>
+            @if (ViewBag.Categories != null)
+            {
+                foreach (COSMETICC.Models.Category cat in ViewBag.Categories)
+                {
+                    var isActive = ViewBag.CurrentCategoryId == cat.Id ? "active" : "";
+                    <a href="@Url.Action("List", "Product", new { categoryId = cat.Id })" class="cat-pill-item @isActive">
+                        @cat.Name
+                    </a>
+                }
+            }
+        </div>
+    </div>
+</div>
+
 <div class="custom-container pb-5">
     <div class="row">
         <!-- Sidebar filters left column (col-md-3) -->
