@@ -171,6 +171,30 @@ namespace COSMETICC.Controllers
             return View(products);
         }
 
+        // GET: /Product/FeaturedCategories
+        public async Task<IActionResult> FeaturedCategories(int? categoryId, string? catKey)
+        {
+            var categories = await _context.Categories
+                .Include(c => c.ChildCategories)
+                .OrderBy(c => c.Name)
+                .ToListAsync();
+
+            var products = await _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.Brand)
+                .Include(p => p.Reviews)
+                .Include(p => p.OrderDetails)
+                .Where(p => p.IsActive)
+                .OrderByDescending(p => p.Id)
+                .ToListAsync();
+
+            ViewBag.Categories = categories;
+            ViewBag.SelectedCategoryId = categoryId;
+            ViewBag.SelectedCatKey = catKey ?? "all";
+
+            return View(products);
+        }
+
         // GET: /Product/Details/5
         public async Task<IActionResult> Details(int id)
         {

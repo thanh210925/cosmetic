@@ -1,0 +1,282 @@
+@model IEnumerable<COSMETICC.Models.Product>
+@{
+    ViewData["Title"] = "Danh Mục Sản Phẩm Nổi Bật - MeiLing Cosmetics";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var categories = ViewBag.Categories as List<COSMETICC.Models.Category>;
+    int? selectedCatId = ViewBag.SelectedCategoryId as int?;
+    string selectedKey = ViewBag.SelectedCatKey as string ?? "all";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+<!-- BREADCRUMB -->
+<div class="breadcrumb-container custom-container py-3">
+    <a asp-controller="Home" asp-action="Index" class="text-decoration-none text-secondary">Trang chủ</a>
+    <i class="bi bi-chevron-right mx-2 text-muted"></i>
+    <span class="text-dark fw-bold">Danh mục nổi bật</span>
+</div>
+
+<div class="custom-container pb-5">
+    
+    <!-- FEATURED CATEGORY HERO BANNER -->
+    <div class="featured-cat-section mb-4" style="background: linear-gradient(135deg, #7a001a 0%, #9b0022 50%, #4a0012 100%); border-radius: 20px; padding: 36px 28px; box-shadow: 0 12px 35px rgba(128,0,32,0.25);">
+        <div class="featured-cat-header text-center mb-4">
+            <span class="badge bg-warning-subtle text-warning-emphasis px-3 py-1.5 rounded-pill fw-bold mb-2" style="letter-spacing: 1px;">💎 MEILING FEATURED CATEGORIES</span>
+            <h1 class="fw-bold text-white text-uppercase mb-2" style="font-size: 26px; letter-spacing: 1px;">DANH MỤC SẢN PHẨM MỸ PHẨM NỔI BẬT</h1>
+            <p class="text-light opacity-90 m-0 fs-6">Chọn danh mục làm đẹp bên dưới để khám phá sản phẩm chính hãng trực tiếp ngay trên trang</p>
+        </div>
+
+        <!-- CATEGORY PILL TAB FILTER -->
+        <div class="featured-cat-pills d-flex flex-wrap gap-2 justify-content-center align-items-center" id="categoryPillTabs">
+            <button type="button" class="cat-pill-item @(selectedKey == "all" && !selectedCatId.HasValue ? "active" : "")" onclick="filterCategoryInline('all', this)" data-cat-key="all">
+                <i class="fa-solid fa-layer-group me-1"></i> Tất Cả Sản Phẩm <span class="cat-pill-badge" id="countAll">@Model.Count()</span>
+            </button>
+            <button type="button" class="cat-pill-item @(selectedKey == "son" ? "active" : "")" onclick="filterCategoryInline('son', this)" data-cat-key="son">
+                <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Son Môi High-End
+            </button>
+            <button type="button" class="cat-pill-item @(selectedKey == "kemduong" ? "active" : "")" onclick="filterCategoryInline('kemduong', this)" data-cat-key="kemduong">
+                <i class="fa-solid fa-jar me-1"></i> Kem Dưỡng Da
+            </button>
+            <button type="button" class="cat-pill-item @(selectedKey == "serum" ? "active" : "")" onclick="filterCategoryInline('serum', this)" data-cat-key="serum">
+                <i class="fa-solid fa-vial me-1"></i> Serum Phục Hồi B5
+            </button>
+            <button type="button" class="cat-pill-item @(selectedKey == "chongnang" ? "active" : "")" onclick="filterCategoryInline('chongnang', this)" data-cat-key="chongnang">
+                <i class="fa-solid fa-sun me-1"></i> Kem Chống Nắng
+            </button>
+            <button type="button" class="cat-pill-item @(selectedKey == "ruamat" ? "active" : "")" onclick="filterCategoryInline('ruamat', this)" data-cat-key="ruamat">
+                <i class="fa-solid fa-pump-soap me-1"></i> Sữa Rửa Mặt
+            </button>
+            <button type="button" class="cat-pill-item @(selectedKey == "taytrang" ? "active" : "")" onclick="filterCategoryInline('taytrang', this)" data-cat-key="taytrang">
+                <i class="fa-solid fa-droplet me-1"></i> Nước Tẩy Trang
+            </button>
+            <button type="button" class="cat-pill-item @(selectedKey == "matna" ? "active" : "")" onclick="filterCategoryInline('matna', this)" data-cat-key="matna">
+                <i class="fa-solid fa-mask-face me-1"></i> Mặt Nạ Dưỡng
+            </button>
+            <button type="button" class="cat-pill-item @(selectedKey == "nuochoa" ? "active" : "")" onclick="filterCategoryInline('nuochoa', this)" data-cat-key="nuochoa">
+                <i class="fa-solid fa-spray-can me-1"></i> Nước Hoa Cao Cấp
+            </button>
+            <button type="button" class="cat-pill-item @(selectedKey == "trangdiem" ? "active" : "")" onclick="filterCategoryInline('trangdiem', this)" data-cat-key="trangdiem">
+                <i class="fa-solid fa-palette me-1"></i> Trang Điểm
+            </button>
+            
+            @if (categories != null)
+            {
+                foreach (var cat in categories)
+                {
+                    var key = "cat_" + cat.Id;
+                    var isActive = selectedCatId == cat.Id ? "active" : "";
+                    <button type="button" class="cat-pill-item @isActive" onclick="filterCategoryInline('cat_@cat.Id', this)" data-cat-id="@cat.Id">
+                        <i class="fa-solid fa-tag me-1"></i> @cat.Name
+                    </button>
+                }
+            }
+        </div>
+    </div>
+
+    <!-- FILTER STATUS BAR -->
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom flex-wrap gap-2">
+        <h4 class="fw-bold text-dark mb-0 d-flex align-items-center" id="activeCategoryHeading">
+            <i class="fa-solid fa-boxes-packing text-danger me-2"></i> Tất cả sản phẩm trong danh mục
+        </h4>
+        <div class="text-muted small">
+            Đang hiển thị <strong class="text-danger" id="visibleProductCount">@Model.Count()</strong> sản phẩm
+        </div>
+    </div>
+
+    <!-- INLINE PRODUCTS GRID CONTAINER -->
+    <div class="row g-3" id="featuredProductsContainer">
+        @if (Model != null && Model.Any())
+        {
+            foreach (var item in Model)
+            {
+                var origP = item.Price;
+                var saleP = item.PromoPrice ?? origP;
+                var discPct = item.PromoPrice.HasValue && origP > 0 ? (int)((origP - saleP) * 100 / origP) : 0;
+                var catName = item.Category?.Name?.ToLower() ?? "";
+                var prodName = item.Name.ToLower();
+
+                // Compute tags for inline filtering
+                var filterClasses = "prod-item-card";
+                if (prodName.Contains("son") || catName.Contains("son")) filterClasses += " filter-son";
+                if (prodName.Contains("dưỡng") || catName.Contains("dưỡng")) filterClasses += " filter-kemduong";
+                if (prodName.Contains("serum") || catName.Contains("serum")) filterClasses += " filter-serum";
+                if (prodName.Contains("nắng") || catName.Contains("nắng")) filterClasses += " filter-chongnang";
+                if (prodName.Contains("mặt") || catName.Contains("rửa")) filterClasses += " filter-ruamat";
+                if (prodName.Contains("tẩy") || catName.Contains("tẩy")) filterClasses += " filter-taytrang";
+                if (prodName.Contains("mặt nạ") || catName.Contains("nạ")) filterClasses += " filter-matna";
+                if (prodName.Contains("hoa") || catName.Contains("hoa")) filterClasses += " filter-nuochoa";
+                if (prodName.Contains("trang điểm") || catName.Contains("trang điểm")) filterClasses += " filter-trangdiem";
+                if (item.CategoryId.HasValue) filterClasses += $" filter-cat_{item.CategoryId.Value}";
+
+                <div class="col-5col @filterClasses" data-cat-id="@(item.CategoryId ?? 0)">
+                    <div class="prod-card h-100 position-relative bg-white p-3 rounded-4 shadow-sm border">
+                        @if (discPct > 0)
+                        {
+                            <span class="home-flash-badge" style="background:#ef4444; color:white; font-size:11px; font-weight:800; padding:2px 8px; border-radius:10px; position:absolute; top:10px; left:10px; z-index:2;">⚡-@discPct%</span>
+                        }
+                        <button class="wishlist-btn border-0 bg-transparent" onclick="toggleWishlist(this, @item.Id)" title="Yêu thích" style="position:absolute; top:10px; right:10px; z-index:2;">
+                            <i class="fa-solid fa-heart text-muted"></i>
+                        </button>
+                        <a href="@Url.Action("Details", "Product", new { id = item.Id })" class="text-decoration-none d-block">
+                            <div class="prod-card-img-wrap text-center mb-2" style="height: 180px; overflow: hidden; display:flex; align-items:center; justify-content:center;">
+                                <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=300&auto=format&fit=crop" : item.ImageUrl)" alt="@item.Name" style="max-height:100%; max-width:100%; object-fit:contain; transition:transform 0.3s;" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=300&auto=format&fit=crop';" />
+                            </div>
+                            <div class="prod-brand small text-muted text-uppercase fw-bold mb-1">@(item.Brand?.Name ?? item.Category?.Name ?? "Beauty Glow")</div>
+                            <h3 class="prod-name text-dark fw-bold" style="font-size:13px; line-height:1.4; height:36px; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">@item.Name</h3>
+                        </a>
+                        <div class="prod-rating text-warning extra-small mb-2">
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <span class="text-muted ms-1">(@(item.Reviews?.Count ?? 12))</span>
+                        </div>
+                        <div class="prod-price-row d-flex align-items-baseline gap-2 mb-3">
+                            <span class="prod-price text-danger fw-bold fs-6">@string.Format("{0:N0}đ", saleP)</span>
+                            @if (discPct > 0)
+                            {
+                                <span class="prod-old-price text-muted text-decoration-line-through extra-small">@string.Format("{0:N0}đ", origP)</span>
+                            }
+                        </div>
+                        <div class="prod-actions-row mt-auto d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-danger w-100 fw-bold rounded-pill" onclick="initAddToCart(this)" data-prod-id="@item.Id" data-prod-name="@item.Name">
+                                <i class="fa-solid fa-cart-plus me-1"></i> Giỏ hàng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="text-center py-5 text-muted col-12">
+                <i class="bi bi-emoji-frown fs-1 d-block mb-2"></i>
+                <p>Chưa có sản phẩm nào trong danh mục này.</p>
+            </div>
+        }
+    </div>
+
+    <!-- EMPTY STATE FOR FILTER -->
+    <div id="noProductsNotice" class="text-center py-5 text-muted bg-white rounded-4 border shadow-sm mt-3 d-none">
+        <i class="fa-solid fa-box-open fs-1 text-danger mb-3 d-block"></i>
+        <h5 class="fw-bold text-dark">Chưa Có Sản Phẩm Phù Hợp Nào</h5>
+        <p class="small text-muted mb-3">Vui lòng chọn danh mục làm đẹp khác hoặc xem tất cả sản phẩm MeiLing.</p>
+        <button type="button" class="btn btn-danger btn-sm rounded-pill px-4 fw-bold" onclick="filterCategoryInline('all', document.querySelector('[data-cat-key=all]'))" style="background:#800020; border:none;">
+            Xem Tất Cả Sản Phẩm
+        </button>
+    </div>
+
+</div>
+
+<script>
+    // INLINE CATEGORY FILTER — NO PAGE REFRESH!
+    function filterCategoryInline(key, btnEl) {
+        // Update active tab button style
+        document.querySelectorAll('#categoryPillTabs .cat-pill-item').forEach(b => b.classList.remove('active'));
+        if (btnEl) btnEl.classList.add('active');
+
+        const heading = document.getElementById('activeCategoryHeading');
+        const countSpan = document.getElementById('visibleProductCount');
+        const emptyNotice = document.getElementById('noProductsNotice');
+        const allCards = document.querySelectorAll('.prod-item-card');
+
+        let visibleCount = 0;
+        let headingText = 'Tất cả sản phẩm trong danh mục';
+
+        allCards.forEach(card => {
+            if (key === 'all') {
+                card.style.display = 'block';
+                visibleCount++;
+                headingText = 'Tất cả sản phẩm MeiLing';
+            } else if (key.startsWith('cat_')) {
+                const catId = key.replace('cat_', '');
+                if (card.dataset.catId === catId || card.classList.contains('filter-' + key)) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+                headingText = btnEl ? btnEl.innerText.trim() : 'Sản phẩm danh mục';
+            } else {
+                if (card.classList.contains('filter-' + key)) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+                headingText = btnEl ? btnEl.innerText.trim() : 'Sản phẩm danh mục';
+            }
+        });
+
+        if (heading) heading.innerHTML = `<i class="fa-solid fa-boxes-packing text-danger me-2"></i> ${headingText}`;
+        if (countSpan) countSpan.textContent = visibleCount;
+
+        if (visibleCount === 0) {
+            emptyNotice.classList.remove('d-none');
+        } else {
+            emptyNotice.classList.add('d-none');
+        }
+    }
+
+    // Auto trigger initial filter if selected via URL query
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const catKey = urlParams.get('catKey') || '@selectedKey';
+        const catId = urlParams.get('categoryId');
+
+        if (catId) {
+            const btn = document.querySelector(`[data-cat-id="${catId}"]`);
+            if (btn) filterCategoryInline('cat_' + catId, btn);
+        } else if (catKey && catKey !== 'all') {
+            const btn = document.querySelector(`[data-cat-key="${catKey}"]`);
+            if (btn) filterCategoryInline(catKey, btn);
+        }
+    });
+
+    function initAddToCart(btn) {
+        const prodId = btn.dataset.prodId;
+        const prodName = btn.dataset.prodName || 'Sản phẩm';
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>...';
+
+        fetch(`/Cart/AddToCart?productId=${prodId}&quantity=1`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-cart-plus me-1"></i> Giỏ hàng';
+                if (data.success) {
+                    if (typeof showCartToast === 'function') showCartToast(`Đã thêm ${prodName} vào giỏ!`);
+                    if (typeof refreshCartBadge === 'function') refreshCartBadge();
+                } else {
+                    alert(data.message || 'Lỗi khi thêm giỏ hàng.');
+                }
+            })
+            .catch(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-cart-plus me-1"></i> Giỏ hàng';
+            });
+    }
+
+    function toggleWishlist(btn, prodId) {
+        const icon = btn.querySelector('i');
+        fetch('/Wishlist/ToggleWishlist', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `productId=${prodId}`
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                if (data.isWishlisted) {
+                    icon.className = 'fa-solid fa-heart text-danger';
+                } else {
+                    icon.className = 'fa-solid fa-heart text-muted';
+                }
+                if (typeof showCartToast === 'function') showCartToast(data.message);
+            }
+        });
+    }
+</script>
