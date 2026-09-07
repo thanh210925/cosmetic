@@ -12,11 +12,13 @@ namespace Cosmetic.Controllers
     {
         private readonly AppDbContext _context;
         private readonly EmailService _emailService;
+        private readonly ICloudinaryService _cloudinaryService;
 
-        public AccountController(AppDbContext context, EmailService emailService)
+        public AccountController(AppDbContext context, EmailService emailService, ICloudinaryService cloudinaryService)
         {
             _context = context;
             _emailService = emailService;
+            _cloudinaryService = cloudinaryService;
         }
 
         // ================= REGISTER =================
@@ -676,10 +678,9 @@ namespace Cosmetic.Controllers
             // Compute counts for tabs
             ViewBag.AllCount = await baseQuery.CountAsync();
             ViewBag.PendingCount = await baseQuery.CountAsync(o => o.Status == "Chờ xác nhận" || o.Status == "Pending");
-            ViewBag.ConfirmedCount = await baseQuery.CountAsync(o => o.Status == "Đã xác nhận" || o.Status == "Confirmed" || o.Status == "Đang đóng gói");
-            ViewBag.ShippingCount = await baseQuery.CountAsync(o => o.Status == "Bàn giao cho GHN" || o.Status == "Đang giao hàng" || o.Status == "Shipping");
-            ViewBag.DeliveredCount = await baseQuery.CountAsync(o => o.Status == "Đã giao hàng" || o.Status == "Hoàn thành" || o.Status == "Delivered" || o.Status == "Completed");
-            ViewBag.CancelledCount = await baseQuery.CountAsync(o => o.Status == "Hủy" || o.Status == "Đã hủy" || o.Status == "Cancelled" || o.Status == "Failed");
+            ViewBag.ShippingCount = await baseQuery.CountAsync(o => o.Status == "Đã xác nhận" || o.Status == "Confirmed" || o.Status == "Đang đóng gói" || o.Status == "Bàn giao cho GHN" || o.Status == "Đang giao hàng" || o.Status == "Shipping" || o.Status == "Đang giao");
+            ViewBag.DeliveredCount = await baseQuery.CountAsync(o => o.Status == "Đã giao hàng" || o.Status == "Hoàn thành" || o.Status == "Delivered" || o.Status == "Completed" || o.Status == "Đã giao");
+            ViewBag.CancelledCount = await baseQuery.CountAsync(o => o.Status == "Hủy" || o.Status == "Đã hủy" || o.Status == "Cancelled" || o.Status == "Failed" || o.Status == "Giao thất bại" || o.Status == "Hoàn hàng" || o.Status == "Đã hoàn");
 
             var query = baseQuery.AsQueryable();
 
@@ -690,21 +691,17 @@ namespace Cosmetic.Controllers
                 {
                     query = query.Where(o => o.Status == "Chờ xác nhận" || o.Status == "Pending");
                 }
-                else if (s == "CONFIRMED" || s == "ĐÃ XÁC NHẬN")
+                else if (s == "SHIPPING" || s == "ĐANG GIAO" || s == "CONFIRMED")
                 {
-                    query = query.Where(o => o.Status == "Đã xác nhận" || o.Status == "Confirmed" || o.Status == "Đang đóng gói");
+                    query = query.Where(o => o.Status == "Đã xác nhận" || o.Status == "Confirmed" || o.Status == "Đang đóng gói" || o.Status == "Bàn giao cho GHN" || o.Status == "Đang giao hàng" || o.Status == "Shipping" || o.Status == "Đang giao");
                 }
-                else if (s == "SHIPPING" || s == "ĐANG GIAO")
+                else if (s == "DELIVERED" || s == "COMPLETED" || s == "HOÀN THÀNH" || s == "ĐÃ GIAO")
                 {
-                    query = query.Where(o => o.Status == "Bàn giao cho GHN" || o.Status == "Đang giao hàng" || o.Status == "Shipping");
-                }
-                else if (s == "DELIVERED" || s == "ĐÃ GIAO")
-                {
-                    query = query.Where(o => o.Status == "Đã giao hàng" || o.Status == "Hoàn thành" || o.Status == "Delivered" || o.Status == "Completed");
+                    query = query.Where(o => o.Status == "Đã giao hàng" || o.Status == "Hoàn thành" || o.Status == "Delivered" || o.Status == "Completed" || o.Status == "Đã giao");
                 }
                 else if (s == "CANCELLED" || s == "HỦY" || s == "ĐÃ HỦY")
                 {
-                    query = query.Where(o => o.Status == "Hủy" || o.Status == "Đã hủy" || o.Status == "Cancelled" || o.Status == "Failed");
+                    query = query.Where(o => o.Status == "Hủy" || o.Status == "Đã hủy" || o.Status == "Cancelled" || o.Status == "Failed" || o.Status == "Giao thất bại" || o.Status == "Hoàn hàng" || o.Status == "Đã hoàn");
                 }
                 else
                 {
@@ -735,7 +732,7 @@ namespace Cosmetic.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CancelOrder(int orderId)
+        public async Task<IActionResult> CancelOrder(int orderId, string? cancelReason)
         {
             var userIdStr = HttpContext.Session.GetString("UserId");
             if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
@@ -749,20 +746,75 @@ namespace Cosmetic.Controllers
             // Only allow cancellation if order is still pending
             if (order.Status != "Pending" && order.Status != "Chờ xác nhận")
             {
-                TempData["ErrorMessage"] = "Chỉ có thể hủy đơn hàng ở trạng thái Chờ xác nhận.";
+                TempData["ErrorMessage"] = "Chỉ có thể hủy đơn hàng ở trạng thái Chờ xác nhận (khi chưa bàn giao vận chuyển).";
                 return RedirectToAction("MyOrders");
             }
 
             order.Status = "Hủy";
             order.CancelledAt = DateTime.Now;
+            if (!string.IsNullOrWhiteSpace(cancelReason))
+            {
+                order.Notes = $"[Lý do hủy: {cancelReason}] " + (order.Notes ?? "");
+            }
             _context.Orders.Update(order);
             await _context.SaveChangesAsync();
 
             // Restore product stock and batch remaining quantities
             await WarehouseHelper.RestoreOrderStockAsync(_context, order.Id);
 
-            TempData["SuccessMessage"] = $"Đã hủy đơn hàng #{order.OrderCode} và hoàn trả số lượng tồn kho thành công.";
+            TempData["SuccessMessage"] = $"Đã hủy đơn hàng #{order.OrderCode ?? order.Id.ToString()} và hoàn trả số lượng tồn kho thành công.";
             return RedirectToAction("MyOrders");
         }
+
+        // POST: /Account/SubmitReturnRequest
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SubmitReturnRequest(int orderId, string reason, IFormFile? imageFile)
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+                return RedirectToAction("Login");
+
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId && o.UserId == userId);
+            if (order == null) return NotFound();
+
+            if (string.IsNullOrWhiteSpace(reason))
+            {
+                TempData["ErrorMessage"] = "Vui lòng nhập lý do yêu cầu trả hàng.";
+                return RedirectToAction("OrderDetail", new { id = orderId });
+            }
+
+            // Check if return request already exists
+            var existing = await _context.ReturnRequests.FirstOrDefaultAsync(r => r.OrderId == orderId);
+            if (existing != null)
+            {
+                TempData["ErrorMessage"] = "Đơn hàng này đã gửi yêu cầu đổi/trả hàng trước đó.";
+                return RedirectToAction("OrderDetail", new { id = orderId });
+            }
+
+            string? imageUrl = null;
+            if (imageFile != null && imageFile.Length > 0)
+            {
+                imageUrl = await _cloudinaryService.UploadImageAsync(imageFile, "returns");
+            }
+
+            var returnRequest = new ReturnRequest
+            {
+                OrderId = orderId,
+                UserId = userId,
+                Reason = reason.Trim(),
+                ImageUrl = imageUrl,
+                RefundAmount = order.TotalAmount ?? 0,
+
+                Status = "Pending",
+                CreatedAt = DateTime.Now
+            };
+
+            _context.ReturnRequests.Add(returnRequest);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Gửi yêu cầu đổi/trả hàng thành công. Bộ phận CSKH sẽ xem xét và phản hồi trong thời gian sớm nhất!";
+            return RedirectToAction("OrderDetail", new { id = orderId });
+        }
     }
-}
+}

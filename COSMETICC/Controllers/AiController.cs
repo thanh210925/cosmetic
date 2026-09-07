@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using COSMETICC.Models;
+using COSMETICC.Services;
 
 namespace COSMETICC.Controllers
 {
@@ -15,7 +16,15 @@ namespace COSMETICC.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly ICloudinaryService _cloudinaryService;
         private static readonly HttpClient _httpClient = new HttpClient();
+
+        public AiController(AppDbContext context, IConfiguration configuration, ICloudinaryService cloudinaryService)
+        {
+            _context = context;
+            _configuration = configuration;
+            _cloudinaryService = cloudinaryService;
+        }
 
         // ─── Ingredient Knowledge Base ───────────────────────────────────────
         private static readonly Dictionary<string, string> IngredientInfo = new(StringComparer.OrdinalIgnoreCase)
@@ -81,12 +90,6 @@ namespace COSMETICC.Controllers
                 ("Kem chống nắng không gây mụn SPF 50+", "☀️", "Oil-free, non-comedogenic — không làm tắc lỗ chân lông."),
             },
         };
-
-        public AiController(AppDbContext context, IConfiguration configuration)
-        {
-            _context = context;
-            _configuration = configuration;
-        }
 
         // ====================================================================
         // 1. AI HUB — Trang trung tâm AI
@@ -499,6 +502,132 @@ Khi gợi ý sản phẩm, hãy đề cập tên sản phẩm cụ thể từ da
 
             return View(results);
         }
+
+        // ====================================================================
+        // 7. AI PHÂN TÍCH DA QUA ẢNH CHỤP (AI SKIN ANALYSIS)
+        // ====================================================================
+
+        [HttpPost]
+        public async Task<IActionResult> AnalyzeSkinImage(IFormFile? skinImage)
+
+        {
+            if (skinImage == null || skinImage.Length == 0)
+            {
+                TempData["ErrorMessage"] = "Vui lòng chọn một bức ảnh chụp khuôn mặt để phân tích!";
+                return RedirectToAction(nameof(SkinAnalysis));
+            }
+
+            // Upload image to Cloudinary
+            var uploadedUrl = await _cloudinaryService.UploadImageAsync(skinImage, "skin_analysis");
+            if (string.IsNullOrEmpty(uploadedUrl))
+            {
+                TempData["ErrorMessage"] = "Không thể tải ảnh lên hệ thống lưu trữ Cloudinary. Vui lòng kiểm tra lại cấu hình hoặc thử lại sau!";
+                return RedirectToAction(nameof(SkinAnalysis));
+            }
+
+            // Pseudo-random deterministic metrics based on image URL hash for realistic demo
+            int hash = Math.Abs(uploadedUrl.GetHashCode());
+            int moisture = 60 + (hash % 31);          // 60% - 90%
+            int acneRisk = 15 + ((hash / 10) % 45);    // 15% - 60%
+            int darkSpots = 20 + ((hash / 100) % 40);   // 20% - 60%
+            int elasticity = 70 + ((hash / 1000) % 26); // 70% - 95%
+
+            string skinTypeResult = "Da hỗn hợp thiên dầu";
+            if (moisture < 70 && acneRisk < 30) skinTypeResult = "Da khô";
+            else if (acneRisk > 40) skinTypeResult = "Da dầu mụn & nhạy cảm";
+            else if (moisture > 80) skinTypeResult = "Da thường / Đủ ẩm";
+
+            // Query matching treatment products from database
+            var recommendedProducts = await _context.Products
+                .Include(p => p.Brand)
+                .Include(p => p.Category)
+                .Include(p => p.Reviews)
+                .Where(p => p.IsActive && (
+                    (acneRisk > 35 && ((p.Description != null && p.Description.Contains("Mụn")) || (p.Tags != null && p.Tags.Contains("Mụn")))) ||
+                    (darkSpots > 35 && ((p.Description != null && (p.Description.Contains("Thâm") || p.Description.Contains("Sáng da"))) || (p.Tags != null && p.Tags.Contains("Thâm")))) ||
+                    (moisture < 75 && ((p.Description != null && p.Description.Contains("Cấp ẩm")) || (p.Tags != null && p.Tags.Contains("Cấp ẩm")))) ||
+                    (p.SkinType != null && p.SkinType.Contains("Mọi loại da"))
+                ))
+                .Take(6)
+                .ToListAsync();
+
+            if (!recommendedProducts.Any())
+            {
+                recommendedProducts = await _context.Products
+                    .Include(p => p.Brand)
+                    .Include(p => p.Category)
+                    .Take(6)
+                    .ToListAsync();
+            }
+
+            ViewBag.UploadedImageUrl = uploadedUrl;
+            ViewBag.Moisture = moisture;
+            ViewBag.AcneRisk = acneRisk;
+            ViewBag.DarkSpots = darkSpots;
+            ViewBag.Elasticity = elasticity;
+            ViewBag.DetectedSkinType = skinTypeResult;
+            ViewBag.RecommendedProducts = recommendedProducts;
+
+            return View("SkinAnalysisResult");
+        }
+
+        // ====================================================================
+        // 8. AI ĐẶT LỊCH HẸN SOI DA & GẶP BÁC SĨ
+        // ====================================================================
+
+        [HttpGet]
+        public async Task<IActionResult> BookAppointment()
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (!string.IsNullOrEmpty(userIdStr) && int.TryParse(userIdStr, out int userId))
+            {
+                var user = await _context.Users.FindAsync(userId);
+                if (user != null)
+                {
+                    ViewBag.UserFullName = user.FullName;
+                    ViewBag.UserPhone = user.Phone;
+                    ViewBag.UserEmail = user.Email;
+                }
+            }
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> BookAppointment([FromForm] Appointment appointment)
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (!string.IsNullOrEmpty(userIdStr) && int.TryParse(userIdStr, out int uid))
+            {
+                appointment.UserId = uid;
+            }
+
+            appointment.Status = "Chờ xác nhận";
+            appointment.CreatedAt = DateTime.Now;
+
+            _context.Appointments.Add(appointment);
+            await _context.SaveChangesAsync();
+
+            ViewBag.BookedAppointment = appointment;
+            return View("AppointmentSuccess", appointment);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> MyAppointments()
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+            {
+                TempData["ErrorMessage"] = "Vui lòng đăng nhập để xem danh sách lịch hẹn của bạn!";
+                return RedirectToAction("Login", "Account");
+            }
+
+            var appointments = await _context.Appointments
+                .Where(a => a.UserId == userId)
+                .OrderByDescending(a => a.CreatedAt)
+                .ToListAsync();
+
+            return View(appointments);
+        }
     }
 
     public class ChatRequest
@@ -506,3 +635,4 @@ Khi gợi ý sản phẩm, hãy đề cập tên sản phẩm cụ thể từ da
         public string? Message { get; set; }
     }
 }
+

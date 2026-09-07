@@ -68,10 +68,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/cart-checkout.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/blog.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/blog.css?v=2.0" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/wishlist-compare.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/account.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/ai-skincare.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/ai-skincare.css?v=2.0" asp-append-version="true" />
     <link rel="stylesheet" href="~/COSMETICC.styles.css" asp-append-version="true" />
 
 </head>
@@ -339,36 +339,36 @@
     @await RenderSectionAsync("Scripts", required: false)
 
     <!-- ====== AI CHATBOT BUBBLE ====== -->
-    <div id="aiChatbotWrap" style="position:fixed; bottom:88px; right:24px; z-index:99998; display:none; flex-direction:column; width:360px; height:500px; background:#1e1b4b; border-radius:20px; border:1px solid rgba(139,92,246,0.4); box-shadow:0 20px 60px rgba(0,0,0,0.5); overflow:hidden; animation: chatPop 0.3s ease;">
+    <div id="aiChatbotWrap" style="position:fixed; bottom:88px; right:24px; z-index:99998; display:none; flex-direction:column; width:360px; height:500px; background:#ffffff; border-radius:20px; border:1px solid rgba(244,114,182,0.3); box-shadow:0 20px 60px rgba(128,0,32,0.15); overflow:hidden; animation: chatPop 0.3s ease;">
         <!-- Header -->
-        <div style="background:linear-gradient(135deg,#7c3aed,#db2777); padding:16px 20px; display:flex; align-items:center; gap:12px; justify-content:space-between;">
+        <div style="background:linear-gradient(135deg,#800020,#db2777); padding:16px 20px; display:flex; align-items:center; gap:12px; justify-content:space-between;">
             <div style="display:flex; align-items:center; gap:10px;">
                 <div style="width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;">🤖</div>
                 <div>
                     <div style="color:white;font-weight:800;font-size:14px;">AI Skincare Advisor</div>
-                    <div style="color:rgba(255,255,255,0.7);font-size:11px;">⚡ Powered by Gemini AI</div>
+                    <div style="color:rgba(255,255,255,0.85);font-size:11px;">⚡ Powered by Gemini AI</div>
                 </div>
             </div>
-            <button onclick="toggleChatbot()" style="background:rgba(255,255,255,0.15);border:none;color:white;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">✕</button>
+            <button onclick="toggleChatbot()" style="background:rgba(255,255,255,0.2);border:none;color:white;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">✕</button>
         </div>
         <!-- Messages -->
-        <div id="aiMessages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;">
-            <div class="ai-msg-bot" style="max-width:85%;background:rgba(124,58,237,0.2);border:1px solid rgba(124,58,237,0.3);border-radius:12px 12px 12px 0;padding:10px 14px;color:#e2e8f0;font-size:13px;line-height:1.5;">
+        <div id="aiMessages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:#f8fafc;">
+            <div class="ai-msg-bot" style="max-width:85%;background:#fff0f3;border:1px solid rgba(244,114,182,0.3);border-radius:12px 12px 12px 0;padding:10px 14px;color:#1e293b;font-size:13px;line-height:1.5;">
                 💕 Xin chào! Tôi là AI tư vấn viên skincare của MeiLing. Bạn có câu hỏi gì về chăm sóc da không?
             </div>
         </div>
         <!-- Quick Replies -->
-        <div id="aiQuickReplies" style="padding:8px 16px;display:flex;gap:6px;flex-wrap:wrap;">
-            <button onclick="sendQuickMsg('Da dầu nên dùng gì?')" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">💦 Da dầu</button>
-            <button onclick="sendQuickMsg('Da khô cần chăm sóc thế nào?')" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">🌵 Da khô</button>
-            <button onclick="sendQuickMsg('Bị mụn nên dùng gì?')" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">🎯 Trị mụn</button>
-            <button onclick="sendQuickMsg('Routine chăm sóc da cơ bản')" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;">✨ Routine</button>
+        <div id="aiQuickReplies" style="padding:8px 16px;display:flex;gap:6px;flex-wrap:wrap;background:#ffffff;border-top:1px solid #f1f5f9;">
+            <button onclick="sendQuickMsg('Da dầu nên dùng gì?')" style="background:#fff0f3;border:1px solid rgba(128,0,32,0.15);color:#800020;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;font-weight:600;">💦 Da dầu</button>
+            <button onclick="sendQuickMsg('Da khô cần chăm sóc thế nào?')" style="background:#fff0f3;border:1px solid rgba(128,0,32,0.15);color:#800020;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;font-weight:600;">🌵 Da khô</button>
+            <button onclick="sendQuickMsg('Bị mụn nên dùng gì?')" style="background:#fff0f3;border:1px solid rgba(128,0,32,0.15);color:#800020;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;font-weight:600;">🎯 Trị mụn</button>
+            <button onclick="sendQuickMsg('Routine chăm sóc da cơ bản')" style="background:#fff0f3;border:1px solid rgba(128,0,32,0.15);color:#800020;padding:4px 10px;border-radius:20px;font-size:11px;cursor:pointer;font-weight:600;">✨ Routine</button>
         </div>
         <!-- Input -->
-        <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,0.08);display:flex;gap:8px;">
+        <div style="padding:12px 16px;border-top:1px solid #e2e8f0;display:flex;gap:8px;background:#ffffff;">
             <input id="aiChatInput" type="text" placeholder="Hỏi về skincare..." onkeydown="if(event.key==='Enter')sendAiMessage()"
-                   style="flex:1;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:20px;color:white;padding:8px 14px;font-size:13px;outline:none;" />
-            <button onclick="sendAiMessage()" style="background:linear-gradient(135deg,#7c3aed,#db2777);border:none;color:white;width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">→</button>
+                   style="flex:1;background:#f8fafc;border:1px solid #cbd5e1;border-radius:20px;color:#1e293b;padding:8px 14px;font-size:13px;outline:none;" />
+            <button onclick="sendAiMessage()" style="background:linear-gradient(135deg,#800020,#db2777);border:none;color:white;width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">→</button>
         </div>
     </div>
 

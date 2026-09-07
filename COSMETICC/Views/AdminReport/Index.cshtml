@@ -1,0 +1,65 @@
+@{
+    ViewData["Title"] = "Xuất Báo Cáo Excel & Thống Kê";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <h3 class="fw-bold text-dark"><i class="bi bi-file-earmark-excel-fill text-success me-2"></i>Báo Cáo & Thống Kê Excel</h3>
+        <p class="text-muted small">Xuất dữ liệu hệ thống ra file Excel (.xlsx) chuyên nghiệp cho ban quản trị và bộ phận kế toán.</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Card 1: Revenue Report -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="p-3 bg-success-subtle text-success rounded-3 me-3">
+                        <i class="bi bi-cash-stack fs-2"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold text-dark mb-0">Báo Cáo Doanh Thu Đơn Hàng</h5>
+                        <span class="small text-muted">Xuất danh sách đơn hàng & tổng doanh thu</span>
+                    </div>
+                </div>
+                <p class="text-muted small">Tải xuống danh sách chi tiết các đơn hàng, người mua, ngày đặt và tổng số tiền doanh thu theo khoảng thời gian tùy chọn.</p>
+                
+                <form asp-action="ExportRevenueReport" method="get" class="mt-auto">
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold text-secondary">Từ ngày:</label>
+                            <input type="date" name="startDate" class="form-control form-control-sm" value="@DateTime.Now.AddMonths(-1).ToString("yyyy-MM-dd")" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold text-secondary">Đến ngày:</label>
+                            <input type="date" name="endDate" class="form-control form-control-sm" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 fw-bold py-2">
+                        <i class="bi bi-download me-2"></i> Tải Báo Cáo Doanh Thu (.xlsx)
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Card 2: Inventory & Expiry Report -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="p-3 bg-primary-subtle text-primary rounded-3 me-3">
+                        <i class="bi bi-box-seam-fill fs-2"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold text-dark mb-0">Báo Cáo Tồn Kho & Hạn Sử Dụng</h5>
+                        <span class="small text-muted">Kiểm kê số lượng tồn & cảnh báo hết hạn</span>
+                    </div>
+                </div>
+                <p class="text-muted small">Xuất toàn bộ Lô hàng, giá nhập, tồn kho hiện tại, Hạn sử dụng (EXP) và tự động đánh dấu các sản phẩm Sắp hết hạn / Đã hết hạn.</p>
+                
+                <a asp-action="ExportInventoryReport" class="btn btn-primary w-100 fw-bold py-2 mt-auto">
+                    <i class="bi bi-download me-2"></i> Tải Báo Cáo Tồn Kho (.xlsx)
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

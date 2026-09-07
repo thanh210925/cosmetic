@@ -137,6 +137,12 @@
                         <span>Phí vận chuyển</span>
                     </a>
                 </li>
+                <li class="@(currentController == "AdminAppointment" ? "active" : "")">
+                    <a asp-controller="AdminAppointment" asp-action="Index">
+                        <i class="bi bi-calendar-check-fill text-danger"></i>
+                        <span>Quản lý Lịch Hẹn</span>
+                    </a>
+                </li>
                 <li class="@(currentController == "Chat" && currentAction == "AdminIndex" ? "active" : "")">
                     <a asp-controller="Chat" asp-action="AdminIndex">
                         <i class="bi bi-chat-dots-fill text-warning"></i>

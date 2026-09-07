@@ -138,7 +138,7 @@
 
                             <!-- Post Body -->
                             <h5 class="fw-bold text-dark mb-2">@post.Title</h5>
-                            <p class="text-dark small mb-3" style="line-height: 1.5; white-space: pre-line;">@post.Content</p>
+                            <div class="blog-post-content mb-3">@Html.Raw(System.Net.WebUtility.HtmlDecode(post.Content))</div>
 
                             @if (!string.IsNullOrEmpty(post.ImageUrl))
                             {

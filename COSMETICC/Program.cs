@@ -29,7 +29,10 @@ namespace Cosmetic
             builder.Services.AddScoped<SpamFilterService>();
             builder.Services.AddScoped<ComboSuggestionService>();
             builder.Services.AddScoped<ShippingSyncService>();
-            
+            builder.Services.AddScoped<RecommendationService>();
+            builder.Services.AddScoped<CacheService>();
+            builder.Services.AddSignalR();
+
             // ======== GHN SHIPPING SERVICE ========
             builder.Services.Configure<GhnSettings>(builder.Configuration.GetSection("GHN"));
             builder.Services.AddHttpClient<IGhnService, GhnService>();
@@ -38,10 +41,15 @@ namespace Cosmetic
             builder.Services.Configure<MomoOption>(builder.Configuration.GetSection("Momo"));
             builder.Services.AddScoped<IMomoService, MomoService>();
 
+            // ======== CLOUDINARY SERVICE ========
+            builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("Cloudinary"));
+            builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
+
             // ======== BACKGROUND SERVICES ========
             builder.Services.AddHostedService<AutoCancelOrderService>();
             builder.Services.AddHostedService<ReviewReminderService>();
             builder.Services.AddHostedService<FlashSaleAutoDeactivateService>();
+            builder.Services.AddHostedService<AutoRefillReminderService>();
             // IHttpContextAccessor for OtpService
             builder.Services.AddHttpContextAccessor();
 
@@ -56,7 +64,6 @@ namespace Cosmetic
                 options.IdleTimeout = TimeSpan.FromMinutes(60);
             });
 
-            // AUTH
             // AUTH
             builder.Services.AddAuthentication(options =>
             {
@@ -76,8 +83,6 @@ namespace Cosmetic
 
             var app = builder.Build();
 
-          
-
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
@@ -94,12 +99,16 @@ namespace Cosmetic
             app.UseAuthorization();
             app.UseSession();
 
+            // Map SignalR Hub
+            app.MapHub<COSMETICC.Hubs.NotificationHub>("/notificationHub");
+
             // ROUTE
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
 
             app.Run();
+
         }
     }
 }

@@ -1,0 +1,199 @@
+@model IEnumerable<COSMETICC.Models.Appointment>
+@{
+    ViewData["Title"] = "Quản Lý Lịch Hẹn Soi Da & Bác Sĩ";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    string currentStatus = ViewBag.CurrentStatus ?? "Tất cả";
+    string searchQuery = ViewBag.SearchQuery ?? "";
+    string filterDate = ViewBag.FilterDate ?? "";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h3 class="fw-bold text-dark mb-1"><i class="bi bi-calendar-check-fill text-danger me-2"></i> Quản Lý Lịch Hẹn Soi Da & Bác Sĩ</h3>
+        <p class="text-muted small mb-0">Theo dõi, tiếp nhận và xác nhận lịch hẹn dịch vụ từ khách hàng.</p>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- STATS CARDS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+        <div class="card border-0 shadow-sm p-3 rounded-4 bg-white border-start border-4 border-primary">
+            <span class="text-muted small fw-bold">TỔNG LỊCH HẸN</span>
+            <h3 class="fw-bold text-primary mb-0 mt-1">@ViewBag.TotalCount</h3>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card border-0 shadow-sm p-3 rounded-4 bg-white border-start border-4 border-warning">
+            <span class="text-muted small fw-bold">CHỜ XÁC NHẬN</span>
+            <h3 class="fw-bold text-warning mb-0 mt-1">@ViewBag.PendingCount</h3>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card border-0 shadow-sm p-3 rounded-4 bg-white border-start border-4 border-info">
+            <span class="text-muted small fw-bold">ĐÃ XÁC NHẬN</span>
+            <h3 class="fw-bold text-info mb-0 mt-1">@ViewBag.ConfirmedCount</h3>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card border-0 shadow-sm p-3 rounded-4 bg-white border-start border-4 border-success">
+            <span class="text-muted small fw-bold">LỊCH HẸN HÔM NAY</span>
+            <h3 class="fw-bold text-success mb-0 mt-1">@ViewBag.TodayCount</h3>
+        </div>
+    </div>
+</div>
+
+<!-- FILTER BAR -->
+<div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+    <form asp-action="Index" method="get" class="row g-3 align-items-center">
+        <div class="col-md-4">
+            <div class="input-group">
+                <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" name="search" value="@searchQuery" placeholder="Tìm tên khách, SĐT, Bác sĩ..." class="form-control border-start-0 bg-light" />
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select name="status" class="form-select bg-light" onchange="this.form.submit()">
+                <option value="Tất cả" selected="@(currentStatus == "Tất cả")">Tất cả trạng thái</option>
+                <option value="Chờ xác nhận" selected="@(currentStatus == "Chờ xác nhận")">Chờ xác nhận</option>
+                <option value="Đã xác nhận" selected="@(currentStatus == "Đã xác nhận")">Đã xác nhận</option>
+                <option value="Đã khám" selected="@(currentStatus == "Đã khám")">Đã khám</option>
+                <option value="Đã hủy" selected="@(currentStatus == "Đã hủy")">Đã hủy</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <input type="date" name="date" value="@filterDate" class="form-control bg-light" onchange="this.form.submit()" />
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary w-100"><i class="bi bi-funnel-fill me-1"></i> Lọc</button>
+            <a href="@Url.Action("Index", "AdminAppointment")" class="btn btn-outline-secondary" title="Đặt lại bộ lọc"><i class="bi bi-arrow-counterclockwise"></i></a>
+        </div>
+    </form>
+</div>
+
+<!-- DATA TABLE CARD -->
+<div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light border-bottom">
+                <tr>
+                    <th class="ps-3">Mã LH</th>
+                    <th>Khách Hàng</th>
+                    <th>Dịch Vụ & Chi Nhánh</th>
+                    <th>Ngày & Khung Giờ</th>
+                    <th>Bác Sĩ / Cố Vấn</th>
+                    <th>Trạng Thái</th>
+                    <th class="text-end pe-3">Thao Tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-calendar-x fs-1 d-block mb-2"></i>
+                            Không tìm thấy lịch hẹn nào phù hợp.
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var item in Model)
+                    {
+                        string badgeBg = item.Status switch
+                        {
+                            "Đã xác nhận" => "bg-primary-subtle text-primary border border-primary",
+                            "Đã khám" => "bg-success-subtle text-success border border-success",
+                            "Đã hủy" => "bg-secondary-subtle text-secondary border border-secondary",
+                            _ => "bg-warning-subtle text-warning-emphasis border border-warning"
+                        };
+
+                        <tr>
+                            <td class="ps-3 fw-bold text-danger">#APT-@item.Id.ToString("D5")</td>
+                            <td>
+                                <div class="fw-bold text-dark">@item.FullName</div>
+                                <div class="small text-danger fw-bold"><i class="bi bi-telephone-fill me-1"></i>@item.PhoneNumber</div>
+                                @if (!string.IsNullOrEmpty(item.Email))
+                                {
+                                    <div class="extra-small text-muted">@item.Email</div>
+                                }
+                            </td>
+                            <td>
+                                <div class="fw-bold text-dark small">@item.ServiceType</div>
+                                <div class="extra-small text-muted"><i class="bi bi-geo-alt-fill text-danger me-1"></i>@item.BranchLocation</div>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-danger">@item.AppointmentDate.ToString("dd/MM/yyyy")</div>
+                                <div class="badge bg-light text-dark border">@item.TimeSlot</div>
+                            </td>
+                            <td>
+                                <div class="small text-dark fw-bold">@(string.IsNullOrEmpty(item.DoctorName) ? "Chưa chọn bác sĩ" : item.DoctorName)</div>
+                            </td>
+                            <td>
+                                <span class="badge rounded-pill px-2.5 py-1.5 small @badgeBg">@item.Status</span>
+                            </td>
+                            <td class="text-end pe-3">
+                                <div class="d-inline-flex gap-1">
+                                    <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Đổi trạng thái <i class="bi bi-chevron-down ms-1"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                        <li>
+                                            <form asp-action="UpdateStatus" method="post">
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                                <input type="hidden" name="status" value="Chờ xác nhận" />
+                                                <button class="dropdown-item small" type="submit">⏳ Chờ xác nhận</button>
+                                            </form>
+                                        </li>
+                                        <li>
+                                            <form asp-action="UpdateStatus" method="post">
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                                <input type="hidden" name="status" value="Đã xác nhận" />
+                                                <button class="dropdown-item small text-primary fw-bold" type="submit">✔ Duyệt (Đã xác nhận)</button>
+                                            </form>
+                                        </li>
+                                        <li>
+                                            <form asp-action="UpdateStatus" method="post">
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                                <input type="hidden" name="status" value="Đã khám" />
+                                                <button class="dropdown-item small text-success fw-bold" type="submit">✅ Hoàn thành (Đã khám)</button>
+                                            </form>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <form asp-action="UpdateStatus" method="post">
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                                <input type="hidden" name="status" value="Đã hủy" />
+                                                <button class="dropdown-item small text-danger" type="submit">❌ Hủy lịch hẹn</button>
+                                            </form>
+                                        </li>
+                                    </ul>
+
+                                    <form asp-action="Delete" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa lịch hẹn này?');">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa lịch hẹn"><i class="bi bi-trash-fill"></i></button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

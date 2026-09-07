@@ -1,302 +1,97 @@
 @{
-    ViewData["Title"] = "Phân tích Loại da — AI Quiz";
+    ViewData["Title"] = "AI Phân Tích Da Qua Ảnh Chụp";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="quiz-wrap">
-    <div class="container">
-        <div class="quiz-card">
-            <!-- Header -->
-            <div class="quiz-header">
-                <div class="quiz-skin-icons">🔬✨</div>
-                <h1>Phân tích Loại da</h1>
-                <p>Trả lời 6 câu hỏi ngắn — AI sẽ xác định chính xác loại da và đề xuất routine phù hợp nhất!</p>
-            </div>
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <span class="badge bg-danger-subtle text-danger px-3 py-2 rounded-pill fw-bold mb-2" style="font-size: 13px;">
+            <i class="bi bi-magic me-1"></i> AI BEAUTY TECH 4.0
+        </span>
+        <h2 class="fw-bold" style="color: #800020;">Phân Tích Sức Khỏe Làn Da Bằng AI</h2>
+        <p class="text-muted mx-auto" style="max-width: 600px;">
+            Tải lên bức ảnh chân thực khuôn mặt của bạn. Công nghệ AI tiên tiến sẽ tự động nhận diện và phân tích 4 chỉ số sức khỏe da quan trọng!
+        </p>
+    </div>
 
-            <!-- Progress -->
-            <div class="quiz-progress-bar">
-                <div class="quiz-progress-fill" id="progressFill"></div>
-            </div>
-            <div class="text-center mb-3" style="color:#64748b; font-size:13px;">
-                Câu <span id="currentQ">1</span> / 6
-            </div>
-
-            <!-- Form -->
-            <form action="@Url.Action("AnalyzeSkin", "AI")" method="post" id="quizForm">
-                @Html.AntiForgeryToken()
-
-                <!-- Q1 -->
-                <div class="question-block active" data-q="1">
-                    <div class="question-num">CÂU HỎI 1 / 6</div>
-                    <div class="question-text">☀️ Vào buổi chiều (sau ~4 giờ từ lúc rửa mặt), mặt bạn cảm giác như thế nào?</div>
-                    <label class="answer-option" onclick="selectOption(this)">
-                        <input type="radio" name="q1" value="very_oily" />
-                        <span class="radio-dot"></span>
-                        <span class="answer-emoji">💦</span>
-                        <span class="answer-label">Mặt bóng dầu nhiều, nhờn rít khắp nơi</span>
-                    </label>
-                    <label class="answer-option" onclick="selectOption(this)">
-                        <input type="radio" name="q1" value="t_zone_oily" />
-                        <span class="radio-dot"></span>
-                        <span class="answer-emoji">🙂</span>
-                        <span class="answer-label">Chỉ vùng T (trán, mũi, cằm) hơi bóng dầu</span>
-                    </label>
-                    <label class="answer-option" onclick="selectOption(this)">
-                        <input type="radio" name="q1" value="normal" />
-                        <span class="radio-dot"></span>
-                        <span class="answer-emoji">😌</span>
-                        <span class="answer-label">Bình thường, không có gì đặc biệt</span>
-                    </label>
-                    <label class="answer-option" onclick="selectOption(this)">
-                        <input type="radio" name="q1" value="tight_dry" />
-                        <span class="radio-dot"></span>
-                        <span class="answer-emoji">😬</span>
-                        <span class="answer-label">Cảm giác căng, khô và bong tróc</span>
-                    </label>
-                </div>
-
-                <!-- Q2 -->
-                <div class="question-block" data-q="2">
-                    <div class="question-num">CÂU HỎI 2 / 6</div>
-                    <div class="question-text">💧 Sau khi rửa mặt và chờ 30 phút (không dùng gì), da bạn như thế nào?</div>
-                    <label class="answer-option" onclick="selectOption(this)">
-                        <input type="radio" name="q2" value="oily_fast" />
-                        <span class="radio-dot"></span>
-                        <span class="answer-emoji">🫧</span>
-                        <span class="answer-label">Tiết dầu trở lại rất nhanh</span>
-                    </label>
-                    <label class="answer-option" onclick="selectOption(this)">
-                        <input type="radio" name="q2" value="comfortable" />
-                        <span class="radio-dot"></span>
-                        <span class="answer-emoji">😊</span>
-                        <span class="answer-label">Thoải mái, cân bằng, không có gì đặc biệt</span>
-                    </label>
-                    <label class="answer-option" onclick="selectOption(this)">
-                        <input type="radio" name="q2" value="tight" />
-                        <span class="radio-dot"></span>
-                        <span class="answer-emoji">😣</span>
-                        <span class="answer-label">Căng, khô, muốn thoa kem ngay</span>
-                    </label>
-                    <label class="answer-option" onclick="selectOption(this)">
-                        <input type="radio" name="q2" value="red_irritated" />
-                        <span class="radio-dot"></span>
-                        <span class="answer-emoji">😳</span>
-                        <span class="answer-label">Đỏ, ngứa, hoặc bị kích ứng</span>
-                    </label>
-                </div>
-
-                <!-- Q3 -->
-                <div class="question-block" data-q="3">
-                    <div class="question-num">CÂU HỎI 3 / 6</div>
-                    <div class="question-text">🔴 Tình trạng mụn của bạn thường xuyên như thế nào?</div>
-                    <label class="answer-option" onclick="selectOption(this)">
-                        <input type="radio" name="q3" value="frequently" />
-                        <span class="radio-dot"></span>
-                        <span class="answer-emoji">😰</span>
-                        <span class="answer-label">Thường xuyên nổi mụn (mụn đầu đen, mụn viêm)</span>
-                    </label>
-                    <label class="answer-option" onclick="selectOption(this)">
-                        <input type="radio" name="q3" value="sometimes" />
-                        <span class="radio-dot"></span>
-                        <span class="answer-emoji">😕</span>
-                        <span class="answer-label">Thỉnh thoảng, đặc biệt khi stress hoặc thay đổi thời tiết</span>
-                    </label>
-                    <label class="answer-option" onclick="selectOption(this)">
-                        <input type="radio" name="q3" value="rarely" />
-                        <span class="radio-dot"></span>
-                        <span class="answer-emoji">🙂</span>
-                        <span class="answer-label">Hiếm khi</span>
-                    </label>
-                    <label class="answer-option" onclick="selectOption(this)">
-                        <input type="radio" name="q3" value="never" />
-                        <span class="radio-dot"></span>
-                        <span class="answer-emoji">😁</span>
-                        <span class="answer-label">Hầu như không bao giờ</span>
-                    </label>
-                </div>
-
-                <!-- Q4 -->
-                <div class="question-block" data-q="4">
-                    <div class="question-num">CÂU HỎI 4 / 6</div>
-                    <div class="question-text">🧴 Khi thử sản phẩm mới, da bạn có phản ứng không?</div>
-                    <label class="answer-option" onclick="selectOption(this)">
-                        <input type="radio" name="q4" value="often_react" />
-                        <span class="radio-dot"></span>
-                        <span class="answer-emoji">😱</span>
-                        <span class="answer-label">Hay bị đỏ, ngứa, rát hoặc nổi mẩn</span>
-                    </label>
-                    <label class="answer-option" onclick="selectOption(this)">
-                        <input type="radio" name="q4" value="sometimes" />
-                        <span class="radio-dot"></span>
-                        <span class="answer-emoji">😬</span>
-                        <span class="answer-label">Đôi khi có phản ứng nhẹ</span>
-                    </label>
-                    <label class="answer-option" onclick="selectOption(this)">
-                        <input type="radio" name="q4" value="rarely" />
-                        <span class="radio-dot"></span>
-                        <span class="answer-emoji">🙂</span>
-                        <span class="answer-label">Rất hiếm khi</span>
-                    </label>
-                    <label class="answer-option" onclick="selectOption(this)">
-                        <input type="radio" name="q4" value="never" />
-                        <span class="radio-dot"></span>
-                        <span class="answer-emoji">💪</span>
-                        <span class="answer-label">Da tôi dùng được hầu hết mọi thứ</span>
-                    </label>
-                </div>
-
-                <!-- Q5 -->
-                <div class="question-block" data-q="5">
-                    <div class="question-num">CÂU HỎI 5 / 6</div>
-                    <div class="question-text">🔍 Nhìn gần gương, lỗ chân lông của bạn như thế nào?</div>
-                    <label class="answer-option" onclick="selectOption(this)">
-                        <input type="radio" name="q5" value="very_visible" />
-                        <span class="radio-dot"></span>
-                        <span class="answer-emoji">😵</span>
-                        <span class="answer-label">Rất to, nhìn rõ khắp mặt</span>
-                    </label>
-                    <label class="answer-option" onclick="selectOption(this)">
-                        <input type="radio" name="q5" value="visible_t" />
-                        <span class="radio-dot"></span>
-                        <span class="answer-emoji">😐</span>
-                        <span class="answer-label">To ở vùng T, nhỏ hơn ở vùng má</span>
-                    </label>
-                    <label class="answer-option" onclick="selectOption(this)">
-                        <input type="radio" name="q5" value="small" />
-                        <span class="radio-dot"></span>
-                        <span class="answer-emoji">😊</span>
-                        <span class="answer-label">Khá nhỏ, chỉ thấy khi nhìn kỹ</span>
-                    </label>
-                    <label class="answer-option" onclick="selectOption(this)">
-                        <input type="radio" name="q5" value="invisible" />
-                        <span class="radio-dot"></span>
-                        <span class="answer-emoji">🌟</span>
-                        <span class="answer-label">Hầu như không nhìn thấy</span>
-                    </label>
-                </div>
-
-                <!-- Q6 -->
-                <div class="question-block" data-q="6">
-                    <div class="question-num">CÂU HỎI 6 / 6</div>
-                    <div class="question-text">🪞 Vấn đề da bạn thường gặp phải là gì?</div>
-                    <label class="answer-option" onclick="selectOption(this)">
-                        <input type="radio" name="q6" value="oily_acne" />
-                        <span class="radio-dot"></span>
-                        <span class="answer-emoji">🌊</span>
-                        <span class="answer-label">Bóng dầu, lỗ chân lông to, hay có mụn</span>
-                    </label>
-                    <label class="answer-option" onclick="selectOption(this)">
-                        <input type="radio" name="q6" value="red_react" />
-                        <span class="radio-dot"></span>
-                        <span class="answer-emoji">🔴</span>
-                        <span class="answer-label">Đỏ da, dễ kích ứng, ngứa ngáy</span>
-                    </label>
-                    <label class="answer-option" onclick="selectOption(this)">
-                        <input type="radio" name="q6" value="dry_flaky" />
-                        <span class="radio-dot"></span>
-                        <span class="answer-emoji">🍂</span>
-                        <span class="answer-label">Khô, bong tróc, thiếu ẩm</span>
-                    </label>
-                    <label class="answer-option" onclick="selectOption(this)">
-                        <input type="radio" name="q6" value="balanced" />
-                        <span class="radio-dot"></span>
-                        <span class="answer-emoji">✨</span>
-                        <span class="answer-label">Da khá ổn định, ít vấn đề</span>
-                    </label>
-                </div>
-
-                <!-- Navigation Buttons -->
-                <div class="d-flex gap-3 mt-2">
-                    <button type="button" id="prevBtn" class="quiz-btn" style="background:#1e293b; display:none;" onclick="prevQuestion()">
-                        ← Quay lại
-                    </button>
-                    <button type="button" id="nextBtn" class="quiz-btn" onclick="nextQuestion()" disabled>
-                        Tiếp theo →
-                    </button>
-                    <button type="submit" id="submitBtn" class="quiz-btn" style="display:none;">
-                        🔬 Phân tích loại da của tôi!
-                    </button>
-                </div>
-            </form>
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mx-auto mb-4" style="max-width: 700px;" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
+    }
+
+    <div class="card border-0 shadow-lg p-4 mx-auto" style="max-width: 700px; border-radius: 16px; background: #ffffff;">
+        <form asp-action="AnalyzeSkinImage" method="post" enctype="multipart/form-data">
+            <div class="mb-4 text-center">
+                <div class="upload-zone p-5 rounded-3 mb-3 border-2 border-dashed position-relative" style="border-color: #800020; background-color: #fff9fa; cursor: pointer;">
+                    <i class="bi bi-cloud-arrow-up-fill display-3" style="color: #800020;"></i>
+                    <h5 class="fw-bold mt-3 text-dark">Kéo thả ảnh hoặc Bấm để tải ảnh mặt lên</h5>
+                    <p class="text-muted small">Hỗ trợ các định dạng JPG, PNG, WEBP (Khuyên dùng ảnh chụp cận mặt, ánh sáng tự nhiên)</p>
+                    <input type="file" name="skinImage" id="skinImageInput" accept="image/*" required class="position-absolute top-0 start-0 w-100 h-100 opacity-0" style="cursor: pointer;" onchange="previewSkinImage(this)" />
+                </div>
+                
+                <div id="imagePreviewContainer" class="d-none text-center mb-3">
+                    <img id="imagePreview" src="#" alt="Preview" class="img-thumbnail shadow-sm rounded-3" style="max-height: 250px; object-fit: cover;" />
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded-3 d-flex align-items-center">
+                        <i class="bi bi-droplet-half fs-3 text-info me-3"></i>
+                        <div>
+                            <strong class="d-block text-dark">Độ ẩm & Dầu</strong>
+                            <span class="small text-muted">Đánh giá hàng rào độ ẩm</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded-3 d-flex align-items-center">
+                        <i class="bi bi-shield-x fs-3 text-danger me-3"></i>
+                        <div>
+                            <strong class="d-block text-dark">Độ Mụn & Viêm</strong>
+                            <span class="small text-muted">Phát hiện tình trạng mụn</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded-3 d-flex align-items-center">
+                        <i class="bi bi-sun-fill fs-3 text-warning me-3"></i>
+                        <div>
+                            <strong class="d-block text-dark">Thâm Nám & Sạm</strong>
+                            <span class="small text-muted">Phát hiện sắc tố Melanin</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded-3 d-flex align-items-center">
+                        <i class="bi bi-activity fs-3 text-success me-3"></i>
+                        <div>
+                            <strong class="d-block text-dark">Đàn Hồi & Nếp Nhăn</strong>
+                            <span class="small text-muted">Đánh giá mức độ collagen</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-danger w-100 py-3 fw-bold rounded-pill shadow" style="background-color: #800020; border: none; font-size: 16px;">
+                <i class="bi bi-cpu-fill me-2"></i> BẮT ĐẦU PHÂN TÍCH AI
+            </button>
+        </form>
     </div>
 </div>
 
 <script>
-let currentQuestion = 1;
-const totalQuestions = 6;
-const answers = {};
-
-function updateProgress() {
-    const pct = ((currentQuestion - 1) / totalQuestions) * 100;
-    document.getElementById('progressFill').style.width = pct + '%';
-    document.getElementById('currentQ').textContent = currentQuestion;
-}
-
-function selectOption(label) {
-    const block = label.closest('.question-block');
-    block.querySelectorAll('.answer-option').forEach(el => el.classList.remove('selected'));
-    label.classList.add('selected');
-
-    const radio = label.querySelector('input[type="radio"]');
-    radio.checked = true;
-    answers[currentQuestion] = radio.value;
-
-    const nextBtn = document.getElementById('nextBtn');
-    const submitBtn = document.getElementById('submitBtn');
-    if (currentQuestion < totalQuestions) {
-        nextBtn.disabled = false;
-    } else {
-        submitBtn.disabled = false;
-    }
-}
-
-function nextQuestion() {
-    if (!answers[currentQuestion]) return;
-
-    document.querySelector(`[data-q="${currentQuestion}"]`).classList.remove('active');
-    currentQuestion++;
-    document.querySelector(`[data-q="${currentQuestion}"]`).classList.add('active');
-    updateProgress();
-
-    document.getElementById('prevBtn').style.display = 'block';
-    document.getElementById('nextBtn').disabled = true;
-
-    if (currentQuestion === totalQuestions) {
-        document.getElementById('nextBtn').style.display = 'none';
-        document.getElementById('submitBtn').style.display = 'block';
-        document.getElementById('submitBtn').disabled = !answers[currentQuestion];
-    }
-
-    // Re-check if already answered
-    if (answers[currentQuestion]) {
-        const block = document.querySelector(`[data-q="${currentQuestion}"]`);
-        const input = block.querySelector(`input[value="${answers[currentQuestion]}"]`);
-        if (input) {
-            input.closest('.answer-option').classList.add('selected');
-            if (currentQuestion === totalQuestions) {
-                document.getElementById('submitBtn').disabled = false;
-            } else {
-                document.getElementById('nextBtn').disabled = false;
+    function previewSkinImage(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('imagePreview').src = e.target.result;
+                document.getElementById('imagePreviewContainer').classList.remove('d-none');
             }
+            reader.readAsDataURL(input.files[0]);
         }
     }
-}
-
-function prevQuestion() {
-    document.querySelector(`[data-q="${currentQuestion}"]`).classList.remove('active');
-    currentQuestion--;
-    document.querySelector(`[data-q="${currentQuestion}"]`).classList.add('active');
-    updateProgress();
-
-    document.getElementById('nextBtn').disabled = false;
-    document.getElementById('nextBtn').style.display = 'block';
-    document.getElementById('submitBtn').style.display = 'none';
-
-    if (currentQuestion === 1) {
-        document.getElementById('prevBtn').style.display = 'none';
-    }
-}
-
-updateProgress();
 </script>

@@ -18,7 +18,13 @@ namespace COSMETICC.Services
             _logger = logger;
         }
 
+        public Task SendEmailAsync(string toEmail, string subject, string htmlBody)
+        {
+            return SendAsync(toEmail, toEmail, subject, htmlBody);
+        }
+
         private async Task SendAsync(string toEmail, string toName, string subject, string htmlBody)
+
         {
             var smtpHost = _config["Email:SmtpHost"] ?? "smtp.gmail.com";
             var smtpPort = int.Parse(_config["Email:SmtpPort"] ?? "587");

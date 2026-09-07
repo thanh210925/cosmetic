@@ -1006,5 +1006,82 @@ namespace COSMETICC.Controllers
 
             return View(orders);
         }
+
+        // POST: /Cart/Reorder
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Reorder(int orderId)
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+            {
+                TempData["ErrorMessage"] = "Vui lòng đăng nhập để thực hiện mua lại đơn hàng!";
+                return RedirectToAction("Login", "Account");
+            }
+
+            var order = await _context.Orders
+                .Include(o => o.OrderDetails)
+                .FirstOrDefaultAsync(o => o.Id == orderId && o.UserId == userId);
+
+            if (order == null || order.OrderDetails == null || !order.OrderDetails.Any())
+            {
+                TempData["ErrorMessage"] = "Không tìm thấy thông tin đơn hàng để mua lại!";
+                return RedirectToAction("MyOrders", "Account");
+            }
+
+            // Get or create user cart
+            var cart = await _context.Carts.FirstOrDefaultAsync(c => c.UserId == userId);
+            if (cart == null)
+            {
+                cart = new Cart { UserId = userId };
+                _context.Carts.Add(cart);
+                await _context.SaveChangesAsync();
+            }
+
+            int addedCount = 0;
+            foreach (var detail in order.OrderDetails)
+            {
+                var product = await _context.Products.FindAsync(detail.ProductId);
+                if (product == null || product.Stock <= 0) continue;
+
+                int qtyToAdd = detail.Quantity ?? 1;
+                int maxStock = product.Stock ?? 0;
+                if (qtyToAdd > maxStock) qtyToAdd = maxStock;
+
+                var cartItem = await _context.CartItems
+                    .FirstOrDefaultAsync(ci => ci.CartId == cart.Id && ci.ProductId == detail.ProductId);
+
+                if (cartItem != null)
+                {
+                    cartItem.Quantity = Math.Min((cartItem.Quantity ?? 0) + qtyToAdd, maxStock);
+                    _context.CartItems.Update(cartItem);
+                }
+
+                else
+                {
+                    cartItem = new CartItem
+                    {
+                        CartId = cart.Id,
+                        ProductId = detail.ProductId,
+                        Quantity = qtyToAdd
+                    };
+                    _context.CartItems.Add(cartItem);
+                }
+                addedCount++;
+            }
+
+            await _context.SaveChangesAsync();
+
+            if (addedCount > 0)
+            {
+                TempData["SuccessMessage"] = $"🎉 Đã thêm lại tất cả {addedCount} sản phẩm từ đơn hàng #{order.OrderCode ?? order.Id.ToString()} vào giỏ hàng thành công!";
+                return RedirectToAction("Index", "Cart");
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Các sản phẩm trong đơn hàng này hiện đã hết hàng hoặc không còn kinh doanh!";
+                return RedirectToAction("MyOrders", "Account");
+            }
+        }
     }
 }

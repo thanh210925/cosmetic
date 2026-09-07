@@ -1,0 +1,66 @@
+@model COSMETICC.Models.Appointment
+@{
+    ViewData["Title"] = "Đặt Lịch Hẹn Thành Công";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="py-5" style="background: linear-gradient(180deg, #fff5f7 0%, #f8fafc 100%); min-height: 80vh;">
+    <div class="container">
+        <div class="bg-white rounded-4 shadow-lg p-4 p-md-5 mx-auto border text-center" style="max-width: 650px; border-color: rgba(244, 114, 182, 0.3) !important;">
+            
+            <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center mx-auto mb-4" style="width: 80px; height: 80px; font-size: 36px; box-shadow: 0 8px 24px rgba(22, 163, 74, 0.25);">
+                ✓
+            </div>
+
+            <span class="badge bg-success-subtle text-success px-3 py-1.5 rounded-pill fw-bold mb-2">ĐẶT LỊCH THÀNH CÔNG</span>
+            <h2 class="fw-bold text-dark mb-2">Cảm Ơn Quý Khách!</h2>
+            <p class="text-muted mb-4">
+                Lịch hẹn dịch vụ <strong class="text-dark">@Model.ServiceType</strong> của bạn đã được ghi nhận vào hệ thống MeiLing Clinic.
+            </p>
+
+            <!-- TICKET SUMMARY BOX -->
+            <div class="bg-light p-4 rounded-3 text-start mb-4 border">
+                <div class="d-flex justify-content-between align-items-center pb-3 border-bottom mb-3">
+                    <span class="text-muted small">MÃ LỊCH HẸN</span>
+                    <strong class="text-danger fs-5">#APT-@Model.Id.ToString("D5")</strong>
+                </div>
+                <div class="row g-2 small">
+                    <div class="col-5 text-secondary">Khách hàng:</div>
+                    <div class="col-7 fw-bold text-dark text-end">@Model.FullName</div>
+
+                    <div class="col-5 text-secondary">Số điện thoại:</div>
+                    <div class="col-7 fw-bold text-dark text-end">@Model.PhoneNumber</div>
+
+                    <div class="col-5 text-secondary">Chi nhánh:</div>
+                    <div class="col-7 fw-bold text-dark text-end">@Model.BranchLocation</div>
+
+                    <div class="col-5 text-secondary">Ngày hẹn:</div>
+                    <div class="col-7 fw-bold text-danger text-end">@Model.AppointmentDate.ToString("dd/MM/yyyy")</div>
+
+                    <div class="col-5 text-secondary">Khung giờ:</div>
+                    <div class="col-7 fw-bold text-danger text-end">@Model.TimeSlot</div>
+
+                    <div class="col-5 text-secondary">Bác sĩ / Cố vấn:</div>
+                    <div class="col-7 fw-bold text-primary text-end">@(string.IsNullOrEmpty(Model.DoctorName) ? "Bác sĩ CKI Da liễu" : Model.DoctorName)</div>
+
+                    <div class="col-5 text-secondary">Trạng thái:</div>
+                    <div class="col-7 text-end"><span class="badge bg-warning text-dark">@Model.Status</span></div>
+                </div>
+            </div>
+
+            <div class="alert alert-info border-0 text-start small mb-4" style="background: #f0f9ff; border-left: 4px solid #0284c7 !important;">
+                <i class="bi bi-info-circle-fill text-info me-1"></i> <strong>Lưu ý nhỏ:</strong> Đội ngũ tư vấn viên MeiLing sẽ nhắn tin SMS/Zalo hoặc gọi điện thoại đến số <strong class="text-dark">@Model.PhoneNumber</strong> để xác nhận lần cuối trước giờ hẹn 30 phút.
+            </div>
+
+            <div class="d-flex gap-2 justify-content-center flex-wrap">
+                <a href="@Url.Action("MyAppointments", "AI")" class="btn btn-outline-danger px-4 rounded-pill fw-bold">
+                    <i class="bi bi-calendar3 me-1"></i> Xem Lịch Hẹn Của Tôi
+                </a>
+                <a href="@Url.Action("Index", "AI")" class="btn btn-danger px-4 rounded-pill fw-bold" style="background-color: #800020; border: none;">
+                    <i class="bi bi-cpu-fill me-1"></i> Trở Về AI Hub
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>

@@ -80,7 +80,7 @@
 
                 <!-- Main Body -->
                 <div class="article-body mb-4">
-                    @Html.Raw(Model.Content)
+                    @Html.Raw(System.Net.WebUtility.HtmlDecode(Model.Content))
                 </div>
 
                 @if (!string.IsNullOrEmpty(Model.Tags))

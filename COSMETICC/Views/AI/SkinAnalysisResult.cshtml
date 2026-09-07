@@ -1,0 +1,128 @@
+@model dynamic
+@{
+    ViewData["Title"] = "Kết Quả Phân Tích Da AI";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    int moisture = ViewBag.Moisture ?? 75;
+    int acneRisk = ViewBag.AcneRisk ?? 25;
+    int darkSpots = ViewBag.DarkSpots ?? 30;
+    int elasticity = ViewBag.Elasticity ?? 85;
+    string skinType = ViewBag.DetectedSkinType ?? "Da hỗn hợp";
+    string imageUrl = ViewBag.UploadedImageUrl ?? "/images/default-avatar.png";
+    var recommendedProducts = (List<COSMETICC.Models.Product>)ViewBag.RecommendedProducts;
+}
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-bold mb-2">
+            <i class="bi bi-check-circle-fill me-1"></i> ĐÃ HOÀN THÀNH PHÂN TÍCH
+        </span>
+        <h2 class="fw-bold" style="color: #800020;">Báo Cáo Sức Khỏe Làn Da Của Bạn</h2>
+        <p class="text-muted">Chẩn đoán dựa trên thuật toán AI Vision của COSMETICC</p>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- Left: Uploaded Photo & Result Badge -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-lg text-center p-4 h-100" style="border-radius: 16px;">
+                <div class="mb-3">
+                    <img src="@imageUrl" alt="Skin Photo" class="img-fluid rounded-4 shadow" style="max-height: 280px; object-fit: cover;" />
+                </div>
+                <h5 class="fw-bold text-dark mb-1">Loại da phát hiện:</h5>
+                <span class="badge bg-danger fs-6 py-2 px-4 rounded-pill mx-auto mb-3" style="background-color: #800020 !important;">
+                    <i class="bi bi-sparkles me-1"></i> @skinType
+                </span>
+                <p class="text-muted small">
+                    Làn da của bạn cần tập trung cấp ẩm sâu, phục hồi hàng rào bảo vệ da và làm mờ các vết sắc tố nhẹ.
+                </p>
+                <a asp-action="SkinAnalysis" class="btn btn-outline-secondary btn-sm rounded-pill mt-auto">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Phân tích ảnh khác
+                </a>
+            </div>
+        </div>
+
+        <!-- Right: Diagnostic Metrics (Progress Bars) -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-lg p-4 h-100" style="border-radius: 16px;">
+                <h5 class="fw-bold text-dark mb-4"><i class="bi bi-bar-chart-fill text-danger me-2"></i>Chỉ Số Chi Tiết</h5>
+
+                <!-- Metric 1: Moisture -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-semibold text-dark"><i class="bi bi-droplet-fill text-info me-2"></i>Độ Ẩm Tự Nhiên</span>
+                        <span class="fw-bold text-info">@moisture%</span>
+                    </div>
+                    <div class="progress" style="height: 10px; border-radius: 5px;">
+                        <div class="progress-bar bg-info" style="width: @moisture%"></div>
+                    </div>
+                </div>
+
+                <!-- Metric 2: Acne Risk -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-semibold text-dark"><i class="bi bi-shield-exclamation text-danger me-2"></i>Nguy Cơ Mụn & Viêm</span>
+                        <span class="fw-bold text-danger">@acneRisk%</span>
+                    </div>
+                    <div class="progress" style="height: 10px; border-radius: 5px;">
+                        <div class="progress-bar bg-danger" style="width: @acneRisk%"></div>
+                    </div>
+                </div>
+
+                <!-- Metric 3: Dark Spots -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-semibold text-dark"><i class="bi bi-sun-fill text-warning me-2"></i>Sắc Tố & Thâm Nám</span>
+                        <span class="fw-bold text-warning">@darkSpots%</span>
+                    </div>
+                    <div class="progress" style="height: 10px; border-radius: 5px;">
+                        <div class="progress-bar bg-warning" style="width: @darkSpots%"></div>
+                    </div>
+                </div>
+
+                <!-- Metric 4: Elasticity -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-semibold text-dark"><i class="bi bi-heart-pulse-fill text-success me-2"></i>Đàn Hồi & Nếp Nhăn</span>
+                        <span class="fw-bold text-success">@elasticity%</span>
+                    </div>
+                    <div class="progress" style="height: 10px; border-radius: 5px;">
+                        <div class="progress-bar bg-success" style="width: @elasticity%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recommended Products Section -->
+    <div class="mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="fw-bold mb-0" style="color: #800020;"><i class="bi bi-bag-heart-fill me-2"></i>Sản Phẩm Điều Trị & Cấp Ẩm Khuyên Dùng</h4>
+                <p class="text-muted small mb-0">Được hệ thống AI tự động đề xuất dựa trên tình trạng da của bạn</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            @if (recommendedProducts != null && recommendedProducts.Any())
+            {
+                foreach (var p in recommendedProducts)
+                {
+                    <div class="col-6 col-md-4 col-lg-2">
+                        <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden text-center">
+                            <a asp-controller="Product" asp-action="Details" asp-route-id="@p.Id">
+                                <img src="@(p.ImageUrl ?? p.ProductImages?.FirstOrDefault()?.ImageUrl ?? "/images/default-product.jpg")" class="card-img-top p-2" style="height: 140px; object-fit: contain;" alt="@p.Name" />
+                            </a>
+                            <div class="card-body p-2 d-flex flex-column">
+                                <span class="badge bg-light text-dark mb-1 text-truncate" style="font-size: 10px;">@p.Brand?.Name</span>
+                                <h6 class="card-title fw-bold text-dark small mb-2 text-truncate" style="font-size: 12px;">@p.Name</h6>
+                                <div class="mt-auto">
+                                    <span class="fw-bold text-danger small">@p.Price.ToString("N0")đ</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>

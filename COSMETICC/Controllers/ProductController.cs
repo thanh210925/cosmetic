@@ -252,5 +252,73 @@ namespace COSMETICC.Controllers
             TempData["SuccessMessage"] = "Đăng đánh giá thành công! Cảm ơn bạn đã đóng góp ý kiến.";
             return RedirectToAction("Details", new { id = productId });
         }
+
+        // GET: /Product/QuickSearch?q=...
+        [HttpGet]
+        public async Task<IActionResult> QuickSearch(string q)
+        {
+            if (string.IsNullOrWhiteSpace(q) || q.Length < 2)
+            {
+                return Json(new List<object>());
+            }
+
+            var query = q.Trim().ToLower();
+            var results = await _context.Products
+                .Where(p => p.IsActive && (p.Name.ToLower().Contains(query) || (p.Brand != null && p.Brand.Name.ToLower().Contains(query))))
+                .Select(p => new
+                {
+                    id = p.Id,
+                    name = p.Name,
+                    price = p.Price,
+                    discountPrice = p.PromoPrice,
+
+                    imageUrl = p.ImageUrl ?? (p.ProductImages.FirstOrDefault() != null ? p.ProductImages.FirstOrDefault()!.ImageUrl : "/images/default-product.jpg")
+                })
+                .Take(6)
+                .ToListAsync();
+
+            return Json(results);
+        }
+
+        // POST: /Product/SubscribeAutoRefill
+        [HttpPost]
+        public async Task<IActionResult> SubscribeAutoRefill(int productId, int intervalDays)
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+            {
+                return Json(new { success = false, message = "Vui lòng đăng nhập để sử dụng tính năng nhắc mua lại định kỳ!" });
+            }
+
+            if (intervalDays != 30 && intervalDays != 45 && intervalDays != 60)
+            {
+                intervalDays = 45;
+            }
+
+            var existing = await _context.AutoRefillSubscriptions
+                .FirstOrDefaultAsync(s => s.UserId == userId && s.ProductId == productId && s.IsActive);
+
+            if (existing != null)
+            {
+                existing.IntervalDays = intervalDays;
+                existing.NextReminderDate = DateTime.Now.AddDays(intervalDays);
+            }
+            else
+            {
+                _context.AutoRefillSubscriptions.Add(new AutoRefillSubscription
+                {
+                    UserId = userId,
+                    ProductId = productId,
+                    IntervalDays = intervalDays,
+                    NextReminderDate = DateTime.Now.AddDays(intervalDays),
+                    IsActive = true,
+                    CreatedAt = DateTime.Now
+                });
+            }
+
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, message = $"Đã cài đặt nhắc mua lại sản phẩm sau mỗi {intervalDays} ngày kèm Voucher ưu đãi 5%!" });
+        }
     }
 }
+

@@ -9,20 +9,27 @@ namespace COSMETICC.Controllers
     public class HomeController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly Services.RecommendationService _recommendationService;
 
-        public HomeController(AppDbContext context)
+        public HomeController(AppDbContext context, Services.RecommendationService recommendationService)
         {
             _context = context;
+            _recommendationService = recommendationService;
         }
 
         public async System.Threading.Tasks.Task<IActionResult> Index()
         {
             var viewModel = new HomeViewModel();
 
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            int? userId = (!string.IsNullOrEmpty(userIdStr) && int.TryParse(userIdStr, out int uid)) ? uid : null;
+            ViewBag.PersonalizedProducts = await _recommendationService.GetPersonalizedRecommendationsAsync(userId, 8);
+
             // 1. Categories
             viewModel.Categories = await _context.Categories
                 .Include(c => c.Products)
                 .ToListAsync();
+
 
             // 2. Bestsellers
             viewModel.Bestsellers = await _context.Products
