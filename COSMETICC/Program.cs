@@ -14,7 +14,8 @@ namespace Cosmetic
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-
+            // Đặt đoạn này ở đầu file Program.cs hoặc ngay trước khi chạy ứng dụng
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
             // MVC
             builder.Services.AddControllersWithViews();
 
@@ -92,11 +93,11 @@ namespace Cosmetic
             app.UseStaticFiles();
 
             app.UseRouting();
+            app.UseSession();
 
             // 🔥 QUAN TRỌNG (THỨ TỰ)
             app.UseAuthentication();
             app.UseAuthorization();
-            app.UseSession();
 
             // Map SignalR Hub
             app.MapHub<COSMETICC.Hubs.NotificationHub>("/notificationHub");
