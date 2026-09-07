@@ -55,7 +55,7 @@ namespace Cosmetic
 
             // DB (FIX NAME)
             builder.Services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));     
+            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
             // SESSION
             builder.Services.AddDistributedMemoryCache();
             builder.Services.AddSession(options =>
